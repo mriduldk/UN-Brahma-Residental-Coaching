@@ -151,6 +151,16 @@
                                     <li class="text-sm text-slate-400 italic">No specific fields selected</li>
                                 @endif
                             </ul>
+                            @if($section === 'academic' && !empty($config['default_qualifications']))
+                                <div class="mt-3 pt-3 border-t border-slate-100">
+                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Default Qualifications:</span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach($config['default_qualifications'] as $dq)
+                                            <span class="text-xs bg-amber-50 text-amber-700 font-semibold px-2 py-0.5 rounded border border-amber-200">{{ $dq }}</span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                         @endif
                     @endforeach

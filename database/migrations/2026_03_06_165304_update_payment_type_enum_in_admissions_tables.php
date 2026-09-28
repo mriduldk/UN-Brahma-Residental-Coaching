@@ -12,8 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE admission_students MODIFY COLUMN payment_type ENUM('full', 'emi', 'cash', 'dd_full', 'dd_emi') NOT NULL");
-        DB::statement("ALTER TABLE admission_payments MODIFY COLUMN payment_type ENUM('full', 'emi', 'cash', 'dd_full', 'dd_emi') NOT NULL");
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'])) {
+            DB::statement("ALTER TABLE admission_students MODIFY COLUMN payment_type ENUM('full', 'emi', 'cash', 'dd_full', 'dd_emi') NOT NULL");
+            DB::statement("ALTER TABLE admission_payments MODIFY COLUMN payment_type ENUM('full', 'emi', 'cash', 'dd_full', 'dd_emi') NOT NULL");
+        }
     }
 
     /**

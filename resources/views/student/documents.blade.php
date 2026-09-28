@@ -75,11 +75,9 @@
                         'photo' => 'Passport Photo',
                         'signature' => 'Signature',
                         'aadhaar_card' => 'Aadhaar Card',
-                        'passport' => 'Passport',
                         'caste_certificate' => 'Caste Certificate',
                         'income_certificate' => 'Income Certificate',
                         'address_proof' => 'Address Proof',
-                        'transfer_certificate' => 'Transfer Certificate',
                     ]
                 ],
                 'Marksheets' => [

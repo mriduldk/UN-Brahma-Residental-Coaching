@@ -216,18 +216,29 @@ class StudentController extends Controller
             abort(403, 'Student profile not found.');
         }
 
-        return view('student.edit-profile', compact('student'));
+        $communities = \App\Models\Community::active()->get();
+        return view('student.edit-profile', compact('student', 'communities'));
     }
 
     public function updateProfile(Request $request) {
         $user = auth()->user();
         $student = \App\Models\Student::where('user_id', $user->id)->first();
 
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+            'dob' => 'required|date',
+            'gender' => 'required|string',
+            'category' => 'required|string',
+            'permanent_district' => 'nullable|in:Kokrajhar,Chirang,Baksa,Tamulpur,Udalguri',
+        ], [
+            'permanent_district.in' => 'Permanent Address District must be one of: Kokrajhar, Chirang, Baksa, Tamulpur, Udalguri.',
+        ]);
+
         // 1. Update Student Personal Details
         $student->update([
             'full_name' => $request->full_name,
-            'phone_number' => $request->phone_number,
-            'email' => $request->email,
+            'phone_number' => $student->phone_number,
+            'email' => $student->email,
             'dob' => $request->dob,
             'gender' => $request->gender,
             'age' => $request->age,
@@ -235,12 +246,13 @@ class StudentController extends Controller
             'category' => $request->category,
             'is_pwd' => $request->boolean('is_pwd'),
             'religion' => $request->religion,
-            'nationality' => $request->nationality,
+            'community' => $request->community ?? $request->nationality,
+            'nationality' => $request->community ?? $request->nationality,
             'mother_tongue' => $request->mother_tongue,
             'identification_mark' => $request->identification_mark,
             'employment_exchange_no' => $request->employment_exchange_no,
-            'is_permanent_resident_of_assam' => $request->boolean('is_permanent_resident_of_assam'),
-            'is_btc_resident' => $request->boolean('is_btc_resident'),
+            'is_permanent_resident_of_assam' => $request->filled('is_permanent_resident_of_assam') ? $request->boolean('is_permanent_resident_of_assam') : null,
+            'is_btc_resident' => $request->filled('is_btc_resident') ? $request->boolean('is_btc_resident') : null,
             'marital_status' => $request->marital_status,
             'alternate_mobile_number' => $request->alternate_mobile_number,
             'is_ex_serviceman' => $request->has('is_ex_serviceman') ? $request->boolean('is_ex_serviceman') : null,
@@ -255,15 +267,17 @@ class StudentController extends Controller
             [
                 'present_village_town' => $request->present_village_town,
                 'present_street' => $request->present_street,
+                'present_city' => $request->present_city,
                 'present_district' => $request->present_district,
-                'present_state' => $request->present_state ?? 'ASSAM',
-                'present_country' => $request->present_country ?? 'India',
+                'present_state' => $request->present_state ?? null,
+                'present_country' => $request->present_country,
                 'present_pin_code' => $request->present_pin_code,
                 'permanent_village_town' => $request->permanent_village_town,
                 'permanent_street' => $request->permanent_street,
+                'permanent_city' => $request->permanent_city,
                 'permanent_district' => $request->permanent_district,
-                'permanent_state' => $request->permanent_state,
-                'permanent_country' => $request->permanent_country ?? 'India',
+                'permanent_state' => 'Assam',
+                'permanent_country' => $request->permanent_country,
                 'permanent_pin_code' => $request->permanent_pin_code,
             ]
         );
@@ -337,36 +351,29 @@ class StudentController extends Controller
 
     public function storeOnboarding(Request $request)
     {
+        $user = auth()->user();
+
         $request->validate([
             'full_name' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:15|unique:students,phone_number',
-            'email' => 'nullable|email|max:255|unique:students,email',
-            'dob' => 'nullable|date',
-            'gender' => 'nullable|string',
+            'dob' => 'required|date',
+            'gender' => 'required|string',
+            'category' => 'required|string',
             'age' => 'nullable|integer',
             'blood_group' => 'nullable|string',
-            'category' => 'nullable|string',
             'religion' => 'nullable|string',
+            'community' => 'nullable|string',
             'nationality' => 'nullable|string',
             'mother_tongue' => 'nullable|string',
             'identification_mark' => 'nullable|string',
             'marital_status' => 'nullable|string',
             'alternate_mobile_number' => 'nullable|string',
-            'is_permanent_resident_of_assam' => 'required|boolean',
-            'is_btc_resident' => 'required|boolean',
-            'is_ex_serviceman' => 'required|boolean',
-            'ncc_certificate' => 'required|string',
-            'has_national_sports_achievement' => 'required|boolean',
-            'has_fine_arts_cultural_achievement' => 'required|boolean',
         ]);
-
-        $user = auth()->user();
 
         \App\Models\Student::create([
             'user_id' => $user->id,
             'full_name' => $request->full_name,
-            'phone_number' => $request->phone_number,
-            'email' => $request->email,
+            'phone_number' => $user->mobile_number,
+            'email' => $user->email,
             'dob' => $request->dob,
             'gender' => $request->gender,
             'age' => $request->age,
@@ -374,12 +381,13 @@ class StudentController extends Controller
             'category' => $request->category,
             'is_pwd' => $request->boolean('is_pwd'),
             'religion' => $request->religion,
-            'nationality' => $request->nationality,
+            'community' => $request->community ?? $request->nationality,
+            'nationality' => $request->community ?? $request->nationality,
             'mother_tongue' => $request->mother_tongue,
             'identification_mark' => $request->identification_mark,
             'employment_exchange_no' => $request->employment_exchange_no,
-            'is_permanent_resident_of_assam' => $request->boolean('is_permanent_resident_of_assam'),
-            'is_btc_resident' => $request->has('is_btc_resident') ? $request->boolean('is_btc_resident') : null,
+            'is_permanent_resident_of_assam' => $request->filled('is_permanent_resident_of_assam') ? $request->boolean('is_permanent_resident_of_assam') : null,
+            'is_btc_resident' => $request->filled('is_btc_resident') ? $request->boolean('is_btc_resident') : null,
             'marital_status' => $request->marital_status,
             'alternate_mobile_number' => $request->alternate_mobile_number,
             'is_ex_serviceman' => $request->has('is_ex_serviceman') ? $request->boolean('is_ex_serviceman') : null,
@@ -439,7 +447,8 @@ class StudentController extends Controller
             return redirect()->route('student.applications.history')->with('error', 'The deadline for this application has passed.');
         }
 
-        return view('student.application.form', compact('form', 'existingApp', 'student'));
+        $communities = \App\Models\Community::active()->get();
+        return view('student.application.form', compact('form', 'existingApp', 'student', 'communities'));
     }
 
     public function showApplication($id)
@@ -632,6 +641,7 @@ class StudentController extends Controller
             if (empty($docConfig)) {
                 $docConfig = ['photo', 'caste_certificate', 'signature', 'prc_certificate', 'age_proof', 'mark_sheet_10', 'certificate_10'];
             }
+            $docConfig = array_values(array_filter($docConfig, fn($f) => $form->isFieldVisible('documents', $f)));
 
             \Illuminate\Support\Facades\Log::info('AppPreview: Processing Uploads for App ID: ' . $app->id);
             \Illuminate\Support\Facades\Log::info('AppPreview: Doc Config: ' . json_encode($docConfig));
@@ -662,33 +672,13 @@ class StudentController extends Controller
                 'hs_admit_card' => 'hs_admit_card',
                 'graduation_admit_card' => 'graduation_admit_card',
                 'post_graduation_admit_card' => 'post_graduation_admit_card',
-                'transfer_certificate' => 'transfer_certificate',
                 'income_certificate' => 'income_certificate',
                 'aadhaar_card' => 'aadhaar_card',
-                'passport' => 'passport',
-                'bed_parangat_marksheet' => 'bed_parangat_marksheet',
-                'bed_parangat_certificate' => 'bed_parangat_certificate',
-                'tet_certificate' => 'tet_certificate',
-                'pwd_certificate' => 'pwd_certificate',
-                'ex_serviceman_certificate' => 'ex_serviceman_certificate',
-                'ncc_certificate_doc' => 'ncc_certificate_doc',
-                'sports_certificate' => 'sports_certificate',
-                'cultural_certificate' => 'cultural_certificate',
                 'btc_residential_certificate' => 'btc_residential_certificate',
-                'language_diploma_certificate' => 'language_diploma_certificate',
             ];
 
             $optionalDocs = [
-                'bed_parangat_marksheet',
-                'bed_parangat_certificate',
-                'tet_certificate',
-                'pwd_certificate',
-                'ex_serviceman_certificate',
-                'ncc_certificate_doc',
-                'sports_certificate',
-                'cultural_certificate',
                 'btc_residential_certificate',
-                'language_diploma_certificate',
             ];
 
             $appDoc = \App\Models\ApplicationDocument::firstOrCreate(['student_application_id' => $app->id]);
@@ -867,23 +857,34 @@ class StudentController extends Controller
         // Build dynamic validation rules based on field_config
         $rules = [];
         if ($step == 1) {
+            // Bidirectional synchronization between community and nationality
+            if ($request->filled('community') && !$request->filled('nationality')) {
+                $request->merge(['nationality' => $request->community]);
+            } elseif ($request->filled('nationality') && !$request->filled('community')) {
+                $request->merge(['community' => $request->nationality]);
+            }
+
             $personalFields = [
                 'full_name', 'phone_number', 'email', 'gender', 'dob', 
-                'category', 'religion', 'marital_status', 'age', 
-                'blood_group', 'nationality', 'mother_tongue', 
+                'category', 'religion', 'age', 
+                'blood_group', 'community', 'mother_tongue', 
                 'identification_mark', 'alternate_mobile_number',
                 'is_permanent_resident_of_assam', 'is_btc_resident',
-                'is_ex_serviceman', 'ncc_certificate',
-                'has_national_sports_achievement', 'has_fine_arts_cultural_achievement'
             ];
 
             foreach($personalFields as $field) {
                 if($form->isFieldVisible('personal', $field)) {
-                    $rules[$field] = 'required';
-                    if($field == 'email') $rules[$field] .= '|email';
-                    if($field == 'phone_number') $rules[$field] .= '|max:15';
-                    if($field == 'age') $rules[$field] .= '|integer|min:14|max:100';
-                    if($field == 'dob') $rules[$field] .= '|date';
+                    if (in_array($field, ['is_permanent_resident_of_assam', 'is_btc_resident'])) {
+                        $rules[$field] = 'nullable|boolean';
+                    } elseif ($field == 'alternate_mobile_number') {
+                        $rules[$field] = 'required|string|max:15';
+                    } else {
+                        $rules[$field] = 'required';
+                        if($field == 'email') $rules[$field] .= '|email';
+                        if($field == 'phone_number') $rules[$field] .= '|max:15';
+                        if($field == 'age') $rules[$field] .= '|integer|min:14|max:100';
+                        if($field == 'dob') $rules[$field] .= '|date';
+                    }
                 }
             }
 
@@ -900,16 +901,30 @@ class StudentController extends Controller
             }
         }
         elseif ($step == 2) {
+            $request->merge(['permanent_state' => 'Assam']);
+
             $addressFields = [
                 'village_town', 'street', 'city', 'district', 'state', 'country', 'pin_code'
             ];
 
-            foreach($addressFields as $field) {
-                if($form->isFieldVisible('address', 'present_'.$field)) {
-                    $rules['present_'.$field] = 'required';
+            if ($request->boolean('same_as_permanent')) {
+                foreach($addressFields as $field) {
+                    if (!$request->filled('present_'.$field) && $request->filled('permanent_'.$field)) {
+                        $request->merge(['present_'.$field => $request->input('permanent_'.$field)]);
+                    }
                 }
-                if($form->isFieldVisible('address', 'permanent_'.$field) && !$request->has('same_as_permanent')) {
-                    $rules['permanent_'.$field] = 'required';
+            }
+
+            foreach($addressFields as $field) {
+                if($form->isFieldVisible('address', 'permanent_'.$field)) {
+                    if ($field === 'district') {
+                        $rules['permanent_district'] = 'required|in:Kokrajhar,Chirang,Baksa,Tamulpur,Udalguri';
+                    } else {
+                        $rules['permanent_'.$field] = 'required';
+                    }
+                }
+                if($form->isFieldVisible('address', 'present_'.$field) && !$request->boolean('same_as_permanent')) {
+                    $rules['present_'.$field] = 'required';
                 }
             }
         }
@@ -936,6 +951,7 @@ class StudentController extends Controller
         }
         
         $messages = [
+            'permanent_district.in' => 'Permanent Address District must be one of: Kokrajhar, Chirang, Baksa, Tamulpur, Udalguri.',
             'qual.required' => 'Please add at least one academic qualification.',
             'qual.*.examination.required' => 'Examination name is required.',
             'qual.*.passing_year.required' => 'Passing year is required.',
@@ -945,8 +961,21 @@ class StudentController extends Controller
             'age.max' => 'Maximum age limit is 100 years.',
         ];
 
+        $attributes = [
+            'alternate_mobile_number' => 'What’s App Number',
+            'father_annual_income' => 'Family income per (per anum)',
+            'permanent_street' => 'BTCLA Constituency',
+            'community' => 'Community',
+            'nationality' => 'Community',
+            'permanent_city' => 'Permanent Post Office',
+            'permanent_country' => 'Permanent Police Station',
+            'present_city' => 'Present Post Office',
+            'present_country' => 'Present Police Station',
+            'permanent_district' => 'Permanent Address District',
+        ];
+
         if (!empty($rules)) {
-            $request->validate($rules, $messages);
+            $request->validate($rules, $messages, $attributes);
         }
 
         try {
@@ -954,13 +983,17 @@ class StudentController extends Controller
 
             if ($step == 1) {
                 // --- Step 1: Personal Details ---
+                // Phone number and email cannot change - lock to student's registered account
+                $fixedPhone = $student->phone_number ?? auth()->user()->mobile_number ?? $request->phone_number;
+                $fixedEmail = $student->email ?? auth()->user()->email ?? $request->email;
+
                 // Update Application Snapshot ONLY
                 \App\Models\ApplicationStudent::updateOrCreate(
                     ['student_application_id' => $application->id],
                     [
                         'full_name' => $request->full_name,
-                        'phone_number' => $request->phone_number,
-                        'email' => $request->email,
+                        'phone_number' => $fixedPhone,
+                        'email' => $fixedEmail,
                         'dob' => $request->dob,
                         'gender' => $request->gender,
                         'category' => $request->category,
@@ -968,14 +1001,15 @@ class StudentController extends Controller
                         'marital_status' => $request->marital_status,
                         'age' => $request->age,
                         'blood_group' => $request->blood_group,
-                        'nationality' => $request->nationality,
+                        'community' => $request->community ?? $request->nationality,
+                        'nationality' => $request->community ?? $request->nationality,
                         'mother_tongue' => $request->mother_tongue,
                         'identification_mark' => $request->identification_mark,
                         'alternate_mobile_number' => $request->alternate_mobile_number,
                         'is_pwd' => $request->has('is_pwd') ? $request->boolean('is_pwd') : null,
                         'employment_exchange_no' => $request->employment_exchange_no,
-                        'is_permanent_resident_of_assam' => $request->has('is_permanent_resident_of_assam') ? $request->boolean('is_permanent_resident_of_assam') : null,
-                        'is_btc_resident' => $request->has('is_btc_resident') ? $request->boolean('is_btc_resident') : null,
+                        'is_permanent_resident_of_assam' => $request->filled('is_permanent_resident_of_assam') ? $request->boolean('is_permanent_resident_of_assam') : null,
+                        'is_btc_resident' => $request->filled('is_btc_resident') ? $request->boolean('is_btc_resident') : null,
                         'is_ex_serviceman' => $request->has('is_ex_serviceman') ? $request->boolean('is_ex_serviceman') : null,
                         'ncc_certificate' => $request->ncc_certificate,
                         'has_national_sports_achievement' => $request->has('has_national_sports_achievement') ? $request->boolean('has_national_sports_achievement') : null,
@@ -1007,24 +1041,25 @@ class StudentController extends Controller
                 // Already validated above
 
                 // Update Application Address Snapshot ONLY
+                $isSame = $request->boolean('same_as_permanent');
                 \App\Models\ApplicationAddress::updateOrCreate(
                     ['student_application_id' => $application->id],
                     [
-                        'present_village_town' => $request->present_village_town,
-                        'present_street' => $request->present_street,
-                        'present_city' => $request->present_city,
-                        'present_district' => $request->present_district,
-                        'present_state' => $request->present_state ?? 'ASSAM',
-                        'present_country' => $request->present_country ?? 'India',
-                        'present_pin_code' => $request->present_pin_code,
                         'permanent_village_town' => $request->permanent_village_town,
                         'permanent_street' => $request->permanent_street,
                         'permanent_city' => $request->permanent_city,
                         'permanent_district' => $request->permanent_district,
-                        'permanent_state' => $request->permanent_state,
-                        'permanent_country' => $request->permanent_country ?? 'India',
+                        'permanent_state' => 'Assam',
+                        'permanent_country' => $request->permanent_country,
                         'permanent_pin_code' => $request->permanent_pin_code,
-                        'same_as_permanent' => $request->has('same_as_permanent'),
+                        'present_village_town' => $isSame ? ($request->permanent_village_town ?? $request->present_village_town) : $request->present_village_town,
+                        'present_street' => $isSame ? ($request->permanent_street ?? $request->present_street) : $request->present_street,
+                        'present_city' => $isSame ? ($request->permanent_city ?? $request->present_city) : $request->present_city,
+                        'present_district' => $isSame ? ($request->permanent_district ?? $request->present_district) : $request->present_district,
+                        'present_state' => $isSame ? 'Assam' : ($request->present_state ?? null),
+                        'present_country' => $isSame ? ($request->permanent_country ?? $request->present_country) : $request->present_country,
+                        'present_pin_code' => $isSame ? ($request->permanent_pin_code ?? $request->present_pin_code) : $request->present_pin_code,
+                        'same_as_permanent' => $isSame,
                     ]
                 );
             }
@@ -1081,6 +1116,7 @@ class StudentController extends Controller
                 if (empty($docConfig)) {
                      $docConfig = ['photo', 'caste_certificate', 'signature', 'prc_certificate', 'age_proof', 'mark_sheet_10', 'certificate_10'];
                 }
+                $docConfig = array_values(array_filter($docConfig, fn($f) => $form->isFieldVisible('documents', $f)));
 
                 $student->load('document'); // Ensure document relation is loaded
                 $appDoc = \App\Models\ApplicationDocument::firstOrCreate(['student_application_id' => $application->id]);
@@ -1111,20 +1147,9 @@ class StudentController extends Controller
                     'hs_admit_card' => 'hs_admit_card',
                     'graduation_admit_card' => 'graduation_admit_card',
                     'post_graduation_admit_card' => 'post_graduation_admit_card',
-                    'transfer_certificate' => 'transfer_certificate',
                     'income_certificate' => 'income_certificate',
                     'aadhaar_card' => 'aadhaar_card',
-                    'passport' => 'passport',
-                    'bed_parangat_marksheet' => 'bed_parangat_marksheet',
-                    'bed_parangat_certificate' => 'bed_parangat_certificate',
-                    'tet_certificate' => 'tet_certificate',
-                    'pwd_certificate' => 'pwd_certificate',
-                    'ex_serviceman_certificate' => 'ex_serviceman_certificate',
-                    'ncc_certificate_doc' => 'ncc_certificate_doc',
-                    'sports_certificate' => 'sports_certificate',
-                    'cultural_certificate' => 'cultural_certificate',
                     'btc_residential_certificate' => 'btc_residential_certificate',
-                    'language_diploma_certificate' => 'language_diploma_certificate',
                 ];
 
                 $updateData = [];
@@ -1160,16 +1185,7 @@ class StudentController extends Controller
 
                     // Strict validation: After potential copy, check if we have it
                     $optionalDocs = [
-                        'bed_parangat_marksheet',
-                        'bed_parangat_certificate',
-                        'tet_certificate',
-                        'pwd_certificate',
-                        'ex_serviceman_certificate',
-                        'ncc_certificate_doc',
-                        'sports_certificate',
-                        'cultural_certificate',
                         'btc_residential_certificate',
-                        'language_diploma_certificate',
                     ];
                     
                     if (empty($appDoc->$dbColumn) && empty($updateData[$dbColumn]) && !in_array($docType, $optionalDocs)) {
@@ -1187,7 +1203,8 @@ class StudentController extends Controller
             }
 
             // Update progress: move to next step (max 5)
-            $newStep = ($step < 5) ? ($step + 1) : 5;
+            // Bank details (step 3) is removed from the form page, so move from step 2 directly to step 4
+            $newStep = ($step == 2) ? 4 : (($step < 5) ? ($step + 1) : 5);
             if ($application->current_step < $newStep) {
                 $application->update(['current_step' => $newStep]);
             }

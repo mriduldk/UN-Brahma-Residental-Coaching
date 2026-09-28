@@ -155,28 +155,19 @@
                 <td><span class="label">Age (Auto Calculate)</span><span class="value">{{ $age }}</span></td>
             </tr>
             <tr>
-                <td><span class="label">Marital Status</span><span class="value">{{ strtoupper($s->marital_status ?? '-') }}</span></td>
-                <td><span class="label">Nationality</span><span class="value">{{ strtoupper($s->nationality ?? '-') }}</span></td>
+                <td><span class="label">Community</span><span class="value">{{ strtoupper($s->community ?? $s->nationality ?? '-') }}</span></td>
                 <td><span class="label">Employment Exchange Registration Number</span><span class="value">{{ strtoupper($s->employment_exchange_no ?? '-') }}</span></td>
-            </tr>
-            <tr>
-                <td><span class="label">Permanent Resident of Assam</span><span class="value">{{ $s->is_permanent_resident_of_assam ? 'YES' : 'NO' }}</span></td>
-                <td><span class="label">BTC Resident</span><span class="value">{{ $s->is_btc_resident ? 'YES' : 'NO' }}</span></td>
-                <td><span class="label">Mobile Number</span><span class="value">{{ $s->phone_number }}</span></td>
-            </tr>
-            <tr>
-                <td><span class="label">Alternate Mobile Number</span><span class="value">{{ $s->alternate_mobile_number ?? '-' }}</span></td>
-                <td><span class="label">Email Address</span><span class="value">{{ $s->email ?? $application->student->email ?? '-' }}</span></td>
                 <td><span class="label">Category</span><span class="value">{{ strtoupper($s->category ?? '-') }}</span></td>
             </tr>
             <tr>
+                <td><span class="label">Permanent Resident of Assam</span><span class="value">{{ !is_null($s->is_permanent_resident_of_assam) ? ($s->is_permanent_resident_of_assam ? 'YES' : 'NO') : '-' }}</span></td>
+                <td><span class="label">BTC Resident</span><span class="value">{{ !is_null($s->is_btc_resident) ? ($s->is_btc_resident ? 'YES' : 'NO') : '-' }}</span></td>
                 <td><span class="label">PwD (Yes/No)</span><span class="value">{{ $s->is_pwd ? 'YES' : 'NO' }}</span></td>
-                <td><span class="label">Ex-Serviceman (Yes/No)</span><span class="value">{{ $s->is_ex_serviceman ? 'YES' : 'NO' }}</span></td>
-                <td><span class="label">NCC Certificate</span><span class="value">{{ strtoupper($s->ncc_certificate ?? 'NO') }}</span></td>
             </tr>
             <tr>
-                <td><span class="label">National Sports Achievement (Yes/No)</span><span class="value">{{ $s->has_national_sports_achievement ? 'YES' : 'NO' }}</span></td>
-                <td colspan="2"><span class="label">Fine Arts/Cultural Achievement (Yes/No)</span><span class="value">{{ $s->has_fine_arts_cultural_achievement ? 'YES' : 'NO' }}</span></td>
+                <td><span class="label">Mobile Number</span><span class="value">{{ $s->phone_number }}</span></td>
+                <td><span class="label">What’s App Number</span><span class="value">{{ $s->alternate_mobile_number ?? '-' }}</span></td>
+                <td><span class="label">Email Address</span><span class="value">{{ $s->email ?? $application->student->email ?? '-' }}</span></td>
             </tr>
         </table>
 
@@ -186,18 +177,20 @@
              @php $a = $application->application_address; @endphp
             <tr>
                 <td width="50%">
-                    <span class="label">Present Address</span>
+                    <span class="label">Permanent Address</span>
                     <span class="value">
-                        {{ $a->present_village_town }}, {{ $a->present_street }}<br>
-                        Dist: {{ $a->present_district }}, {{ $a->present_state }} - {{ $a->present_pin_code }}
+                        {{ $a->permanent_village_town }}<br>
+                        @if($a->permanent_city)P.O.: {{ $a->permanent_city }}, @endif @if($a->permanent_country)P.S.: {{ $a->permanent_country }}, @endif Dist: {{ $a->permanent_district }}@if($a->permanent_street), BTCLA Constituency: {{ $a->permanent_street }}@endif<br>
+                        {{ $a->permanent_state }} - {{ $a->permanent_pin_code }}
                     </span>
                 </td>
                 <td width="50%">
-                    <span class="label">Permanent Address</span>
+                    <span class="label">Current Address / Communication Address</span>
                     <span class="value">
-                        @if($a->same_as_permanent) Same as Present @else
-                        {{ $a->permanent_village_town }}, {{ $a->permanent_street }}<br>
-                        Dist: {{ $a->permanent_district }}, {{ $a->permanent_state }} - {{ $a->permanent_pin_code }}
+                        @if($a->same_as_permanent) Same as Permanent Address @else
+                        {{ $a->present_village_town }}@if($a->present_street), {{ $a->present_street }}@endif<br>
+                        @if($a->present_city)P.O.: {{ $a->present_city }}, @endif @if($a->present_country)P.S.: {{ $a->present_country }}, @endif Dist: {{ $a->present_district }}<br>
+                        {{ $a->present_state }} - {{ $a->present_pin_code }}
                         @endif
                     </span>
                 </td>
@@ -248,22 +241,11 @@
                         'graduation_pass_certificate' => 'Graduation Degree Certificate',
                         'post_graduation_marksheet' => 'Post Graduation Mark Sheets',
                         'post_graduation_pass_certificate' => 'Post Graduation Certificate',
-                        'bed_parangat_marksheet' => 'B.Ed./Parangat Mark Sheets',
-                        'bed_parangat_certificate' => 'B.Ed./Parangat Certificate',
-                        'tet_certificate' => 'TET Certificate',
                         'caste_certificate' => 'Caste Certificate',
-                        'pwd_certificate' => 'PwD Certificate',
-                        'ex_serviceman_certificate' => 'Ex-Serviceman Certificate',
-                        'ncc_certificate_doc' => 'NCC Certificate',
-                        'sports_certificate' => 'Sports Certificate',
-                        'cultural_certificate' => 'Fine Arts/Cultural Achievement',
-                        'btc_residential_certificate' => 'BTC Residential Certificate',
-                        'language_diploma_certificate' => 'Language Diploma Certificate',
+                        'btc_residential_certificate' => 'Permanent Resident Certificate',
                         'aadhaar_card' => 'Aadhaar Card',
-                        'passport' => 'Passport',
                         'income_certificate' => 'Income Certificate',
-                        'address_proof' => 'Address Proof',
-                        'transfer_certificate' => 'Transfer Certificate'
+                        'address_proof' => 'Address Proof'
                     ];
                     $docs = $application->application_documents;
                     $providedDocs = [];

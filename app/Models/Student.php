@@ -22,6 +22,7 @@ class Student extends Model
         'category',
         'is_pwd',
         'religion',
+        'community',
         'nationality',
         'mother_tongue',
         'identification_mark',
@@ -37,6 +38,19 @@ class Student extends Model
         'has_national_sports_achievement',
         'has_fine_arts_cultural_achievement',
     ];
+
+    /**
+     * Backwards compatibility for nationality attribute
+     */
+    public function getNationalityAttribute()
+    {
+        return $this->attributes['community'] ?? $this->attributes['nationality'] ?? null;
+    }
+
+    public function setNationalityAttribute($value)
+    {
+        $this->attributes['community'] = $value;
+    }
 
     protected $casts = [
         'dob' => 'date',

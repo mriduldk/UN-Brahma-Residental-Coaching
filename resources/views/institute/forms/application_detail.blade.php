@@ -65,6 +65,12 @@
                         <div><span class="text-slate-400 block text-xs uppercase font-bold mb-1">Category</span><span class="font-medium text-slate-800 text-base">{{ $application->application_student->category ?? 'N/A' }}</span></div>
                         <div><span class="text-slate-400 block text-xs uppercase font-bold mb-1">Email</span><span class="font-medium text-slate-800 text-base">{{ $application->application_student->email ?? 'N/A' }}</span></div>
                          <div><span class="text-slate-400 block text-xs uppercase font-bold mb-1">Phone</span><span class="font-medium text-slate-800 text-base">{{ $application->application_student->phone_number ?? 'N/A' }}</span></div>
+                        @if(!empty($application->application_student->alternate_mobile_number))
+                        <div><span class="text-slate-400 block text-xs uppercase font-bold mb-1">What’s App Number</span><span class="font-medium text-slate-800 text-base">{{ $application->application_student->alternate_mobile_number }}</span></div>
+                        @endif
+                        @if(!empty($application->application_parent?->father_annual_income))
+                        <div><span class="text-slate-400 block text-xs uppercase font-bold mb-1">Family income per (per anum):</span><span class="font-medium text-slate-800 text-base">₹{{ number_format((float)$application->application_parent->father_annual_income, 2) }}</span></div>
+                        @endif
                     </div>
                 </section>
 
@@ -74,23 +80,25 @@
                     </h3>
                     <div class="grid grid-cols-2 gap-6 text-sm">
                         <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
-                            <span class="text-xs font-bold text-blue-600 uppercase block mb-2">Present Address</span>
+                            <span class="text-xs font-bold text-blue-600 uppercase block mb-2">Permanent Address</span>
+                            <p class="leading-relaxed text-slate-700 font-medium">
+                                {{ $application->application_address->permanent_village_town ?? '' }}<br>
+                                Dist: {{ $application->application_address->permanent_district ?? '' }}<br>
+                                @if(!empty($application->application_address->permanent_street))
+                                    BTCLA Constituency: {{ $application->application_address->permanent_street }}<br>
+                                @endif
+                                State: {{ $application->application_address->permanent_state ?? '' }}<br>
+                                PIN: {{ $application->application_address->permanent_pin_code ?? '' }}
+                            </p>
+                        </div>
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                            <span class="text-xs font-bold text-slate-500 uppercase block mb-2">Current Address / Communication Address</span>
                             <p class="leading-relaxed text-slate-700 font-medium">
                                 {{ $application->application_address->present_village_town ?? '' }}, 
                                 {{ $application->application_address->present_street ?? '' }}<br>
                                 Dist: {{ $application->application_address->present_district ?? '' }}, 
                                 State: {{ $application->application_address->present_state ?? '' }}<br>
                                 PIN: {{ $application->application_address->present_pin_code ?? '' }}
-                            </p>
-                        </div>
-                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
-                            <span class="text-xs font-bold text-slate-500 uppercase block mb-2">Permanent Address</span>
-                            <p class="leading-relaxed text-slate-700 font-medium">
-                                {{ $application->application_address->permanent_village_town ?? '' }}, 
-                                {{ $application->application_address->permanent_street ?? '' }}<br>
-                                Dist: {{ $application->application_address->permanent_district ?? '' }}, 
-                                State: {{ $application->application_address->permanent_state ?? '' }}<br>
-                                PIN: {{ $application->application_address->permanent_pin_code ?? '' }}
                             </p>
                         </div>
                     </div>
@@ -229,7 +237,6 @@
                                 'hs_admit_card' => '12th Admit Card',
                                 'graduation_admit_card' => 'Graduation Admit',
                                 'post_graduation_admit_card' => 'PG Admit',
-                                'transfer_certificate' => 'Transfer Cert',
                                 'caste_certificate' => 'Caste Certificate',
                                 'income_certificate' => 'Income Certificate',
                                 'address_proof' => 'Address Proof',

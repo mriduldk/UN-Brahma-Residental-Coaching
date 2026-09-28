@@ -25,11 +25,11 @@
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label><input type="text" name="full_name" value="{{ $student->full_name }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Phone Number</label><input type="text" name="phone_number" value="{{ $student->phone_number }}" class="w-full p-2 border border-slate-300 rounded"></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email (Optional)</label><input type="email" name="email" value="{{ $student->email }}" class="w-full p-2 border border-slate-300 rounded"></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date of Birth</label><input type="date" name="dob" value="{{ $student->dob }}" class="w-full p-2 border border-slate-300 rounded"></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Gender</label>
-                    <select name="gender" class="w-full p-2 border border-slate-300 rounded">
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Phone Number <span class="text-red-500">*</span></label><input type="text" name="phone_number" value="{{ $student->phone_number }}" readonly class="w-full p-2 border border-slate-300 rounded bg-slate-100 text-slate-500 cursor-not-allowed"></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label><input type="email" name="email" value="{{ $student->email }}" readonly class="w-full p-2 border border-slate-300 rounded bg-slate-100 text-slate-500 cursor-not-allowed"></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date of Birth <span class="text-red-500">*</span></label><input type="date" name="dob" required value="{{ $student->dob }}" class="w-full p-2 border border-slate-300 rounded"></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Gender <span class="text-red-500">*</span></label>
+                    <select name="gender" required class="w-full p-2 border border-slate-300 rounded">
                         <option value="Male" {{ $student->gender == 'Male' ? 'selected' : '' }}>Male</option>
                         <option value="Female" {{ $student->gender == 'Female' ? 'selected' : '' }}>Female</option>
                         <option value="Other" {{ $student->gender == 'Other' ? 'selected' : '' }}>Other</option>
@@ -43,8 +43,8 @@
                         @endforeach
                     </select>
                 </div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
-                    <select name="category" class="w-full p-2 border border-slate-300 rounded">
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category <span class="text-red-500">*</span></label>
+                    <select name="category" required class="w-full p-2 border border-slate-300 rounded">
                         <option value="General" {{ $student->category == 'General' ? 'selected' : '' }}>General</option>
                         <option value="SC" {{ $student->category == 'SC' ? 'selected' : '' }}>SC</option>
                         <option value="ST" {{ $student->category == 'ST' ? 'selected' : '' }}>ST</option>
@@ -63,66 +63,42 @@
                 </div>
 
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Religion</label><input type="text" name="religion" value="{{ $student->religion }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nationality</label><input type="text" name="nationality" value="{{ $student->nationality ?? 'Indian' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Mother Tongue</label><input type="text" name="mother_tongue" value="{{ $student->mother_tongue }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Marital Status</label>
-                    <select name="marital_status" class="w-full p-2 border border-slate-300 rounded">
-                        <option value="Unmarried" {{ $student->marital_status == 'Unmarried' ? 'selected' : '' }}>Unmarried</option>
-                        <option value="Married" {{ $student->marital_status == 'Married' ? 'selected' : '' }}>Married</option>
-                        <option value="Divorced" {{ $student->marital_status == 'Divorced' ? 'selected' : '' }}>Divorced</option>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Community</label>
+                    @php
+                        $communityList = $communities ?? \App\Models\Community::active()->get();
+                        $selectedCommunity = $student->community ?? $student->nationality ?? '';
+                    @endphp
+                    <select name="community" class="w-full p-2 border border-slate-300 rounded bg-white">
+                        <option value="">Select Community</option>
+                        @foreach($communityList as $comm)
+                            <option value="{{ $comm->name }}" {{ strcasecmp($selectedCommunity, $comm->name) === 0 ? 'selected' : '' }}>{{ $comm->name }}</option>
+                        @endforeach
+                        @if($selectedCommunity && !$communityList->contains('name', $selectedCommunity))
+                            <option value="{{ $selectedCommunity }}" selected>{{ $selectedCommunity }}</option>
+                        @endif
                     </select>
                 </div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Mother Tongue</label><input type="text" name="mother_tongue" value="{{ $student->mother_tongue }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Identification Mark</label><input type="text" name="identification_mark" value="{{ $student->identification_mark }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
                 <div class="col-span-1 md:col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Employment Exchange Registration Number <span class="text-xs font-normal lowercase">(Optional)</span></label><input type="text" name="employment_exchange_no" value="{{ $student->employment_exchange_no }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Permanent Resident of Assam <span class="text-red-500">*</span></label>
-                    <select name="is_permanent_resident_of_assam" required class="w-full p-2 border border-slate-300 rounded">
-                        <option value="">Select Yes/No</option>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Permanent Resident of Assam</label>
+                    <select name="is_permanent_resident_of_assam" class="w-full p-2 border border-slate-300 rounded">
+                        <option value="">Select (Optional)</option>
                         <option value="1" {{ $student->is_permanent_resident_of_assam === true ? 'selected' : '' }}>Yes</option>
                         <option value="0" {{ $student->is_permanent_resident_of_assam === false ? 'selected' : '' }}>No</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTC Resident <span class="text-red-500">*</span></label>
-                    <select name="is_btc_resident" required class="w-full p-2 border border-slate-300 rounded">
-                        <option value="">Select Yes/No</option>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTC Resident</label>
+                    <select name="is_btc_resident" class="w-full p-2 border border-slate-300 rounded">
+                        <option value="">Select (Optional)</option>
                         <option value="1" {{ $student->is_btc_resident === true ? 'selected' : '' }}>Yes</option>
                         <option value="0" {{ $student->is_btc_resident === false ? 'selected' : '' }}>No</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Ex-Serviceman <span class="text-red-500">*</span></label>
-                    <select name="is_ex_serviceman" required class="w-full p-2 border border-slate-300 rounded">
-                        <option value="">Select Yes/No</option>
-                        <option value="1" {{ $student->is_ex_serviceman === true ? 'selected' : '' }}>Yes</option>
-                        <option value="0" {{ $student->is_ex_serviceman === false ? 'selected' : '' }}>No</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">NCC Certificate <span class="text-red-500">*</span></label>
-                    <select name="ncc_certificate" required class="w-full p-2 border border-slate-300 rounded">
-                        <option value="None" {{ strcasecmp($student->ncc_certificate ?? '', 'None') === 0 || empty($student->ncc_certificate) ? 'selected' : '' }}>None</option>
-                        <option value="B Certificate" {{ $student->ncc_certificate === 'B Certificate' ? 'selected' : '' }}>B Certificate</option>
-                        <option value="C Certificate" {{ $student->ncc_certificate === 'C Certificate' ? 'selected' : '' }}>C Certificate</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">National Sports Achievement <span class="text-red-500">*</span></label>
-                    <select name="has_national_sports_achievement" required class="w-full p-2 border border-slate-300 rounded">
-                        <option value="">Select Yes/No</option>
-                        <option value="1" {{ $student->has_national_sports_achievement === true ? 'selected' : '' }}>Yes</option>
-                        <option value="0" {{ $student->has_national_sports_achievement === false ? 'selected' : '' }}>No</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Fine Arts/Cultural Achievement <span class="text-red-500">*</span></label>
-                    <select name="has_fine_arts_cultural_achievement" required class="w-full p-2 border border-slate-300 rounded">
-                        <option value="">Select Yes/No</option>
-                        <option value="1" {{ $student->has_fine_arts_cultural_achievement === true ? 'selected' : '' }}>Yes</option>
-                        <option value="0" {{ $student->has_fine_arts_cultural_achievement === false ? 'selected' : '' }}>No</option>
-                    </select>
-                </div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Alternate Mobile</label><input type="text" name="alternate_mobile_number" value="{{ $student->alternate_mobile_number }}" class="w-full p-2 border border-slate-300 rounded"></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">What’s App Number</label><input type="text" name="alternate_mobile_number" value="{{ $student->alternate_mobile_number }}" class="w-full p-2 border border-slate-300 rounded"></div>
             </div>
         </div>
 
@@ -133,30 +109,42 @@
             </h3>
             
              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <!-- Present -->
-                 <div class="space-y-4">
-                    <h4 class="font-bold text-slate-600 bg-slate-50 p-2 rounded">Present Address</h4>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vill/Town</label><input type="text" name="present_village_town" value="{{ $student->address->present_village_town ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">District</label><input type="text" name="present_district" value="{{ $student->address->present_district ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">State</label><input type="text" name="present_state" value="{{ $student->address->present_state ?? 'ASSAM' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Country</label><input type="text" name="present_country" value="{{ $student->address->present_country ?? 'India' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">PIN</label><input type="text" name="present_pin_code" value="{{ $student->address->present_pin_code ?? '' }}" class="w-full p-2 border border-slate-300 rounded"></div>
-                 </div>
-
                  <!-- Permanent -->
                  <div class="space-y-4">
+                    <h4 class="font-bold text-slate-600 bg-slate-50 p-2 rounded">Permanent Address</h4>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vill/Town</label><input type="text" name="permanent_village_town" value="{{ $student->address->permanent_village_town ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Permanent Post Office</label><input type="text" name="permanent_city" value="{{ $student->address->permanent_city ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Permanent Police Station</label><input type="text" name="permanent_country" value="{{ $student->address->permanent_country ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">District</label>
+                        <select name="permanent_district" class="w-full p-2 border border-slate-300 rounded uppercase">
+                            <option value="">Select District</option>
+                            @foreach(['Kokrajhar', 'Chirang', 'Baksa', 'Tamulpur', 'Udalguri'] as $dist)
+                                <option value="{{ $dist }}" {{ strcasecmp($student->address->permanent_district ?? '', $dist) === 0 ? 'selected' : '' }}>{{ $dist }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTCLA Constituency</label><input type="text" name="permanent_street" value="{{ $student->address->permanent_street ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">State</label><input type="text" name="permanent_state" value="Assam" readonly class="w-full p-2 border border-slate-300 rounded uppercase bg-slate-100 text-slate-600 font-semibold cursor-not-allowed"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">PIN</label><input type="text" name="permanent_pin_code" value="{{ $student->address->permanent_pin_code ?? '' }}" class="w-full p-2 border border-slate-300 rounded"></div>
+                 </div>
+
+                 <!-- Current / Communication Address -->
+                 <div class="space-y-4">
                     <div class="flex items-center justify-between bg-slate-50 p-2 rounded">
-                        <h4 class="font-bold text-slate-600">Permanent Address</h4>
+                        <h4 class="font-bold text-slate-600">Current Address / Communication Address</h4>
                         <div class="flex items-center">
-                            <input type="checkbox" id="sameAsPresent" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
-                            <label for="sameAsPresent" class="ml-2 text-xs font-bold text-slate-500 uppercase cursor-pointer select-none">Same as Present</label>
+                            <input type="checkbox" id="sameAsPermanent" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="sameAsPermanent" class="ml-2 text-xs font-bold text-slate-500 uppercase cursor-pointer select-none">Same as Permanent</label>
                         </div>
                     </div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vill/Town</label><input type="text" name="permanent_village_town" value="{{ $student->address->permanent_village_town ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">District</label><input type="text" name="permanent_district" value="{{ $student->address->permanent_district ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">State</label><input type="text" name="permanent_state" value="{{ $student->address->permanent_state ?? 'ASSAM' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Country</label><input type="text" name="permanent_country" value="{{ $student->address->permanent_country ?? 'India' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">PIN</label><input type="text" name="permanent_pin_code" value="{{ $student->address->permanent_pin_code ?? '' }}" class="w-full p-2 border border-slate-300 rounded"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vill/Town</label><input type="text" name="present_village_town" value="{{ $student->address->present_village_town ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Street</label><input type="text" name="present_street" value="{{ $student->address->present_street ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Present Post Office</label><input type="text" name="present_city" value="{{ $student->address->present_city ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">District</label><input type="text" name="present_district" value="{{ $student->address->present_district ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">State</label><input type="text" name="present_state" value="{{ $student->address->present_state ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Present Police Station</label><input type="text" name="present_country" value="{{ $student->address->present_country ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">PIN</label><input type="text" name="present_pin_code" value="{{ $student->address->present_pin_code ?? '' }}" class="w-full p-2 border border-slate-300 rounded"></div>
                  </div>
              </div>
         </div>
@@ -176,7 +164,7 @@
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Mobile</label><input type="text" name="father_mobile" value="{{ $student->parent->father_mobile ?? '' }}" class="w-full p-2 border border-slate-300 rounded"></div>
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label><input type="text" name="father_email" value="{{ $student->parent->father_email ?? '' }}" class="w-full p-2 border border-slate-300 rounded"></div>
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Occupation</label><input type="text" name="father_occupation" value="{{ $student->parent->father_occupation ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
-                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Annual Income</label><input type="number" name="father_annual_income" value="{{ $student->parent->father_annual_income ?? '' }}" class="w-full p-2 border border-slate-300 rounded"></div>
+                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Family income per (per anum):</label><input type="number" name="father_annual_income" value="{{ $student->parent->father_annual_income ?? '' }}" class="w-full p-2 border border-slate-300 rounded"></div>
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Qualification</label><input type="text" name="father_qualification" value="{{ $student->parent->father_qualification ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
                     </div>
                 </div>
@@ -302,8 +290,6 @@
                 {value: 'HS', text: 'HS'},
                 {value: 'GRADUATION', text: 'Graduation'},
                 {value: 'POST GRADUATION', text: 'Post Graduation'},
-                {value: 'B.ED.', text: 'B.Ed.'},
-                {value: 'PARANGAT', text: 'Parangat'},
                 {value: 'OTHER', text: 'Other'}
             ],
             render: {
@@ -364,18 +350,17 @@
     });
 
     // Address Checkbox Logic
-    const sameAsPresentCheckbox = document.getElementById('sameAsPresent');
-    if (sameAsPresentCheckbox) {
-        sameAsPresentCheckbox.addEventListener('change', function() {
+    const sameAsPermanentCheckbox = document.getElementById('sameAsPermanent');
+    if (sameAsPermanentCheckbox) {
+        sameAsPermanentCheckbox.addEventListener('change', function() {
             if (this.checked) {
-                const fields = ['village_town', 'district', 'state', 'country', 'pin_code'];
+                const fields = ['village_town', 'street', 'city', 'district', 'state', 'country', 'pin_code'];
                 fields.forEach(field => {
                     const present = document.querySelector(`[name="present_${field}"]`);
                     const permanent = document.querySelector(`[name="permanent_${field}"]`);
                     if (present && permanent) {
-                        permanent.value = present.value;
-                        // Optional: trigger input event if needed for validation
-                        permanent.dispatchEvent(new Event('input'));
+                        present.value = permanent.value;
+                        present.dispatchEvent(new Event('input'));
                     }
                 });
             }

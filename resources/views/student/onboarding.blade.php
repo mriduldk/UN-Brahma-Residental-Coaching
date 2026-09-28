@@ -81,19 +81,19 @@
                         <!-- Phone -->
                         <div>
                             <label for="phone_number" class="block text-xs font-bold text-slate-500 uppercase mb-1">Phone Number <span class="text-red-500">*</span></label>
-                            <input id="phone_number" name="phone_number" type="tel" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="10-digit Number" value="{{ auth()->user()->mobile_number }}">
+                            <input id="phone_number" name="phone_number" type="tel" required readonly class="w-full p-2 border border-slate-300 bg-slate-100 text-slate-500 cursor-not-allowed rounded outline-none transition" placeholder="10-digit Number" value="{{ auth()->user()->mobile_number }}">
                         </div>
 
                         <!-- Email -->
                         <div>
                             <label for="email" class="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
-                            <input id="email" name="email" type="email" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase" placeholder="email@example.com (Optional)" value="{{ auth()->user()->email }}">
+                            <input id="email" name="email" type="email" readonly class="w-full p-2 border border-slate-300 bg-slate-100 text-slate-500 cursor-not-allowed rounded outline-none transition uppercase" placeholder="email@example.com" value="{{ auth()->user()->email }}">
                         </div>
 
                         <!-- DOB -->
                         <div>
-                            <label for="dob" class="block text-xs font-bold text-slate-500 uppercase mb-1">Date of Birth</label>
-                            <input id="dob" name="dob" type="date" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" onchange="calculateAge()">
+                            <label for="dob" class="block text-xs font-bold text-slate-500 uppercase mb-1">Date of Birth <span class="text-red-500">*</span></label>
+                            <input id="dob" name="dob" type="date" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" onchange="calculateAge()">
                         </div>
 
                         <!-- Age (Auto-calculated) -->
@@ -104,18 +104,18 @@
 
                         <!-- Gender -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Gender</label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Gender <span class="text-red-500">*</span></label>
                             <div class="flex space-x-4 mt-2">
                                 <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 px-3 py-2 rounded hover:bg-slate-100 border border-transparent hover:border-slate-200 transition">
-                                    <input type="radio" name="gender" value="Male" class="text-blue-600 focus:ring-blue-500">
+                                    <input type="radio" name="gender" value="Male" required class="text-blue-600 focus:ring-blue-500">
                                     <span class="text-sm font-medium text-slate-700">Male</span>
                                 </label>
                                 <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 px-3 py-2 rounded hover:bg-slate-100 border border-transparent hover:border-slate-200 transition">
-                                    <input type="radio" name="gender" value="Female" class="text-blue-600 focus:ring-blue-500">
+                                    <input type="radio" name="gender" value="Female" required class="text-blue-600 focus:ring-blue-500">
                                     <span class="text-sm font-medium text-slate-700">Female</span>
                                 </label>
                                 <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 px-3 py-2 rounded hover:bg-slate-100 border border-transparent hover:border-slate-200 transition">
-                                    <input type="radio" name="gender" value="Other" class="text-blue-600 focus:ring-blue-500">
+                                    <input type="radio" name="gender" value="Other" required class="text-blue-600 focus:ring-blue-500">
                                     <span class="text-sm font-medium text-slate-700">Other</span>
                                 </label>
                             </div>
@@ -124,9 +124,9 @@
 
                         <!-- Category -->
                         <div>
-                            <label for="category" class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
-                            <select id="category" name="category" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                <option value="">Select</option>
+                            <label for="category" class="block text-xs font-bold text-slate-500 uppercase mb-1">Category <span class="text-red-500">*</span></label>
+                            <select id="category" name="category" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                <option value="">Select Category</option>
                                 <option value="General">General</option>
                                 <option value="SC">SC</option>
                                 <option value="ST">ST</option>
@@ -134,83 +134,6 @@
                                 <option value="MOBC">MOBC</option>
                             </select>
                         </div>
-
-                        <!-- PwD Checkbox -->
-                        <div class="col-span-1 md:col-span-2 pt-2">
-                            <label class="flex items-center space-x-3 cursor-pointer">
-                                <input type="checkbox" name="is_pwd" value="1" class="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 transition">
-                                <div>
-                                    <span class="text-sm font-bold text-slate-700">Are you a Person with Benchmark Disability (PwD)?</span>
-                                    <p class="text-xs text-slate-500 mt-0.5">Check this box if you hold a valid PwD certificate.</p>
-                                </div>
-                            </label>
-                        </div>
-
-                        <!-- Employment Exchange Number -->
-                        <div class="md:col-span-2">
-                            <label for="employment_exchange_no" class="block text-xs font-bold text-slate-500 uppercase mb-1">Employment Exchange Registration Number <span class="text-xs font-normal lowercase">(Optional)</span></label>
-                            <input id="employment_exchange_no" name="employment_exchange_no" type="text" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase" placeholder="Enter Registration Number" value="{{ old('employment_exchange_no') }}">
-                        </div>
-
-                        <!-- Residency -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Permanent Resident of Assam <span class="text-red-500">*</span></label>
-                                <select name="is_permanent_resident_of_assam" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                    <option value="">Select Yes/No</option>
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTC Resident <span class="text-red-500">*</span></label>
-                                <select name="is_btc_resident" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                    <option value="">Select Yes/No</option>
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Achievements & Services -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2 mt-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Ex-Serviceman <span class="text-red-500">*</span></label>
-                                <select name="is_ex_serviceman" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                    <option value="">Select Yes/No</option>
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">NCC Certificate <span class="text-red-500">*</span></label>
-                                <select name="ncc_certificate" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                    <option value="None">None</option>
-                                    <option value="B Certificate">B Certificate</option>
-                                    <option value="C Certificate">C Certificate</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">National Sports Achievement <span class="text-red-500">*</span></label>
-                                <select name="has_national_sports_achievement" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                    <option value="">Select Yes/No</option>
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Fine Arts/Cultural Achievement <span class="text-red-500">*</span></label>
-                                <select name="has_fine_arts_cultural_achievement" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                    <option value="">Select Yes/No</option>
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
-                                </select>
-                            </div>
-                        </div>
-
-
-
-
 
                     </div>
                 </div>

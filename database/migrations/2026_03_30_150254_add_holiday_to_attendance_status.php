@@ -12,8 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE student_attendances MODIFY COLUMN status ENUM('Present', 'Absent', 'Half Day', 'Late', 'Leave', 'Holiday') NOT NULL");
-        DB::statement("ALTER TABLE staff_attendances MODIFY COLUMN status ENUM('Present', 'Absent', 'Half Day', 'Late', 'Leave', 'Holiday') NOT NULL");
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'])) {
+            DB::statement("ALTER TABLE student_attendances MODIFY COLUMN status ENUM('Present', 'Absent', 'Half Day', 'Late', 'Leave', 'Holiday') NOT NULL");
+            DB::statement("ALTER TABLE staff_attendances MODIFY COLUMN status ENUM('Present', 'Absent', 'Half Day', 'Late', 'Leave', 'Holiday') NOT NULL");
+        }
     }
 
     /**

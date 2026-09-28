@@ -220,20 +220,15 @@
                     <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Date of Birth</span><span class="font-bold text-slate-800 text-base">{{ $s->dob ? \Carbon\Carbon::parse($s->dob)->format('d-m-Y') : 'N/A' }}</span></div>
                     <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Age</span><span class="font-bold text-slate-800 text-base">{{ $age }}</span></div>
                     <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Gender</span><span class="font-bold text-slate-800 text-base">{{ strtoupper($s->gender ?? 'N/A') }}</span></div>
-                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Marital Status</span><span class="font-bold text-slate-800 text-base">{{ strtoupper($s->marital_status ?? 'N/A') }}</span></div>
-                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Nationality</span><span class="font-bold text-slate-800 text-base">{{ strtoupper($s->nationality ?? 'N/A') }}</span></div>
+                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Community</span><span class="font-bold text-slate-800 text-base">{{ strtoupper($s->community ?? $s->nationality ?? 'N/A') }}</span></div>
                     <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Emp Exchange No</span><span class="font-bold text-slate-800 text-base">{{ $s->employment_exchange_no ?? 'N/A' }}</span></div>
-                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">PR of Assam</span><span class="font-bold text-slate-800 text-base">{{ $s->is_permanent_resident_of_assam ? 'YES' : 'NO' }}</span></div>
-                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">BTC Resident</span><span class="font-bold text-slate-800 text-base">{{ $s->is_btc_resident ? 'YES' : 'NO' }}</span></div>
+                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">PR of Assam</span><span class="font-bold text-slate-800 text-base">{{ !is_null($s->is_permanent_resident_of_assam) ? ($s->is_permanent_resident_of_assam ? 'YES' : 'NO') : 'N/A' }}</span></div>
+                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">BTC Resident</span><span class="font-bold text-slate-800 text-base">{{ !is_null($s->is_btc_resident) ? ($s->is_btc_resident ? 'YES' : 'NO') : 'N/A' }}</span></div>
                     <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Student Mobile</span><span class="font-bold text-slate-800 text-base">{{ $s->phone_number ?? 'N/A' }}</span></div>
-                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Alt. Mobile</span><span class="font-bold text-slate-800 text-base">{{ $s->alternate_mobile_number ?? 'N/A' }}</span></div>
+                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">What’s App Number</span><span class="font-bold text-slate-800 text-base">{{ $s->alternate_mobile_number ?? 'N/A' }}</span></div>
                     <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Email ID</span><span class="font-bold text-slate-800 text-base">{{ $s->email ?? 'N/A' }}</span></div>
                     <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Category</span><span class="font-bold text-slate-800 text-base">{{ strtoupper($s->category ?? 'N/A') }}</span></div>
                     <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">PwD</span><span class="font-bold text-slate-800 text-base">{{ $s->is_pwd ? 'YES' : 'NO' }}</span></div>
-                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Ex-Serviceman</span><span class="font-bold text-slate-800 text-base">{{ $s->is_ex_serviceman ? 'YES' : 'NO' }}</span></div>
-                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">NCC Certificate</span><span class="font-bold text-slate-800 text-base">{{ strtoupper($s->ncc_certificate ?? 'NO') }}</span></div>
-                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Sports Achievement</span><span class="font-bold text-slate-800 text-base">{{ $s->has_national_sports_achievement ? 'YES' : 'NO' }}</span></div>
-                    <div><span class="text-slate-400 block text-[10px] uppercase font-bold mb-1 tracking-tight">Cultural Achievement</span><span class="font-bold text-slate-800 text-base">{{ $s->has_fine_arts_cultural_achievement ? 'YES' : 'NO' }}</span></div>
                 </div>
             </section>
 
@@ -243,23 +238,26 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
                     <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm">
-                        <span class="text-xs font-bold text-blue-600 uppercase tracking-widest block mb-4 border-b border-blue-100 pb-2">Present Address</span>
+                        <span class="text-xs font-bold text-blue-600 uppercase tracking-widest block mb-4 border-b border-blue-100 pb-2">Permanent Address</span>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
+                            <div class="col-span-2 md:col-span-1"><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Village / Town</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_village_town ?? 'N/A' }}</p></div>
+                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Permanent Post Office</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_city ?? 'N/A' }}</p></div>
+                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Permanent Police Station</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_country ?? 'N/A' }}</p></div>
+                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">District</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_district ?? 'N/A' }}</p></div>
+                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">BTCLA Constituency</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_street ?? 'N/A' }}</p></div>
+                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">State</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_state ?? 'N/A' }}</p></div>
+                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Pin Code</span><p class="font-mono font-bold text-blue-600 bg-blue-50 w-fit px-1.5 rounded">{{ $application->application_address->permanent_pin_code ?? 'N/A' }}</p></div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm opacity-90 hover:opacity-100 transition-opacity">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-4 border-b border-slate-200 pb-2">Current Address / Communication Address</span>
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
                             <div class="col-span-2 md:col-span-1"><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Village / Town</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->present_village_town ?? 'N/A' }}</p></div>
                             <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">District</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->present_district ?? 'N/A' }}</p></div>
                             <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">State</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->present_state ?? 'N/A' }}</p></div>
-                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Country</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->present_country ?? 'N/A' }}</p></div>
-                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Pin Code</span><p class="font-mono font-bold text-blue-600 bg-blue-50 w-fit px-1.5 rounded">{{ $application->application_address->present_pin_code ?? 'N/A' }}</p></div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm opacity-90 hover:opacity-100 transition-opacity">
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-4 border-b border-slate-200 pb-2">Permanent Address</span>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
-                            <div class="col-span-2 md:col-span-1"><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Village / Town</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_village_town ?? 'N/A' }}</p></div>
-                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">District</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_district ?? 'N/A' }}</p></div>
-                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">State</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_state ?? 'N/A' }}</p></div>
-                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Country</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->permanent_country ?? 'N/A' }}</p></div>
-                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Pin Code</span><p class="font-mono font-bold text-slate-600 bg-slate-100 w-fit px-1.5 rounded">{{ $application->application_address->permanent_pin_code ?? 'N/A' }}</p></div>
+                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Present Post Office</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->present_city ?? 'N/A' }}</p></div>
+                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Present Police Station</span><p class="font-bold text-slate-700 leading-tight">{{ $application->application_address->present_country ?? 'N/A' }}</p></div>
+                            <div><span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Pin Code</span><p class="font-mono font-bold text-slate-600 bg-slate-100 w-fit px-1.5 rounded">{{ $application->application_address->present_pin_code ?? 'N/A' }}</p></div>
                         </div>
                     </div>
                 </div>
@@ -324,22 +322,11 @@
                             'hs_admit_card' => 'HS Admit Card',
                             'graduation_admit_card' => 'Graduation Admit Card',
                             'post_graduation_admit_card' => 'PG Admit Card',
-                            'transfer_certificate' => 'Transfer Certificate',
                             'caste_certificate' => 'Caste Certificate',
                             'income_certificate' => 'Income Certificate',
                             'address_proof' => 'Address Proof',
                             'aadhaar_card' => 'Aadhaar Card',
-                            'passport' => 'Passport',
-                            'bed_parangat_marksheet' => 'B.Ed./Parangat Mark Sheets',
-                            'bed_parangat_certificate' => 'B.Ed./Parangat Certificate',
-                            'tet_certificate' => 'TET Certificate',
-                            'pwd_certificate' => 'PwD Certificate',
-                            'ex_serviceman_certificate' => 'Ex-Serviceman Certificate',
-                            'ncc_certificate_doc' => 'NCC Certificate',
-                            'sports_certificate' => 'Sports Certificate',
-                            'cultural_certificate' => 'Fine Arts/Cultural Certificate',
-                            'btc_residential_certificate' => 'BTC Residential Certificate',
-                            'language_diploma_certificate' => 'Language Diploma Certificate',
+                            'btc_residential_certificate' => 'Permanent Resident Certificate',
                         ];
                         $hasDocs = false;
                         if($docs) {

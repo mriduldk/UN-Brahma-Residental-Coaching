@@ -44,11 +44,10 @@
                     <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Gender</span><span class="text-slate-700 font-medium">{{ $student->gender ?? 'N/A' }}</span></div>
                     
                     <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Category</span><span class="text-slate-700 font-medium">{{ $student->category ?? 'N/A' }}</span></div>
-                    <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Marital Status</span><span class="text-slate-700 font-medium">{{ $student->marital_status ?? 'N/A' }}</span></div>
                     <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Religion</span><span class="text-slate-700 font-medium">{{ $student->religion ?? 'N/A' }}</span></div>
                     
                     <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Blood Group</span><span class="text-slate-700 font-medium">{{ $student->blood_group ?? 'N/A' }}</span></div>
-                    <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Nationality</span><span class="text-slate-700 font-medium">{{ $student->nationality ?? 'N/A' }}</span></div>
+                    <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Community</span><span class="text-slate-700 font-medium">{{ $student->community ?? $student->nationality ?? 'N/A' }}</span></div>
                     <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Mother Tongue</span><span class="text-slate-700 font-medium">{{ $student->mother_tongue ?? 'N/A' }}</span></div>
                     
                     <div class="md:col-span-3"><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Identification Mark</span><span class="text-slate-700 font-medium">{{ $student->identification_mark ?? 'N/A' }}</span></div>
@@ -56,7 +55,7 @@
                 <div class="pt-4 border-t border-slate-50">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Mobile Number</span><span class="text-slate-700 font-medium">{{ $student->phone_number }}</span></div>
-                        <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Alt. Mobile</span><span class="text-slate-700 font-medium">{{ $student->alternate_mobile_number ?? 'N/A' }}</span></div>
+                        <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">What’s App Number</span><span class="text-slate-700 font-medium">{{ $student->alternate_mobile_number ?? 'N/A' }}</span></div>
                         <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Email Address</span><span class="text-slate-700 font-medium">{{ $student->email }}</span></div>
                     </div>
                 </div>
@@ -80,7 +79,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Occupation</span><span class="text-slate-700 font-medium uppercase">{{ $student->parent?->father_occupation ?? 'N/A' }}</span></div>
-                            <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Income</span><span class="text-slate-700 font-medium">₹ {{ $student->parent?->father_annual_income ?? 'N/A' }}</span></div>
+                            <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Family Income (p.a.)</span><span class="text-slate-700 font-medium">₹ {{ $student->parent?->father_annual_income ?? 'N/A' }}</span></div>
                         </div>
                         <div><span class="text-xs font-bold text-slate-400 uppercase block mb-1">Qualification</span><span class="text-slate-700 font-medium uppercase">{{ $student->parent?->father_qualification ?? 'N/A' }}</span></div>
                     </div>
@@ -129,22 +128,28 @@
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-blue-50 p-5 rounded-lg border border-blue-100 relative">
-                <div class="absolute top-4 right-4 text-blue-300"><i data-lucide="map" size="24"></i></div>
-                <span class="text-xs font-bold text-blue-600 uppercase block mb-2">Present Address</span>
+                <span class="text-xs font-bold text-blue-600 uppercase block mb-2">Permanent Address</span>
                 <p class="text-sm text-slate-700 leading-relaxed font-medium uppercase">
-                    Vill/Town: {{ $student->address?->present_village_town ?? 'N/A' }}<br>
-                    Dist: {{ $student->address?->present_district ?? 'N/A' }}<br>
-                    State: {{ $student->address?->present_state ?? 'N/A' }}<br>
-                    Country: {{ $student->address?->present_country ?? 'N/A' }}, PIN: {{ $student->address?->present_pin_code ?? 'N/A' }}
+                    Vill/Town: {{ $student->address?->permanent_village_town ?? 'N/A' }}<br>
+                    P.O.: {{ $student->address?->permanent_city ?? 'N/A' }}<br>
+                    P.S.: {{ $student->address?->permanent_country ?? 'N/A' }}<br>
+                    Dist: {{ $student->address?->permanent_district ?? 'N/A' }}<br>
+                    BTCLA Constituency: {{ $student->address?->permanent_street ?? 'N/A' }}<br>
+                    State: {{ $student->address?->permanent_state ?? 'N/A' }}<br>
+                    PIN: {{ $student->address?->permanent_pin_code ?? 'N/A' }}
                 </p>
             </div>
             <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 relative">
-                <span class="text-xs font-bold text-slate-500 uppercase block mb-2">Permanent Address</span>
+                <div class="absolute top-4 right-4 text-slate-400"><i data-lucide="map" size="24"></i></div>
+                <span class="text-xs font-bold text-slate-500 uppercase block mb-2">Current Address / Communication Address</span>
                 <p class="text-sm text-slate-600 leading-relaxed uppercase">
-                    Vill/Town: {{ $student->address?->permanent_village_town ?? 'N/A' }}<br>
-                    Dist: {{ $student->address?->permanent_district ?? 'N/A' }}<br>
-                    State: {{ $student->address?->permanent_state ?? 'N/A' }}<br>
-                    Country: {{ $student->address?->permanent_country ?? 'N/A' }}, PIN: {{ $student->address?->permanent_pin_code ?? 'N/A' }}
+                    Vill/Town: {{ $student->address?->present_village_town ?? 'N/A' }}<br>
+                    @if($student->address?->present_street)Street: {{ $student->address?->present_street }}<br>@endif
+                    P.O.: {{ $student->address?->present_city ?? 'N/A' }}<br>
+                    P.S.: {{ $student->address?->present_country ?? 'N/A' }}<br>
+                    Dist: {{ $student->address?->present_district ?? 'N/A' }}<br>
+                    State: {{ $student->address?->present_state ?? 'N/A' }}<br>
+                    PIN: {{ $student->address?->present_pin_code ?? 'N/A' }}
                 </p>
             </div>
         </div>
@@ -224,7 +229,7 @@
                 <div class="space-y-4">
                     <h4 class="text-sm font-bold text-slate-700 mb-3 flex items-center"><span class="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>Identity & Proofs</h4>
                     <ul class="space-y-3">
-                        @foreach(['aadhaar_card' => 'Aadhaar Card', 'passport' => 'Passport', 'caste_certificate' => 'Caste Certificate', 'income_certificate' => 'Income Certificate', 'address_proof' => 'Address Proof', 'transfer_certificate' => 'Transfer Certificate', 'signature' => 'Signature'] as $field => $label)
+                        @foreach(['aadhaar_card' => 'Aadhaar Card', 'caste_certificate' => 'Caste Certificate', 'income_certificate' => 'Income Certificate', 'address_proof' => 'Address Proof', 'signature' => 'Signature'] as $field => $label)
                             @if($student->document->$field)
                             <li class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                                 <div class="flex items-center space-x-3 overflow-hidden">

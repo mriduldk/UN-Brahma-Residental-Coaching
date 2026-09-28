@@ -948,19 +948,16 @@
                             <span class="text-sm font-medium text-slate-900">{{ $application->application_student->religion ?? '-' }}</span>
                         </div>
                          <div>
-                            <span class="text-xs text-slate-500 block mb-1">Nationality</span>
-                            <span class="text-sm font-medium text-slate-900">{{ $application->application_student->nationality ?? '-' }}</span>
+                            <span class="text-xs text-slate-500 block mb-1">Community</span>
+                            <span class="text-sm font-medium text-slate-900">{{ $application->application_student->community ?? $application->application_student->nationality ?? '-' }}</span>
                         </div>
-                         <div>
-                            <span class="text-xs text-slate-500 block mb-1">Marital Status</span>
-                            <span class="text-sm font-medium text-slate-900">{{ $application->application_student->marital_status ?? '-' }}</span>
-                        </div>
+
                         <div>
                             <span class="text-xs text-slate-500 block mb-1">Mobile Number</span>
                             <span class="text-sm font-medium text-slate-900 font-mono">{{ $application->application_student->phone_number ?? '-' }}</span>
                         </div>
                          <div>
-                            <span class="text-xs text-slate-500 block mb-1">Alternate Mobile</span>
+                            <span class="text-xs text-slate-500 block mb-1">What’s App Number</span>
                             <span class="text-sm font-medium text-slate-900 font-mono">{{ $application->application_student->alternate_mobile_number ?? '-' }}</span>
                         </div>
                          <div class="col-span-1 md:col-span-2">
@@ -980,6 +977,9 @@
                             <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Father</span>
                             <p class="text-sm font-bold text-slate-900 mb-1">{{ $application->application_parent->father_name ?? '-' }}</p>
                             <p class="text-xs text-slate-600 mb-1">{{ $application->application_parent->father_occupation ?? 'Occupation N/A' }}</p>
+                            @if(!empty($application->application_parent->father_annual_income))
+                            <p class="text-xs text-slate-600 mb-1">Family Income (p.a.): ₹{{ number_format($application->application_parent->father_annual_income, 2) }}</p>
+                            @endif
                              <p class="text-xs text-slate-500 font-mono">{{ $application->application_parent->father_mobile ?? '' }}</p>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-lg">
@@ -1008,18 +1008,20 @@
                              <h4 class="text-xs font-semibold text-blue-600 uppercase mb-3">Permanent Address</h4>
                              <div class="text-sm text-slate-700 space-y-1">
                                 <p><span class="text-slate-500 w-20 inline-block">Village/Town:</span> {{ $application->application_address->permanent_village_town }}</p>
-                                <p><span class="text-slate-500 w-20 inline-block">Street:</span> {{ $application->application_address->permanent_street ?? '-' }}</p>
-                                <p><span class="text-slate-500 w-20 inline-block">City:</span> {{ $application->application_address->permanent_city ?? '-' }}</p>
+                                <p><span class="text-slate-500 w-24 inline-block">Post Office:</span> {{ $application->application_address->permanent_city ?? '-' }}</p>
+                                <p><span class="text-slate-500 w-24 inline-block">Police Station:</span> {{ $application->application_address->permanent_country ?? '-' }}</p>
                                 <p><span class="text-slate-500 w-20 inline-block">District:</span> {{ $application->application_address->permanent_district }}</p>
+                                <p><span class="text-slate-500 inline-block mr-2">BTCLA Constituency:</span> {{ $application->application_address->permanent_street ?? '-' }}</p>
                                 <p><span class="text-slate-500 w-20 inline-block">State:</span> {{ $application->application_address->permanent_state }} - {{ $application->application_address->permanent_pin_code }}</p>
                              </div>
                         </div>
                         <div>
-                             <h4 class="text-xs font-semibold text-green-600 uppercase mb-3">Present Address</h4>
+                             <h4 class="text-xs font-semibold text-green-600 uppercase mb-3">Current Address / Communication Address</h4>
                              <div class="text-sm text-slate-700 space-y-1">
                                 <p><span class="text-slate-500 w-20 inline-block">Village/Town:</span> {{ $application->application_address->present_village_town }}</p>
                                 <p><span class="text-slate-500 w-20 inline-block">Street:</span> {{ $application->application_address->present_street ?? '-' }}</p>
-                                <p><span class="text-slate-500 w-20 inline-block">City:</span> {{ $application->application_address->present_city ?? '-' }}</p>
+                                <p><span class="text-slate-500 w-24 inline-block">Post Office:</span> {{ $application->application_address->present_city ?? '-' }}</p>
+                                <p><span class="text-slate-500 w-24 inline-block">Police Station:</span> {{ $application->application_address->present_country ?? '-' }}</p>
                                 <p><span class="text-slate-500 w-20 inline-block">District:</span> {{ $application->application_address->present_district }}</p>
                                 <p><span class="text-slate-500 w-20 inline-block">State:</span> {{ $application->application_address->present_state }} - {{ $application->application_address->present_pin_code }}</p>
                              </div>
@@ -1115,16 +1117,7 @@
                             'caste_certificate' => 'Caste Certificate',
                             'income_certificate' => 'Income Certificate',
                             'address_proof' => 'Address Proof',
-                            'bed_parangat_marksheet' => 'B.Ed./Parangat Mark Sheets',
-                            'bed_parangat_certificate' => 'B.Ed./Parangat Certificate',
-                            'tet_certificate' => 'TET Certificate',
-                            'pwd_certificate' => 'PwD Certificate',
-                            'ex_serviceman_certificate' => 'Ex-Serviceman Certificate',
-                            'ncc_certificate_doc' => 'NCC Certificate',
-                            'sports_certificate' => 'Sports Certificate',
-                            'cultural_certificate' => 'Fine Arts/Cultural Certificate',
-                            'btc_residential_certificate' => 'BTC Residential Certificate',
-                            'language_diploma_certificate' => 'Language Diploma Certificate',
+                            'btc_residential_certificate' => 'Permanent Resident Certificate',
                         ];
                         $hasDocs = false;
                     @endphp

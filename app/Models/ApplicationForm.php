@@ -106,9 +106,54 @@ class ApplicationForm extends Model
             return false;
         }
 
+        // Fields removed from application forms
+        if (in_array($field, ['marital_status', 'is_ex_serviceman', 'ncc_certificate', 'has_national_sports_achievement', 'has_fine_arts_cultural_achievement'])) {
+            return false;
+        }
+
+        // Documents removed from application forms
+        if ($section === 'documents' && in_array($field, [
+            'passport',
+            'transfer_certificate',
+            'bed_parangat_marksheet',
+            'bed_parangat_certificate',
+            'tet_certificate',
+            'pwd_certificate',
+            'ex_serviceman_certificate',
+            'ncc_certificate_doc',
+            'sports_certificate',
+            'cultural_certificate',
+            'language_diploma_certificate',
+        ])) {
+            return false;
+        }
+
         $sectionFields = $this->field_config[$section]['fields'] ?? [];
+
+        if ($field === 'community' && in_array('nationality', $sectionFields)) {
+            return true;
+        }
+        if ($field === 'nationality' && in_array('community', $sectionFields)) {
+            return true;
+        }
+        if ($section === 'parents' && $field === 'father_annual_income') {
+            return true;
+        }
+        if ($section === 'personal' && $field === 'alternate_mobile_number') {
+            return true;
+        }
+
         return in_array($field, $sectionFields);
     }
+
+    public function getDefaultQualifications(): array
+    {
+        if (isset($this->field_config['academic']['default_qualifications']) && is_array($this->field_config['academic']['default_qualifications']) && !empty($this->field_config['academic']['default_qualifications'])) {
+            return $this->field_config['academic']['default_qualifications'];
+        }
+        return ['HSLC', 'HS', 'GRADUATION'];
+    }
+
     public function formLinks()
     {
         return $this->hasMany(FormLink::class);

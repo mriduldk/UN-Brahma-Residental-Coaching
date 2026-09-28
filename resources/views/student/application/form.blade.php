@@ -29,10 +29,6 @@
             $steps[] = ['number' => 2, 'id' => 'address', 'label' => 'Address'];
         }
         
-        if($form->isSectionEnabled('bank')) {
-            $steps[] = ['number' => 3, 'id' => 'bank', 'label' => 'Bank'];
-        }
-        
         if($form->isSectionEnabled('academic')) {
             $steps[] = ['number' => 4, 'id' => 'academic', 'label' => 'Academic'];
         }
@@ -95,7 +91,7 @@
                 @if($form->isFieldVisible('personal', 'phone_number'))
                 <div>
                      <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Phone Number <span class="text-red-500">*</span></label>
-                     <input type="text" name="phone_number" required value="{{ $existingApp?->application_student?->phone_number ?? $student->phone_number ?? auth()->user()->mobile_number ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                     <input type="text" name="phone_number" required value="{{ $student->phone_number ?? auth()->user()->mobile_number ?? $existingApp?->application_student?->phone_number ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500 bg-slate-100 text-slate-500 cursor-not-allowed" readonly>
                 </div>
                 @endif
                 
@@ -152,17 +148,7 @@
                 </div>
                 @endif
 
-                @if($form->isFieldVisible('personal', 'marital_status'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Marital Status <span class="text-red-500">*</span></label>
-                    <select name="marital_status" required class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                        <option value="">Select</option>
-                        @foreach(['Unmarried', 'Married', 'Divorced'] as $status)
-                             <option value="{{ $status }}" {{ strcasecmp($existingApp?->application_student?->marital_status ?? $student->marital_status ?? '', $status) === 0 ? 'selected' : '' }}>{{ $status }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                 @endif
+
 
                 @if($form->isFieldVisible('personal', 'mother_tongue'))
                 <div>
@@ -171,10 +157,23 @@
                 </div>
                 @endif
 
-                @if($form->isFieldVisible('personal', 'nationality'))
+                @if($form->isFieldVisible('personal', 'community') || $form->isFieldVisible('personal', 'nationality'))
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nationality <span class="text-red-500">*</span></label>
-                    <input type="text" name="nationality" required value="{{ $existingApp?->application_student?->nationality ?? $student->nationality ?? 'Indian' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Community <span class="text-red-500">*</span></label>
+                    @php
+                        $communityList = $communities ?? \App\Models\Community::active()->get();
+                        $selectedCommunity = $existingApp?->application_student?->community ?? $existingApp?->application_student?->nationality ?? $student->community ?? $student->nationality ?? '';
+                    @endphp
+                    <select name="community" id="community_select" required class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500 bg-white" onchange="const natInput = document.getElementById('nationality_input'); if(natInput) natInput.value = this.value;">
+                        <option value="">Select Community</option>
+                        @foreach($communityList as $comm)
+                            <option value="{{ $comm->name }}" {{ strcasecmp($selectedCommunity, $comm->name) === 0 ? 'selected' : '' }}>{{ $comm->name }}</option>
+                        @endforeach
+                        @if($selectedCommunity && !$communityList->contains('name', $selectedCommunity))
+                            <option value="{{ $selectedCommunity }}" selected>{{ $selectedCommunity }}</option>
+                        @endif
+                    </select>
+                    <input type="hidden" name="nationality" id="nationality_input" value="{{ $selectedCommunity }}">
                 </div>
                 @endif
 
@@ -199,8 +198,8 @@
 
                 @if($form->isFieldVisible('personal', 'alternate_mobile_number'))
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Alternate Mobile No</label>
-                    <input type="text" name="alternate_mobile_number" value="{{ $existingApp?->application_student?->alternate_mobile_number ?? $student->alternate_mobile_number ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">What’s App Number <span class="text-red-500">*</span></label>
+                    <input type="text" name="alternate_mobile_number" required value="{{ $existingApp?->application_student?->alternate_mobile_number ?? $student->alternate_mobile_number ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
                 </div>
                 @endif
 
@@ -225,9 +224,9 @@
 
                 @if($form->isFieldVisible('personal', 'is_permanent_resident_of_assam'))
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Permanent Resident of Assam <span class="text-red-500">*</span></label>
-                    <select name="is_permanent_resident_of_assam" required class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                        <option value="">Select Yes/No</option>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Permanent Resident of Assam</label>
+                    <select name="is_permanent_resident_of_assam" class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        <option value="">Select (Optional)</option>
                         <option value="1" {{ ($existingApp?->application_student?->is_permanent_resident_of_assam ?? $student->is_permanent_resident_of_assam) === true ? 'selected' : '' }}>Yes</option>
                         <option value="0" {{ ($existingApp?->application_student?->is_permanent_resident_of_assam ?? $student->is_permanent_resident_of_assam) === false ? 'selected' : '' }}>No</option>
                     </select>
@@ -236,58 +235,16 @@
 
                 @if($form->isFieldVisible('personal', 'is_btc_resident'))
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTC Resident <span class="text-red-500">*</span></label>
-                    <select name="is_btc_resident" required class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                        <option value="">Select Yes/No</option>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTC Resident</label>
+                    <select name="is_btc_resident" class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        <option value="">Select (Optional)</option>
                         <option value="1" {{ ($existingApp?->application_student?->is_btc_resident ?? $student->is_btc_resident) === true ? 'selected' : '' }}>Yes</option>
                         <option value="0" {{ ($existingApp?->application_student?->is_btc_resident ?? $student->is_btc_resident) === false ? 'selected' : '' }}>No</option>
                     </select>
                 </div>
                 @endif
 
-                @if($form->isFieldVisible('personal', 'is_ex_serviceman'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Ex-Serviceman <span class="text-red-500">*</span></label>
-                    <select name="is_ex_serviceman" required class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                        <option value="">Select Yes/No</option>
-                        <option value="1" {{ ($existingApp?->application_student?->is_ex_serviceman ?? $student->is_ex_serviceman) === true ? 'selected' : '' }}>Yes</option>
-                        <option value="0" {{ ($existingApp?->application_student?->is_ex_serviceman ?? $student->is_ex_serviceman) === false ? 'selected' : '' }}>No</option>
-                    </select>
-                </div>
-                @endif
 
-                @if($form->isFieldVisible('personal', 'ncc_certificate'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">NCC Certificate <span class="text-red-500">*</span></label>
-                    <select name="ncc_certificate" required class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                        <option value="None" {{ strcasecmp($existingApp?->application_student?->ncc_certificate ?? $student->ncc_certificate ?? '', 'None') === 0 || empty($existingApp?->application_student?->ncc_certificate ?? $student->ncc_certificate ?? '') ? 'selected' : '' }}>None</option>
-                        <option value="B Certificate" {{ strcasecmp($existingApp?->application_student?->ncc_certificate ?? $student->ncc_certificate ?? '', 'B Certificate') === 0 ? 'selected' : '' }}>B Certificate</option>
-                        <option value="C Certificate" {{ strcasecmp($existingApp?->application_student?->ncc_certificate ?? $student->ncc_certificate ?? '', 'C Certificate') === 0 ? 'selected' : '' }}>C Certificate</option>
-                    </select>
-                </div>
-                @endif
-
-                @if($form->isFieldVisible('personal', 'has_national_sports_achievement'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">National Sports Achievement <span class="text-red-500">*</span></label>
-                    <select name="has_national_sports_achievement" required class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                        <option value="">Select Yes/No</option>
-                        <option value="1" {{ ($existingApp?->application_student?->has_national_sports_achievement ?? $student->has_national_sports_achievement) === true ? 'selected' : '' }}>Yes</option>
-                        <option value="0" {{ ($existingApp?->application_student?->has_national_sports_achievement ?? $student->has_national_sports_achievement) === false ? 'selected' : '' }}>No</option>
-                    </select>
-                </div>
-                @endif
-
-                @if($form->isFieldVisible('personal', 'has_fine_arts_cultural_achievement'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Fine Arts/Cultural Achievement <span class="text-red-500">*</span></label>
-                    <select name="has_fine_arts_cultural_achievement" required class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                        <option value="">Select Yes/No</option>
-                        <option value="1" {{ ($existingApp?->application_student?->has_fine_arts_cultural_achievement ?? $student->has_fine_arts_cultural_achievement) === true ? 'selected' : '' }}>Yes</option>
-                        <option value="0" {{ ($existingApp?->application_student?->has_fine_arts_cultural_achievement ?? $student->has_fine_arts_cultural_achievement) === false ? 'selected' : '' }}>No</option>
-                    </select>
-                </div>
-                @endif
             </div>
 
             <!-- Parent Details (if enabled) -->
@@ -321,8 +278,8 @@
                 
                  @if($form->isFieldVisible('parents', 'father_annual_income'))
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Father's Annual Income</label>
-                    <input type="number" name="father_annual_income" value="{{ $existingApp?->application_parent?->father_annual_income ?? $student->parent?->father_annual_income ?? '' }}" class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Family income per (per anum): <span class="text-red-500">*</span></label>
+                    <input type="number" name="father_annual_income" required value="{{ $existingApp?->application_parent?->father_annual_income ?? $student->parent?->father_annual_income ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
                 </div>
                 @endif
             </div>
@@ -406,107 +363,150 @@
             </h3>
 
             @if($form->isSectionEnabled('address'))
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Present Address -->
-                <div class="space-y-4" id="present-address-container">
-                    <h4 class="font-semibold text-blue-800 bg-blue-50 p-2 rounded">Present Address</h4>
-                    
-                    @if($form->isFieldVisible('address', 'present_village_town'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vill/Town <span class="text-red-500">*</span></label><input type="text" required name="present_village_town" id="pre_vill" value="{{ $existingApp?->application_address?->present_village_town ?? $student->address?->present_village_town ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
-                    
-                    @if($form->isFieldVisible('address', 'present_street'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Street <span class="text-red-500">*</span></label><input type="text" required name="present_street" value="{{ $existingApp?->application_address?->present_street ?? $student->address?->present_street ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
-
-                    @if($form->isFieldVisible('address', 'present_city'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">City <span class="text-red-500">*</span></label><input type="text" required name="present_city" value="{{ $existingApp?->application_address?->present_city ?? $student->address?->present_city ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
-
-                    @if($form->isFieldVisible('address', 'present_district'))
-                    @php
-                        $assamDistricts = [
-                            'Baksa', 'Barpeta', 'Bajali', 'Biswanath', 'Bongaigaon', 'Cachar', 'Charaideo', 
-                            'Chirang', 'Darrang', 'Dhemaji', 'Dhubri', 'Dibrugarh', 'Dima Hasao', 'Goalpara', 
-                            'Golaghat', 'Hailakandi', 'Hojai', 'Jorhat', 'Kamrup', 'Kamrup Metropolitan', 
-                            'Karbi Anglong', 'Karimganj', 'Kokrajhar', 'Lakhimpur', 'Majuli', 'Morigaon', 
-                            'Nagaon', 'Nalbari', 'Sivasagar', 'Sonitpur', 'South Salmara-Mankachar', 
-                            'Tamulpur', 'Tinsukia', 'Udalguri', 'West Karbi Anglong'
-                        ];
-                        $savedPresent = $existingApp?->application_address?->present_district ?? $student->address?->present_district ?? '';
-                    @endphp
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">District <span class="text-red-500">*</span></label>
-                        <select required name="present_district" id="pre_dist" class="district-tom-select w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                            <option value="">Select District</option>
-                            @foreach($assamDistricts as $dist)
-                                <option value="{{ $dist }}" {{ strcasecmp($savedPresent, $dist) === 0 ? 'selected' : '' }}>{{ $dist }}</option>
-                            @endforeach
-                        </select>
+            @php
+                $assamDistricts = [
+                    'Baksa', 'Barpeta', 'Bajali', 'Biswanath', 'Bongaigaon', 'Cachar', 'Charaideo', 
+                    'Chirang', 'Darrang', 'Dhemaji', 'Dhubri', 'Dibrugarh', 'Dima Hasao', 'Goalpara', 
+                    'Golaghat', 'Hailakandi', 'Hojai', 'Jorhat', 'Kamrup', 'Kamrup Metropolitan', 
+                    'Karbi Anglong', 'Karimganj', 'Kokrajhar', 'Lakhimpur', 'Majuli', 'Morigaon', 
+                    'Nagaon', 'Nalbari', 'Sivasagar', 'Sonitpur', 'South Salmara-Mankachar', 
+                    'Tamulpur', 'Tinsukia', 'Udalguri', 'West Karbi Anglong'
+                ];
+                $btrDistricts = [
+                    'Kokrajhar', 'Chirang', 'Baksa', 'Tamulpur', 'Udalguri'
+                ];
+                $savedPermanent = $existingApp?->application_address?->permanent_district ?? $student->address?->permanent_district ?? '';
+                $savedPresent = $existingApp?->application_address?->present_district ?? $student->address?->present_district ?? '';
+            @endphp
+            <div class="space-y-8">
+                <!-- Permanent Address (First, in one row) -->
+                <div class="space-y-4">
+                    <div class="bg-blue-50 p-2.5 rounded-lg border border-blue-100 flex items-center">
+                        <h4 class="font-bold text-blue-900 text-sm uppercase tracking-wide">Permanent Address</h4>
                     </div>
-                    @endif
-                    
-                    @if($form->isFieldVisible('address', 'present_state'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">State <span class="text-red-500">*</span></label><input type="text" required name="present_state" id="pre_state" value="{{ $existingApp?->application_address?->present_state ?? $student->address?->present_state ?? 'ASSAM' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
 
-                    @if($form->isFieldVisible('address', 'present_country'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Country <span class="text-red-500">*</span></label><input type="text" required name="present_country" value="{{ $existingApp?->application_address?->present_country ?? $student->address?->present_country ?? 'India' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
-                    
-                    @if($form->isFieldVisible('address', 'present_pin_code'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">PIN <span class="text-red-500">*</span></label><input type="text" required name="present_pin_code" id="pre_pin" value="{{ $existingApp?->application_address?->present_pin_code ?? $student->address?->present_pin_code ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @if($form->isFieldVisible('address', 'permanent_village_town'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vill/Town <span class="text-red-500">*</span></label>
+                            <input type="text" required name="permanent_village_town" id="perm_vill" value="{{ $existingApp?->application_address?->permanent_village_town ?? $student->address?->permanent_village_town ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
+
+                        @if($form->isFieldVisible('address', 'permanent_city'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Post Office <span class="text-red-500">*</span></label>
+                            <input type="text" required name="permanent_city" id="perm_city" value="{{ $existingApp?->application_address?->permanent_city ?? $student->address?->permanent_city ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
+
+                        @if($form->isFieldVisible('address', 'permanent_country'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Police Station <span class="text-red-500">*</span></label>
+                            <input type="text" required name="permanent_country" id="perm_country" value="{{ $existingApp?->application_address?->permanent_country ?? $student->address?->permanent_country ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
+
+                        @if($form->isFieldVisible('address', 'permanent_district'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">District <span class="text-red-500">*</span></label>
+                            <select required name="permanent_district" id="perm_dist" class="district-tom-select w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                                <option value="">Select District</option>
+                                @foreach($btrDistricts as $dist)
+                                    <option value="{{ $dist }}" {{ strcasecmp($savedPermanent, $dist) === 0 ? 'selected' : '' }}>{{ $dist }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+
+                        @if($form->isFieldVisible('address', 'permanent_street'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTCLA Constituency <span class="text-red-500">*</span></label>
+                            <input type="text" required name="permanent_street" id="perm_street" value="{{ $existingApp?->application_address?->permanent_street ?? $student->address?->permanent_street ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
+                        
+                        @if($form->isFieldVisible('address', 'permanent_state'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">State <span class="text-red-500">*</span></label>
+                            <input type="text" required name="permanent_state" id="perm_state" value="Assam" readonly class="input-block w-full p-2 border border-slate-300 rounded outline-none bg-slate-100 text-slate-600 font-semibold cursor-not-allowed">
+                        </div>
+                        @endif
+                        
+                        @if($form->isFieldVisible('address', 'permanent_pin_code'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">PIN <span class="text-red-500">*</span></label>
+                            <input type="text" required name="permanent_pin_code" id="perm_pin" value="{{ $existingApp?->application_address?->permanent_pin_code ?? $student->address?->permanent_pin_code ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
+                    </div>
                 </div>
 
-                <!-- Permanent Address -->
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center bg-blue-50 p-2 rounded">
-                        <h4 class="font-semibold text-blue-800">Permanent Address</h4>
-                        <label class="flex items-center space-x-2 text-xs cursor-pointer select-none">
-                            <input type="checkbox" id="sameAddress" onchange="toggleSameAddress()" {{ ($existingApp?->application_address?->same_as_permanent ?? false) ? 'checked' : '' }} class="rounded text-blue-600 focus:ring-blue-500">
-                            <span>Same as Present</span>
+                <!-- Current Address / Communication Address (Below Permanent Address) -->
+                <div class="space-y-4 pt-4 border-t border-slate-200" id="present-address-container">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-blue-50 p-2.5 rounded-lg border border-blue-100 gap-2">
+                        <h4 class="font-bold text-blue-900 text-sm uppercase tracking-wide">Current Address / Communication Address</h4>
+                        <label class="flex items-center space-x-2 text-xs font-semibold text-slate-700 cursor-pointer select-none bg-white px-3 py-1 rounded border border-slate-200 shadow-sm hover:bg-slate-50">
+                            <input type="checkbox" id="sameAddress" name="same_as_permanent" value="1" onchange="toggleSameAddress()" {{ ($existingApp?->application_address?->same_as_permanent ?? false) ? 'checked' : '' }} class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>Same as Permanent Address</span>
                         </label>
                     </div>
                     
-                    @if($form->isFieldVisible('address', 'permanent_village_town'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vill/Town <span class="text-red-500">*</span></label><input type="text" required name="permanent_village_town" id="perm_vill" value="{{ $existingApp?->application_address?->permanent_village_town ?? $student->address?->permanent_village_town ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
-                    
-                    @if($form->isFieldVisible('address', 'permanent_street'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Street <span class="text-red-500">*</span></label><input type="text" required name="permanent_street" id="perm_street" value="{{ $existingApp?->application_address?->permanent_street ?? $student->address?->permanent_street ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @if($form->isFieldVisible('address', 'present_village_town'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vill/Town <span class="text-red-500">*</span></label>
+                            <input type="text" required name="present_village_town" id="pre_vill" value="{{ $existingApp?->application_address?->present_village_town ?? $student->address?->present_village_town ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
+                        
+                        @if($form->isFieldVisible('address', 'present_street'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Street <span class="text-red-500">*</span></label>
+                            <input type="text" required name="present_street" id="pre_street" value="{{ $existingApp?->application_address?->present_street ?? $student->address?->present_street ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
 
-                    @if($form->isFieldVisible('address', 'permanent_city'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">City <span class="text-red-500">*</span></label><input type="text" required name="permanent_city" id="perm_city" value="{{ $existingApp?->application_address?->permanent_city ?? $student->address?->permanent_city ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
+                        @if($form->isFieldVisible('address', 'present_city'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Post Office <span class="text-red-500">*</span></label>
+                            <input type="text" required name="present_city" id="pre_city" value="{{ $existingApp?->application_address?->present_city ?? $student->address?->present_city ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
 
-                    @if($form->isFieldVisible('address', 'permanent_district'))
-                    @php
-                        $savedPermanent = $existingApp?->application_address?->permanent_district ?? $student->address?->permanent_district ?? '';
-                    @endphp
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">District <span class="text-red-500">*</span></label>
-                        <select required name="permanent_district" id="perm_dist" class="district-tom-select w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                            <option value="">Select District</option>
-                            @foreach($assamDistricts as $dist)
-                                <option value="{{ $dist }}" {{ strcasecmp($savedPermanent, $dist) === 0 ? 'selected' : '' }}>{{ $dist }}</option>
-                            @endforeach
-                        </select>
+                        @if($form->isFieldVisible('address', 'present_country'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Police Station <span class="text-red-500">*</span></label>
+                            <input type="text" required name="present_country" id="pre_country" value="{{ $existingApp?->application_address?->present_country ?? $student->address?->present_country ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
+
+                        @if($form->isFieldVisible('address', 'present_district'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">District <span class="text-red-500">*</span></label>
+                            <select required name="present_district" id="pre_dist" class="district-tom-select w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                                <option value="">Select District</option>
+                                @foreach($assamDistricts as $dist)
+                                    <option value="{{ $dist }}" {{ strcasecmp($savedPresent, $dist) === 0 ? 'selected' : '' }}>{{ $dist }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+                        
+                        @if($form->isFieldVisible('address', 'present_state'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">State <span class="text-red-500">*</span></label>
+                            <input type="text" required name="present_state" id="pre_state" value="{{ $existingApp?->application_address?->present_state ?? $student->address?->present_state ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
+                        
+                        @if($form->isFieldVisible('address', 'present_pin_code'))
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">PIN <span class="text-red-500">*</span></label>
+                            <input type="text" required name="present_pin_code" id="pre_pin" value="{{ $existingApp?->application_address?->present_pin_code ?? $student->address?->present_pin_code ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                        </div>
+                        @endif
                     </div>
-                    @endif
-                    
-                    @if($form->isFieldVisible('address', 'permanent_state'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">State <span class="text-red-500">*</span></label><input type="text" required name="permanent_state" id="perm_state" value="{{ $existingApp?->application_address?->permanent_state ?? $student->address?->permanent_state ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
-
-                    @if($form->isFieldVisible('address', 'permanent_country'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Country <span class="text-red-500">*</span></label><input type="text" required name="permanent_country" id="perm_country" value="{{ $existingApp?->application_address?->permanent_country ?? $student->address?->permanent_country ?? 'India' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
-                    
-                    @if($form->isFieldVisible('address', 'permanent_pin_code'))
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">PIN <span class="text-red-500">*</span></label><input type="text" required name="permanent_pin_code" id="perm_pin" value="{{ $existingApp?->application_address?->permanent_pin_code ?? $student->address?->permanent_pin_code ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500"></div>
-                    @endif
                 </div>
             </div>
             @endif
@@ -522,75 +522,6 @@
                     $nextStepId = isset($stepMap[$currentIdx + 1]) ? $stepMap[$currentIdx + 1] : null;
                 @endphp
                 
-                @if($nextStepId)
-                <button type="button" onclick="nextStep({{ $nextStepId }}, this)" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-700 flex items-center">
-                    Next Step <i data-lucide="arrow-right" class="ml-2" size="18"></i>
-                </button>
-                @endif
-            </div>
-        </div>
-
-        <!-- STEP 3: BANK DETAILS -->
-        <div id="step-3" class="step-content space-y-6">
-            <h3 class="text-lg font-bold text-slate-800 border-b pb-2 flex items-center">
-                <i data-lucide="landmark" class="mr-2" size="20"></i> Bank Details
-            </h3>
-
-            @if($form->isSectionEnabled('bank'))
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                @if($form->isFieldVisible('bank', 'account_holder_name'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Account Holder Name<span class="text-red-500">*</span></label>
-                    <input type="text" name="account_holder_name" required value="{{ $existingApp?->application_bank_detail?->account_holder_name ?? $student->bank_detail?->account_holder_name ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                </div>
-                @endif
-                
-                @if($form->isFieldVisible('bank', 'bank_name'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Bank Name<span class="text-red-500">*</span></label>
-                    <input type="text" name="bank_name" required value="{{ $existingApp?->application_bank_detail?->bank_name ?? $student->bank_detail?->bank_name ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                </div>
-                @endif
-
-                @if($form->isFieldVisible('bank', 'branch'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Branch<span class="text-red-500">*</span></label>
-                    <input type="text" name="branch" required value="{{ $existingApp?->application_bank_detail?->branch ?? $student->bank_detail?->branch ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                </div>
-                @endif
-                
-                @if($form->isFieldVisible('bank', 'account_number'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Account Number<span class="text-red-500">*</span></label>
-                    <input type="text" name="account_number" required value="{{ $existingApp?->application_bank_detail?->account_number ?? $student->bank_detail?->account_number ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                </div>
-                @endif
-
-                @if($form->isFieldVisible('bank', 'ifsc_code'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">IFSC Code<span class="text-red-500">*</span></label>
-                    <input type="text" name="ifsc_code" required value="{{ $existingApp?->application_bank_detail?->ifsc_code ?? $student->bank_detail?->ifsc_code ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                </div>
-                @endif
-
-                @if($form->isFieldVisible('bank', 'upi_id'))
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">UPI ID (Optional)</label>
-                    <input type="text" name="upi_id" value="{{ $existingApp?->application_bank_detail?->upi_id ?? $student->bank_detail?->upi_id ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
-                </div>
-                @endif
-            </div>
-            @endif
-
-            <div class="flex justify-between pt-6 border-t border-slate-100">
-                @php
-                    $currentIdx = array_search(3, $stepMap); // 3 is Bank
-                    $prevStepId = isset($stepMap[$currentIdx - 1]) ? $stepMap[$currentIdx - 1] : 1;
-                    $nextStepId = isset($stepMap[$currentIdx + 1]) ? $stepMap[$currentIdx + 1] : null;
-                @endphp
-                <button type="button" onclick="prevStep({{ $prevStepId }})" class="px-6 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg flex items-center">
-                    <i data-lucide="arrow-left" class="mr-2" size="18"></i> Previous
-                </button>
                 @if($nextStepId)
                 <button type="button" onclick="nextStep({{ $nextStepId }}, this)" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-700 flex items-center">
                     Next Step <i data-lucide="arrow-right" class="ml-2" size="18"></i>
@@ -624,6 +555,65 @@
                     'marks_obtained' => 'Marks Obtained',
                     'medium_of_study' => 'Medium',
                 ];
+
+                $defaultQuals = $form->getDefaultQualifications();
+                if (empty($defaultQuals)) {
+                    $defaultQuals = ['HSLC', 'HS', 'GRADUATION'];
+                }
+
+                $savedQuals = collect();
+                if ($existingApp && $existingApp->application_academic_qualifications && $existingApp->application_academic_qualifications->count() > 0) {
+                    $savedQuals = $existingApp->application_academic_qualifications;
+                } elseif ($student && $student->academic_qualifications && $student->academic_qualifications->count() > 0) {
+                    $savedQuals = $student->academic_qualifications;
+                }
+
+                $qualRows = [];
+                $matchedSavedIds = [];
+
+                // 1. Populate rows for each default qualification configured in the form
+                foreach ($defaultQuals as $dq) {
+                    $matched = $savedQuals->first(function($item, $idx) use ($dq, $matchedSavedIds) {
+                        $id = $item->id ?? $idx;
+                        return !in_array($id, $matchedSavedIds) && 
+                               strcasecmp(trim($item->examination ?? ''), trim($dq)) === 0;
+                    });
+
+                    if ($matched) {
+                        $matchedSavedIds[] = $matched->id ?? count($matchedSavedIds);
+                        $qualRows[] = [
+                            'is_default' => true,
+                            'examination' => $dq,
+                            'data' => $matched,
+                        ];
+                    } else {
+                        $qualRows[] = [
+                            'is_default' => true,
+                            'examination' => $dq,
+                            'data' => null,
+                        ];
+                    }
+                }
+
+                // 2. Append any extra saved qualifications not in the default list
+                foreach ($savedQuals as $idx => $sq) {
+                    $idKey = $sq->id ?? $idx;
+                    if (!in_array($idKey, $matchedSavedIds)) {
+                        $qualRows[] = [
+                            'is_default' => false,
+                            'examination' => $sq->examination,
+                            'data' => $sq,
+                        ];
+                    }
+                }
+
+                if (empty($qualRows)) {
+                    $qualRows[] = [
+                        'is_default' => true,
+                        'examination' => 'HSLC',
+                        'data' => null,
+                    ];
+                }
             @endphp
 
             
@@ -639,68 +629,65 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100" id="qualBody">
-                        @if($existingApp && $existingApp->application_academic_qualifications->count() > 0)
-                            @foreach($existingApp->application_academic_qualifications as $index => $qual)
+                        @foreach($qualRows as $index => $rowItem)
+                            @php
+                                $examVal = $rowItem['examination'] ?? '';
+                                $rowData = $rowItem['data'];
+                                $isDefault = $rowItem['is_default'];
+                            @endphp
                             <tr>
                                 @foreach($academicFieldsConfig as $field)
+                                    @php
+                                        if ($field === 'examination') {
+                                            $val = $examVal;
+                                        } else {
+                                            $val = $rowData ? ($rowData->$field ?? '') : '';
+                                        }
+                                    @endphp
                                     <td class="p-2">
-                                        <input type="{{ in_array($field, ['passing_year', 'percentage_grade', 'total_marks', 'marks_obtained', 'division']) ? 'number' : 'text' }}" 
-                                               name="qual[{{ $index }}][{{ $field }}]" 
-                                               value="{{ $qual->$field }}" 
-                                               class="input-block w-full p-2 border rounded {{ $field == 'examination' ? 'exam-tom-select' : '' }}" 
-                                               placeholder="{{ $fieldLabels[$field] ?? '' }}"
-                                               {{ $field == 'percentage_grade' ? 'step=0.01' : '' }}>
+                                        @if($field === 'examination')
+                                            @if($isDefault)
+                                                <div class="relative">
+                                                    <input type="text" 
+                                                           name="qual[{{ $index }}][examination]" 
+                                                           value="{{ $val }}" 
+                                                           readonly 
+                                                           class="input-block w-full p-2 border border-slate-200 bg-slate-100 text-slate-700 font-bold rounded cursor-not-allowed uppercase">
+                                                </div>
+                                            @else
+                                                <select name="qual[{{ $index }}][examination]" class="exam-tom-select input-block w-full p-2 border rounded">
+                                                    <option value="">Select Qualification</option>
+                                                    <option value="HSLC" {{ strcasecmp($val, 'HSLC') === 0 ? 'selected' : '' }}>HSLC</option>
+                                                    <option value="HS" {{ strcasecmp($val, 'HS') === 0 ? 'selected' : '' }}>HS</option>
+                                                    <option value="GRADUATION" {{ strcasecmp($val, 'GRADUATION') === 0 ? 'selected' : '' }}>Graduation</option>
+                                                    <option value="POST GRADUATION" {{ strcasecmp($val, 'POST GRADUATION') === 0 ? 'selected' : '' }}>Post Graduation</option>
+                                                    <option value="OTHER" {{ strcasecmp($val, 'OTHER') === 0 ? 'selected' : '' }}>Other</option>
+                                                    @if($val && !in_array(strtoupper($val), ['HSLC', 'HS', 'GRADUATION', 'POST GRADUATION', 'OTHER']))
+                                                        <option value="{{ $val }}" selected>{{ $val }}</option>
+                                                    @endif
+                                                </select>
+                                            @endif
+                                        @else
+                                            <input type="{{ in_array($field, ['passing_year', 'percentage_grade', 'total_marks', 'marks_obtained', 'division']) ? 'number' : 'text' }}" 
+                                                   name="qual[{{ $index }}][{{ $field }}]" 
+                                                   value="{{ $val }}" 
+                                                   class="input-block w-full p-2 border rounded" 
+                                                   placeholder="{{ $fieldLabels[$field] ?? '' }}"
+                                                   {{ $field == 'percentage_grade' ? 'step=0.01' : '' }}>
+                                        @endif
                                     </td>
                                 @endforeach
                                 <td class="p-2 text-center">
-                                    @if($index == 0)
-                                        <span class="text-slate-400">Fixed</span>
+                                    @if($isDefault)
+                                        <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200" title="Mandatory default qualification">Fixed</span>
                                     @else
-                                        <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700">
+                                        <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded transition-colors" title="Remove Qualification">
                                             <i data-lucide="trash-2" size="18"></i>
                                         </button>
                                     @endif
                                 </td>
                             </tr>
-                            @endforeach
-                        @elseif($student && $student->academic_qualifications->count() > 0)
-                            @foreach($student->academic_qualifications as $index => $qual)
-                            <tr>
-                                @foreach($academicFieldsConfig as $field)
-                                    <td class="p-2">
-                                        <input type="{{ in_array($field, ['passing_year', 'percentage_grade', 'total_marks', 'marks_obtained', 'division']) ? 'number' : 'text' }}" 
-                                               name="qual[{{ $index }}][{{ $field }}]" 
-                                               value="{{ $qual->$field }}" 
-                                               class="input-block w-full p-2 border rounded {{ $field == 'examination' ? 'exam-tom-select' : '' }}" 
-                                               placeholder="{{ $fieldLabels[$field] ?? '' }}"
-                                               {{ $field == 'percentage_grade' ? 'step=0.01' : '' }}>
-                                    </td>
-                                @endforeach
-                                <td class="p-2 text-center">
-                                    @if($index == 0)
-                                        <span class="text-slate-400">Fixed</span>
-                                    @else
-                                        <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700">
-                                            <i data-lucide="trash-2" size="18"></i>
-                                        </button>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        @else
-                            <tr>
-                                @foreach($academicFieldsConfig as $field)
-                                    <td class="p-2">
-                                        <input type="{{ in_array($field, ['passing_year', 'percentage_grade', 'total_marks', 'marks_obtained', 'division']) ? 'number' : 'text' }}" 
-                                               name="qual[0][{{ $field }}]" 
-                                               class="input-block w-full p-2 border rounded {{ $field == 'examination' ? 'exam-tom-select' : '' }}" 
-                                               placeholder="{{ $fieldLabels[$field] ?? '' }}"
-                                               {{ $field == 'percentage_grade' ? 'step=0.01' : '' }}>
-                                    </td>
-                                @endforeach
-                                <td class="p-2 text-center text-slate-400">Fixed</td>
-                            </tr>
-                        @endif
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -739,6 +726,7 @@
                 if (empty($docConfig)) {
                      $docConfig = ['photo', 'caste_certificate', 'signature', 'prc_certificate', 'age_proof', 'mark_sheet_10', 'certificate_10'];
                 }
+                $docConfig = array_values(array_filter($docConfig, fn($f) => $form->isFieldVisible('documents', $f)));
                 
                 $docLabels = [
                     'photo' => 'Passport Size Photograph',
@@ -764,21 +752,10 @@
                     'hs_admit_card' => 'HS Admit Card',
                     'graduation_admit_card' => 'Graduation Admit Card',
                     'post_graduation_admit_card' => 'Post Graduation Admit Card',
-                    'transfer_certificate' => 'Transfer Certificate',
                     'income_certificate' => 'Income Certificate',
                     'address_proof' => 'Address Proof',
                     'aadhaar_card' => 'Aadhaar Card',
-                    'passport' => 'Passport',
-                    'bed_parangat_marksheet' => 'B.Ed./Parangat Mark Sheets',
-                    'bed_parangat_certificate' => 'B.Ed./Parangat Certificate',
-                    'tet_certificate' => 'TET Certificate',
-                    'pwd_certificate' => 'PwD Certificate',
-                    'ex_serviceman_certificate' => 'Ex-Serviceman Certificate',
-                    'ncc_certificate_doc' => 'NCC Certificate',
-                    'sports_certificate' => 'Sports Certificate',
-                    'cultural_certificate' => 'Fine Arts/Cultural Achievement Certificate',
-                    'btc_residential_certificate' => 'BTC Residential Certificate',
-                    'language_diploma_certificate' => 'Language Diploma Certificate',
+                    'btc_residential_certificate' => 'Permanent Resident Certificate',
                 ];
 
                 $profileMap = [
@@ -806,33 +783,13 @@
                     'hs_admit_card' => 'hs_admit_card',
                     'graduation_admit_card' => 'graduation_admit_card',
                     'post_graduation_admit_card' => 'post_graduation_admit_card',
-                    'transfer_certificate' => 'transfer_certificate',
                     'income_certificate' => 'income_certificate',
                     'aadhaar_card' => 'aadhaar_card',
-                    'passport' => 'passport',
-                    'bed_parangat_marksheet' => 'bed_parangat_marksheet',
-                    'bed_parangat_certificate' => 'bed_parangat_certificate',
-                    'tet_certificate' => 'tet_certificate',
-                    'pwd_certificate' => 'pwd_certificate',
-                    'ex_serviceman_certificate' => 'ex_serviceman_certificate',
-                    'ncc_certificate_doc' => 'ncc_certificate_doc',
-                    'sports_certificate' => 'sports_certificate',
-                    'cultural_certificate' => 'cultural_certificate',
                     'btc_residential_certificate' => 'btc_residential_certificate',
-                    'language_diploma_certificate' => 'language_diploma_certificate',
                 ];
 
                 $optionalDocs = [
-                    'bed_parangat_marksheet',
-                    'bed_parangat_certificate',
-                    'tet_certificate',
-                    'pwd_certificate',
-                    'ex_serviceman_certificate',
-                    'ncc_certificate_doc',
-                    'sports_certificate',
-                    'cultural_certificate',
                     'btc_residential_certificate',
-                    'language_diploma_certificate',
                 ];
             @endphp
             
@@ -1019,28 +976,16 @@
 <script>
     function initTomSelectExam(element) {
         if (element.tomselect) return;
-        new TomSelect(element, {
-            create: false,
+        const currentVal = element.value;
+        const ts = new TomSelect(element, {
+            create: true,
             maxItems: 1,
             dropdownParent: 'body',
-            valueField: 'value',
-            labelField: 'text',
-            searchField: 'text',
-            options: [
-                {value: 'HSLC', text: 'HSLC'},
-                {value: 'HS', text: 'HS'},
-                {value: 'GRADUATION', text: 'Graduation'},
-                {value: 'POST GRADUATION', text: 'Post Graduation'},
-                {value: 'B.ED.', text: 'B.Ed.'},
-                {value: 'PARANGAT', text: 'Parangat'},
-                {value: 'OTHER', text: 'Other'}
-            ],
-            render: {
-                option_create: function(data, escape) {
-                    return '<div class="create">Add <strong>' + escape(data.input) + '</strong>&hellip;</div>';
-                }
-            }
+            placeholder: 'Select Qualification'
         });
+        if (currentVal) {
+            ts.setValue(currentVal, true);
+        }
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -1076,6 +1021,16 @@
     // --- Multi-Step Form Logic ---
     let currentStep = {{ $existingApp ? ($existingApp->current_step ?? 1) : 1 }};
     const steps = @json($steps);
+    const validStepNumbers = steps.map(s => s.number);
+    if (!validStepNumbers.includes(currentStep)) {
+        if (currentStep == 3 && validStepNumbers.includes(4)) {
+            currentStep = 4;
+        } else if (validStepNumbers.length > 0) {
+            currentStep = validStepNumbers[0];
+        } else {
+            currentStep = 1;
+        }
+    }
     const totalVisibleSteps = {{ count($steps) }};
     
     function updateSteps() {
@@ -1301,8 +1256,10 @@
 
     // --- Address Logic ---
     function toggleSameAddress() {
-        const isChecked = document.getElementById('sameAddress').checked;
-        const fields = ['vill', 'po', 'dist', 'state', 'pin'];
+        const sameCheckbox = document.getElementById('sameAddress');
+        if (!sameCheckbox) return;
+        const isChecked = sameCheckbox.checked;
+        const fields = ['vill', 'street', 'city', 'dist', 'state', 'country', 'pin'];
         
         fields.forEach(field => {
             const permInput = document.getElementById(`perm_${field}`);
@@ -1310,25 +1267,40 @@
             
             if (permInput && preInput) {
                 if (isChecked) {
-                    if (permInput.tomselect) {
-                        permInput.tomselect.setValue(preInput.value);
-                        permInput.tomselect.lock();
-                        permInput.tomselect.control.classList.add('bg-slate-100');
+                    if (preInput.tomselect) {
+                        preInput.tomselect.setValue(permInput.value);
+                        preInput.tomselect.lock();
+                        preInput.tomselect.control.classList.add('bg-slate-100');
                     } else {
-                        permInput.value = preInput.value;
-                        permInput.setAttribute('readonly', 'true');
-                        permInput.classList.add('bg-slate-100');
+                        preInput.value = permInput.value;
+                        preInput.setAttribute('readonly', 'true');
+                        preInput.classList.add('bg-slate-100');
                     }
                 } else {
-                    if (permInput.tomselect) {
-                        permInput.tomselect.unlock();
-                        permInput.tomselect.control.classList.remove('bg-slate-100');
-                        if(permInput.value === preInput.value) permInput.tomselect.setValue('');
+                    if (preInput.tomselect) {
+                        preInput.tomselect.unlock();
+                        preInput.tomselect.control.classList.remove('bg-slate-100');
                     } else {
-                        permInput.removeAttribute('readonly');
-                        permInput.classList.remove('bg-slate-100');
-                        if(permInput.value === preInput.value) permInput.value = '';
+                        preInput.removeAttribute('readonly');
+                        preInput.classList.remove('bg-slate-100');
                     }
+                }
+            }
+        });
+    }
+
+    function syncSameAddressLive() {
+        const sameCheckbox = document.getElementById('sameAddress');
+        if (!sameCheckbox || !sameCheckbox.checked) return;
+        const fields = ['vill', 'street', 'city', 'dist', 'state', 'country', 'pin'];
+        fields.forEach(field => {
+            const permInput = document.getElementById(`perm_${field}`);
+            const preInput = document.getElementById(`pre_${field}`);
+            if (permInput && preInput) {
+                if (preInput.tomselect) {
+                    preInput.tomselect.setValue(permInput.value);
+                } else {
+                    preInput.value = permInput.value;
                 }
             }
         });
@@ -1338,11 +1310,21 @@
         if(document.getElementById('sameAddress') && document.getElementById('sameAddress').checked) {
             toggleSameAddress();
         }
+
+        const fields = ['vill', 'street', 'city', 'dist', 'state', 'country', 'pin'];
+        fields.forEach(field => {
+            const permInput = document.getElementById(`perm_${field}`);
+            if (permInput) {
+                permInput.addEventListener('input', syncSameAddressLive);
+                permInput.addEventListener('change', syncSameAddressLive);
+            }
+        });
+
         updateSteps();
     });
 
     // --- Dynamic Table Logic ---
-    let rowCount = {{ ($existingApp && $existingApp->application_academic_qualifications->count() > 0) ? $existingApp->application_academic_qualifications->count() : (($student && $student->academic_qualifications->count() > 0) ? $student->academic_qualifications->count() : 1) }};
+    let rowCount = {{ count($qualRows ?? []) }};
     const academicFieldsConfig = @json($academicFieldsConfig ?? []);
     const fieldLabels = @json($fieldLabels ?? []);
 
@@ -1355,18 +1337,33 @@
             const type = ['passing_year', 'percentage_grade', 'total_marks', 'marks_obtained', 'division'].includes(field) ? 'number' : 'text';
             const step = field === 'percentage_grade' ? 'step="0.01"' : '';
             const isExam = field === 'examination';
-            const extraClass = isExam ? 'exam-tom-select' : '';
             const placeholder = fieldLabels[field] || '';
-            cols += `
-                <td class="p-2">
-                    <input type="${type}" name="qual[${rowCount}][${field}]" class="input-block w-full p-2 border rounded ${extraClass}" placeholder="${placeholder}" ${step}>
-                </td>
-            `;
+            
+            if (isExam) {
+                cols += `
+                    <td class="p-2">
+                        <select name="qual[${rowCount}][examination]" class="exam-tom-select input-block w-full p-2 border rounded">
+                            <option value="">Select Qualification</option>
+                            <option value="HSLC">HSLC</option>
+                            <option value="HS">HS</option>
+                            <option value="GRADUATION">Graduation</option>
+                            <option value="POST GRADUATION">Post Graduation</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </td>
+                `;
+            } else {
+                cols += `
+                    <td class="p-2">
+                        <input type="${type}" name="qual[${rowCount}][${field}]" class="input-block w-full p-2 border rounded" placeholder="${placeholder}" ${step}>
+                    </td>
+                `;
+            }
         });
         
         cols += `
             <td class="p-2 text-center">
-                <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700">
+                <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded transition-colors" title="Remove Qualification">
                     <i data-lucide="trash-2" size="18"></i>
                 </button>
             </td>
@@ -1381,7 +1378,9 @@
             initTomSelectExam(newExamInput);
         }
         
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
         rowCount++;
     }
 

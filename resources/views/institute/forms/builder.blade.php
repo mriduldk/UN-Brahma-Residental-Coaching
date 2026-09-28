@@ -132,16 +132,16 @@
 
             @php
                 $sections = [
-                    'personal' => ['title' => 'Personal Details', 'icon' => 'user', 'color' => 'blue', 'mandatory' => ['full_name', 'email', 'phone_number']],
+                    'personal' => ['title' => 'Personal Details', 'icon' => 'user', 'color' => 'blue', 'mandatory' => ['full_name', 'email', 'phone_number', 'alternate_mobile_number']],
                     'address' => ['title' => 'Address Details', 'icon' => 'map-pin', 'color' => 'emerald', 'mandatory' => []],
                     'academic' => ['title' => 'Academic Information', 'icon' => 'graduation-cap', 'color' => 'amber', 'mandatory' => []],
-                    'parents' => ['title' => 'Parent/Guardian Details', 'icon' => 'users', 'color' => 'indigo', 'mandatory' => []],
+                    'parents' => ['title' => 'Parent/Guardian Details', 'icon' => 'users', 'color' => 'indigo', 'mandatory' => ['father_annual_income']],
                     'bank' => ['title' => 'Bank Details', 'icon' => 'university', 'color' => 'rose', 'mandatory' => []],
                     'documents' => ['title' => 'Documents Upload', 'icon' => 'file', 'color' => 'slate', 'mandatory' => []],
                 ];
 
                 $defaults = [
-                    'personal' => ['full_name', 'gender', 'category', 'dob', 'phone_number', 'email'],
+                    'personal' => ['full_name', 'gender', 'category', 'dob', 'phone_number', 'email', 'alternate_mobile_number'],
                     'address' => [
                         'permanent_village_town', 'permanent_district', 'permanent_state', 'permanent_country', 'permanent_pin_code',
                         'present_village_town', 'present_district', 'present_state', 'present_country', 'present_pin_code'
@@ -186,6 +186,17 @@
                                 @foreach($groupFields as $col)
                                     @php
                                         $label = ucwords(str_replace('_', ' ', $col));
+                                        if ($col === 'is_permanent_resident_of_assam') $label = 'Permanent Resident Of Assam';
+                                        if ($col === 'is_btc_resident') $label = 'BTC Resident';
+                                        if ($col === 'employment_exchange_no') $label = 'Employment Exchange No.';
+                                        if ($col === 'is_pwd') $label = 'Is PwD';
+                                        if ($col === 'alternate_mobile_number') $label = 'What’s App Number';
+                                        if ($col === 'father_annual_income') $label = 'Family income per (per anum):';
+                                        if ($col === 'permanent_street') $label = 'BTCLA Constituency';
+                                        if ($col === 'permanent_city') $label = 'Permanent Post Office';
+                                        if ($col === 'permanent_country') $label = 'Permanent Police Station';
+                                        if ($col === 'present_city') $label = 'Present Post Office';
+                                        if ($col === 'present_country') $label = 'Present Police Station';
                                         $isMandatory = in_array($col, $section['mandatory']);
                                         
                                         if($isMandatory) {
@@ -219,6 +230,18 @@
                             @foreach($columns[$key] as $col)
                                 @php
                                     $label = ucwords(str_replace('_', ' ', $col));
+                                    if ($col === 'is_permanent_resident_of_assam') $label = 'Permanent Resident Of Assam';
+                                    if ($col === 'is_btc_resident') $label = 'BTC Resident';
+                                    if ($col === 'employment_exchange_no') $label = 'Employment Exchange No.';
+                                    if ($col === 'is_pwd') $label = 'Is PwD';
+                                    if ($col === 'alternate_mobile_number') $label = 'What’s App Number';
+                                    if ($col === 'father_annual_income') $label = 'Family income per (per anum):';
+                                    if ($col === 'permanent_street') $label = 'BTCLA Constituency';
+                                    if ($col === 'permanent_city') $label = 'Permanent Post Office';
+                                    if ($col === 'permanent_country') $label = 'Permanent Police Station';
+                                    if ($col === 'present_city') $label = 'Present Post Office';
+                                    if ($col === 'present_country') $label = 'Present Police Station';
+                                    if ($col === 'btc_residential_certificate') $label = 'Permanent Resident Certificate';
                                     $isMandatory = in_array($col, $section['mandatory']);
                                     
                                      if($isMandatory) {
@@ -249,6 +272,45 @@
                         @endif
                     @else
                         <p class="text-sm text-slate-400 italic">No configuration available for this section.</p>
+                    @endif
+
+                    @if($key === 'academic')
+                        <div class="col-span-full mt-6 pt-4 border-t border-slate-100">
+                            <div class="mb-3">
+                                <h5 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                    <i data-lucide="graduation-cap" size="18" class="text-amber-500"></i>
+                                    Default Qualifications to Show in Student Form
+                                </h5>
+                                <p class="text-xs text-slate-500">Select which qualifications will appear by default in the applicant's academic qualification table.</p>
+                            </div>
+                            @php
+                                $selectedQuals = isset($form) && isset($form->field_config['academic']['default_qualifications'])
+                                    ? $form->field_config['academic']['default_qualifications']
+                                    : ['HSLC', 'HS', 'GRADUATION'];
+                                $qualOptions = [
+                                    'HSLC' => 'HSLC / 10th Standard',
+                                    'HS' => 'HS / 12th Standard',
+                                    'GRADUATION' => 'Graduation / Degree',
+                                    'POST GRADUATION' => 'Post Graduation / Master\'s',
+                                ];
+                            @endphp
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                @foreach($qualOptions as $qCode => $qTitle)
+                                    @php $isQChecked = in_array($qCode, $selectedQuals); @endphp
+                                    <label class="flex items-start space-x-3 p-3 rounded-xl border border-slate-200 transition-all cursor-pointer hover:border-amber-400 hover:shadow-sm bg-white">
+                                        <input type="checkbox" 
+                                            name="field_config[academic][default_qualifications][]" 
+                                            value="{{ $qCode }}" 
+                                            {{ $isQChecked ? 'checked' : '' }} 
+                                            class="mt-1 w-5 h-5 text-amber-600 rounded focus:ring-amber-500">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-semibold text-slate-800">{{ $qCode }}</span>
+                                            <span class="text-xs text-slate-500">{{ $qTitle }}</span>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
                     @endif
                 </div>
             </div>

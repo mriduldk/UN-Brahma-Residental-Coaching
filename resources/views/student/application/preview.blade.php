@@ -115,19 +115,14 @@
                         'Caste' => 'caste',
                         'Mother Tongue' => 'mother_tongue',
                         'Religion' => 'religion',
-                        'Marital Status' => 'marital_status',
-                        'Nationality' => 'nationality',
+                        'Community' => 'community',
                         'Identity Mark' => 'identification_mark',
                         'Blood Group' => 'blood_group',
                         'Mobile No' => 'phone_number',
-                        'Alt Mobile No' => 'alternate_mobile_number',
+                        'What’s App Number' => 'alternate_mobile_number',
                         'Employment Exchange No' => 'employment_exchange_no',
                         'PR of Assam' => 'is_permanent_resident_of_assam',
                         'BTC Resident' => 'is_btc_resident',
-                        'Ex-Serviceman' => 'is_ex_serviceman',
-                        'NCC Certificate' => 'ncc_certificate',
-                        'National Sports' => 'has_national_sports_achievement',
-                        'Cultural/Fine Arts' => 'has_fine_arts_cultural_achievement'
                     ];
                 @endphp
                 @foreach($personalFields as $label => $key)
@@ -137,8 +132,10 @@
                         <p class="text-slate-800 font-bold text-sm">
                             @if($key == 'email')
                                 {{ $data[$key] ?? $app->student->email ?? '—' }}
-                            @elseif(in_array($key, ['is_permanent_resident_of_assam', 'is_btc_resident', 'is_ex_serviceman', 'has_national_sports_achievement', 'has_fine_arts_cultural_achievement']))
-                                {{ isset($data[$key]) ? ($data[$key] ? 'Yes' : 'No') : '—' }}
+                            @elseif($key == 'community')
+                                {{ $data['community'] ?? $data['nationality'] ?? '—' }}
+                            @elseif(in_array($key, ['is_permanent_resident_of_assam', 'is_btc_resident']))
+                                {{ isset($data[$key]) && $data[$key] !== '' && $data[$key] !== null ? ($data[$key] ? 'Yes' : 'No') : '—' }}
                             @else
                                 {{ $data[$key] ?? '—' }}
                             @endif
@@ -168,7 +165,7 @@
                         'Email' => 'father_email',
                         'Occupation' => 'father_occupation',
                         'Qualification' => 'father_qualification',
-                        'Annual Income' => 'father_annual_income'
+                        'Family income per (per anum):' => 'father_annual_income'
                     ];
                     $hasFather = false;
                     foreach($fatherFields as $label => $key) {
@@ -278,17 +275,17 @@
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 @php
                     $addressTypes = [
-                        'present' => 'Present Address',
-                        'permanent' => 'Permanent Address'
+                        'permanent' => 'Permanent Address',
+                        'present' => 'Current Address / Communication Address'
                     ];
                     
                     $addressFields = [
                         'village_town' => 'Vill/Town',
                         'street' => 'Street',
-                        'city' => 'City',
+                        'city' => 'Post Office',
                         'district' => 'Dist',
                         'state' => 'State',
-                        'country' => 'Country',
+                        'country' => 'Police Station',
                         'pin_code' => 'PIN'
                     ];
                 @endphp
@@ -297,8 +294,8 @@
                 <div class="bg-slate-50/50 rounded-xl p-6 border border-slate-100">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest block">{{ $label }}</span>
-                        @if($type === 'permanent' && isset($data['same_as_permanent']))
-                            <span class="bg-green-100 text-green-700 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Same as Present</span>
+                        @if($type === 'present' && !empty($data['same_as_permanent']))
+                            <span class="bg-green-100 text-green-700 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Same as Permanent</span>
                         @endif
                     </div>
                     
@@ -316,7 +313,7 @@
                             @php 
                                 $line1 = []; 
                                 if(!empty($data[$vKey])) $line1[] = $data[$vKey];
-                                if(!empty($data[$sKey])) $line1[] = "ST: " . $data[$sKey];
+                                if(!empty($data[$sKey])) $line1[] = ($type === 'permanent' ? 'BTCLA: ' : 'ST: ') . $data[$sKey];
                             @endphp
                             @if(!empty($line1))
                                 @php $hasData = true; @endphp
@@ -326,7 +323,7 @@
 
                         @if($app->application_form->isFieldVisible('address', $cKey) && !empty($data[$cKey]))
                             @php $hasData = true; @endphp
-                            City: {{ $data[$cKey] }} <br>
+                            P.O.: {{ $data[$cKey] }} <br>
                         @endif
 
                         @php $l3 = []; @endphp
@@ -338,8 +335,8 @@
                         @endif
 
                         @php $l4 = []; @endphp
+                        @if($app->application_form->isFieldVisible('address', $ctKey) && !empty($data[$ctKey])) @php $l4[] = "P.S.: " . $data[$ctKey]; @endphp @endif
                         @if($app->application_form->isFieldVisible('address', $stKey) && !empty($data[$stKey])) @php $l4[] = $data[$stKey]; @endphp @endif
-                        @if($app->application_form->isFieldVisible('address', $ctKey) && !empty($data[$ctKey])) @php $l4[] = $data[$ctKey]; @endphp @endif
                         @if(!empty($l4))
                             @php $hasData = true; @endphp
                             <span class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">{{ implode(', ', $l4) }}</span>
@@ -503,20 +500,9 @@
                         'hs_admit_card' => 'hs_admit_card',
                         'graduation_admit_card' => 'graduation_admit_card',
                         'post_graduation_admit_card' => 'post_graduation_admit_card',
-                        'transfer_certificate' => 'transfer_certificate',
                         'income_certificate' => 'income_certificate',
                         'aadhaar_card' => 'aadhaar_card',
-                        'passport' => 'passport',
-                        'bed_parangat_marksheet' => 'bed_parangat_marksheet',
-                        'bed_parangat_certificate' => 'bed_parangat_certificate',
-                        'tet_certificate' => 'tet_certificate',
-                        'pwd_certificate' => 'pwd_certificate',
-                        'ex_serviceman_certificate' => 'ex_serviceman_certificate',
-                        'ncc_certificate_doc' => 'ncc_certificate_doc',
-                        'sports_certificate' => 'sports_certificate',
-                        'cultural_certificate' => 'cultural_certificate',
-                        'btc_residential_certificate' => 'btc_residential_certificate',
-                        'language_diploma_certificate' => 'language_diploma_certificate'
+                        'btc_residential_certificate' => 'btc_residential_certificate'
                     ];
 
                     $docLabels = [
@@ -544,20 +530,9 @@
                         'hs_admit_card' => 'HS Admit Card',
                         'graduation_admit_card' => 'Graduation Admit Card',
                         'post_graduation_admit_card' => 'PG Admit Card',
-                        'transfer_certificate' => 'Transfer Certificate',
                         'income_certificate' => 'Income Certificate',
                         'aadhaar_card' => 'Aadhaar Card',
-                        'passport' => 'Passport',
-                        'bed_parangat_marksheet' => 'B.Ed./Parangat Mark Sheets',
-                        'bed_parangat_certificate' => 'B.Ed./Parangat Certificate',
-                        'tet_certificate' => 'TET Certificate',
-                        'pwd_certificate' => 'PwD Certificate',
-                        'ex_serviceman_certificate' => 'Ex-Serviceman Certificate',
-                        'ncc_certificate_doc' => 'NCC Certificate',
-                        'sports_certificate' => 'Sports Certificate',
-                        'cultural_certificate' => 'Fine Arts/Cultural Certificate',
-                        'btc_residential_certificate' => 'BTC Residential Certificate',
-                        'language_diploma_certificate' => 'Language Diploma Certificate'
+                        'btc_residential_certificate' => 'Permanent Resident Certificate'
                     ];
 
                     // Define unique keys for display to avoid duplicates if multiple aliases map to same DB key
@@ -569,12 +544,8 @@
                         'graduation_certificate', 'graduation_pass_certificate', 
                         'post_graduation_marksheet', 'post_graduation_certificate', 
                         'post_graduation_pass_certificate', 'hs_admit_card', 'graduation_admit_card', 
-                        'post_graduation_admit_card', 'transfer_certificate', 'income_certificate', 
-                        'aadhaar_card', 'passport',
-                        'bed_parangat_marksheet', 'bed_parangat_certificate', 'tet_certificate',
-                        'pwd_certificate', 'ex_serviceman_certificate', 'ncc_certificate_doc',
-                        'sports_certificate', 'cultural_certificate', 'btc_residential_certificate',
-                        'language_diploma_certificate'
+                        'post_graduation_admit_card', 'income_certificate', 
+                        'aadhaar_card', 'btc_residential_certificate'
                     ];
                     
                     $docs = $app->application_documents;

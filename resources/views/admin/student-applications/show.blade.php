@@ -86,16 +86,27 @@
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Gender</p>
                         <p class="font-medium text-slate-800">{{ ucfirst($application->application_student->gender ?? $application->student->gender ?? '-') }}</p>
                     </div>
+                    @if(!empty($application->application_student?->alternate_mobile_number))
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">What’s App Number</p>
+                        <p class="font-medium text-slate-800">{{ $application->application_student->alternate_mobile_number }}</p>
+                    </div>
+                    @endif
                     <div class="md:col-span-2 pt-4 border-t border-slate-100 mt-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Permanent Address</p>
                             @if($application->application_address)
                                 <p class="font-medium text-slate-800">
-                                    {{ $application->application_address->permanent_village_town ?? '' }}{{ $application->application_address->permanent_street ? ', ' . $application->application_address->permanent_street : '' }}
+                                    {{ $application->application_address->permanent_village_town ?? '' }}
                                     <br>
-                                    {{ $application->application_address->permanent_city ?? '' }}{{ $application->application_address->permanent_district ? ', ' . $application->application_address->permanent_district : '' }}
+                                    @if($application->application_address->permanent_city) P.O.: {{ $application->application_address->permanent_city }}, @endif
+                                    @if($application->application_address->permanent_country) P.S.: {{ $application->application_address->permanent_country }}, @endif
+                                    Dist: {{ $application->application_address->permanent_district ?? '' }}
+                                    @if(!empty($application->application_address->permanent_street))
+                                        <br>BTCLA Constituency: {{ $application->application_address->permanent_street }}
+                                    @endif
                                     <br>
-                                    {{ $application->application_address->permanent_state ?? '' }}{{ $application->application_address->permanent_country ? ', ' . $application->application_address->permanent_country : '' }}
+                                    {{ $application->application_address->permanent_state ?? '' }}
                                     @if($application->application_address->permanent_pin_code) - {{ $application->application_address->permanent_pin_code }} @endif
                                 </p>
                             @else
@@ -103,14 +114,16 @@
                             @endif
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Present Address</p>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Current Address / Communication Address</p>
                             @if($application->application_address)
                                 <p class="font-medium text-slate-800">
                                     {{ $application->application_address->present_village_town ?? '' }}{{ $application->application_address->present_street ? ', ' . $application->application_address->present_street : '' }}
                                     <br>
-                                    {{ $application->application_address->present_city ?? '' }}{{ $application->application_address->present_district ? ', ' . $application->application_address->present_district : '' }}
+                                    @if($application->application_address->present_city) P.O.: {{ $application->application_address->present_city }}, @endif
+                                    @if($application->application_address->present_country) P.S.: {{ $application->application_address->present_country }}, @endif
+                                    Dist: {{ $application->application_address->present_district ?? '' }}
                                     <br>
-                                    {{ $application->application_address->present_state ?? '' }}{{ $application->application_address->present_country ? ', ' . $application->application_address->present_country : '' }}
+                                    {{ $application->application_address->present_state ?? '' }}
                                     @if($application->application_address->present_pin_code) - {{ $application->application_address->present_pin_code }} @endif
                                 </p>
                             @else
@@ -139,6 +152,12 @@
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Father's Phone</p>
                         <p class="font-medium text-slate-800">{{ $application->application_parent->father_phone ?? '-' }}</p>
                     </div>
+                    @if(!empty($application->application_parent->father_annual_income))
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Family income per (per anum):</p>
+                        <p class="font-medium text-slate-800">₹{{ number_format((float)$application->application_parent->father_annual_income, 2) }}</p>
+                    </div>
+                    @endif
                     <div>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Mother's Name</p>
                         <p class="font-medium text-slate-800">{{ $application->application_parent->mother_name ?? '-' }}</p>
@@ -231,10 +250,7 @@
                                 'post_graduation_pass_certificate' => 'PG Pass Certificate',
                                 'caste_certificate' => 'Caste Certificate',
                                 'aadhaar_card' => 'Aadhaar Card',
-                                'pwd_certificate' => 'PWD Certificate',
                                 'bpl_certificate' => 'BPL Certificate',
-                                'sports_certificate' => 'Sports Certificate',
-                                'ncc_certificate' => 'NCC Certificate',
                             ];
                         @endphp
                         

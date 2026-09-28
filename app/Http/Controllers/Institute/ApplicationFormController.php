@@ -301,7 +301,12 @@ class ApplicationFormController extends Controller
         $columns = [];
         foreach ($tables as $key => $table) {
             $cols = Schema::getColumnListing($table);
-            $cols = array_diff($cols, ['id', 'user_id', 'created_at', 'updated_at', 'student_id', 'email_verified_at', 'password', 'remember_token', 'role', 'same_as_permanent']);
+            $cols = array_diff($cols, [
+                'id', 'user_id', 'created_at', 'updated_at', 'student_id', 'email_verified_at', 'password', 'remember_token', 'role', 'same_as_permanent',
+                'marital_status', 'is_ex_serviceman', 'ncc_certificate', 'has_national_sports_achievement', 'has_fine_arts_cultural_achievement',
+                'passport', 'transfer_certificate', 'bed_parangat_marksheet', 'bed_parangat_certificate', 'tet_certificate', 'pwd_certificate',
+                'ex_serviceman_certificate', 'ncc_certificate_doc', 'sports_certificate', 'cultural_certificate', 'language_diploma_certificate'
+            ]);
             
             if ($key === 'personal') {
                 $priority = ['full_name', 'phone_number', 'email', 'gender', 'dob', 'category', 'age'];

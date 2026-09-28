@@ -166,12 +166,13 @@
                         'Caste' => 'caste',
                         'Mother Tongue' => 'mother_tongue',
                         'Religion' => 'religion',
-                        'Marital Status' => 'marital_status',
-                        'Nationality' => 'nationality',
+                        'Community' => 'community',
                         'Identity Mark' => 'identification_mark',
                         'Blood Group' => 'blood_group',
                         'Mobile No' => 'phone_number',
-                        'Alt Mobile No' => 'alternate_mobile_number'
+                        'What’s App Number' => 'alternate_mobile_number',
+                        'PR of Assam' => 'is_permanent_resident_of_assam',
+                        'BTC Resident' => 'is_btc_resident'
                     ];
                 @endphp
                 @foreach($personalFields as $label => $key)
@@ -181,6 +182,10 @@
                         <p class="text-slate-800 font-bold text-sm">
                             @if($key == 'email')
                                 {{ $studentSnapshot->$key ?? $application->student->email ?? '—' }}
+                            @elseif($key == 'community')
+                                {{ $studentSnapshot->community ?? $studentSnapshot->nationality ?? '—' }}
+                            @elseif(in_array($key, ['is_permanent_resident_of_assam', 'is_btc_resident']))
+                                {{ !is_null($studentSnapshot->$key) ? ($studentSnapshot->$key ? 'Yes' : 'No') : '—' }}
                             @else
                                 {{ $studentSnapshot->$key ?? '—' }}
                             @endif
@@ -210,7 +215,7 @@
                         'Email' => 'father_email',
                         'Occupation' => 'father_occupation',
                         'Qualification' => 'father_qualification',
-                        'Annual Income' => 'father_annual_income'
+                        'Family income per (per anum):' => 'father_annual_income'
                     ];
                     $hasFather = false;
                     foreach($fatherFields as $label => $key) {
@@ -318,15 +323,15 @@
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 @php
                     $addressSnapshot = $application->application_address;
-                    $addressTypes = ['present' => 'Present Address', 'permanent' => 'Permanent Address'];
+                    $addressTypes = ['permanent' => 'Permanent Address', 'present' => 'Current Address / Communication Address'];
                 @endphp
 
                 @foreach($addressTypes as $type => $label)
                 <div class="bg-slate-50/50 rounded-xl p-6 border border-slate-100">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest block">{{ $label }}</span>
-                        @if($type === 'permanent' && isset($addressSnapshot->same_as_permanent) && $addressSnapshot->same_as_permanent)
-                            <span class="bg-green-100 text-green-700 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Same as Present</span>
+                        @if($type === 'present' && isset($addressSnapshot->same_as_permanent) && $addressSnapshot->same_as_permanent)
+                            <span class="bg-green-100 text-green-700 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Same as Permanent</span>
                         @endif
                     </div>
                     
@@ -344,7 +349,7 @@
                             @php 
                                 $line1 = []; 
                                 if(!empty($addressSnapshot->$vKey)) $line1[] = $addressSnapshot->$vKey;
-                                if(!empty($addressSnapshot->$sKey)) $line1[] = "ST: " . $addressSnapshot->$sKey;
+                                if(!empty($addressSnapshot->$sKey)) $line1[] = ($type === 'permanent' ? 'BTCLA: ' : 'ST: ') . $addressSnapshot->$sKey;
                             @endphp
                             @if(!empty($line1))
                                 @php $hasData = true; @endphp
@@ -354,7 +359,7 @@
 
                         @if($application->application_form->isFieldVisible('address', $cKey) && !empty($addressSnapshot->$cKey))
                             @php $hasData = true; @endphp
-                            City: {{ $addressSnapshot->$cKey }} <br>
+                            P.O.: {{ $addressSnapshot->$cKey }} <br>
                         @endif
 
                         @php $l3 = []; @endphp
@@ -366,8 +371,8 @@
                         @endif
 
                         @php $l4 = []; @endphp
+                        @if($application->application_form->isFieldVisible('address', $ctKey) && !empty($addressSnapshot->$ctKey)) @php $l4[] = "P.S.: " . $addressSnapshot->$ctKey; @endphp @endif
                         @if($application->application_form->isFieldVisible('address', $stKey) && !empty($addressSnapshot->$stKey)) @php $l4[] = $addressSnapshot->$stKey; @endphp @endif
-                        @if($application->application_form->isFieldVisible('address', $ctKey) && !empty($addressSnapshot->$ctKey)) @php $l4[] = $addressSnapshot->$ctKey; @endphp @endif
                         @if(!empty($l4))
                             @php $hasData = true; @endphp
                             <span class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">{{ implode(', ', $l4) }}</span>
@@ -480,8 +485,8 @@
             </div>
             <div class="p-6">
                 @php
-                    $docMap = ['photo' => 'photo','signature' => 'signature','caste_certificate' => 'caste_certificate','prc_certificate' => 'address_proof','address_proof' => 'address_proof','age_proof' => 'hslc_admit_card','hslc_admit_card' => 'hslc_admit_card','mark_sheet_10' => 'hslc_marksheet','hslc_marksheet' => 'hslc_marksheet','certificate_10' => 'hslc_pass_certificate','hslc_pass_certificate' => 'hslc_pass_certificate','mark_sheet_12' => 'hs_marksheet','hs_marksheet' => 'hs_marksheet','certificate_12' => 'hs_pass_certificate','hs_pass_certificate' => 'hs_pass_certificate','graduation_marksheet' => 'graduation_marksheet','graduation_certificate' => 'graduation_pass_certificate','graduation_pass_certificate' => 'graduation_pass_certificate','post_graduation_marksheet' => 'post_graduation_marksheet','post_graduation_certificate' => 'post_graduation_pass_certificate','post_graduation_pass_certificate' => 'post_graduation_pass_certificate','hs_admit_card' => 'hs_admit_card','graduation_admit_card' => 'graduation_admit_card','post_graduation_admit_card' => 'post_graduation_admit_card','transfer_certificate' => 'transfer_certificate','income_certificate' => 'income_certificate','aadhaar_card' => 'aadhaar_card','passport' => 'passport'];
-                    $docLbls = ['photo' => 'Photograph','signature' => 'Signature','caste_certificate' => 'Caste Certificate','prc_certificate' => 'PRC / Address','address_proof' => 'Address Proof','age_proof' => 'Age Proof','hslc_admit_card' => 'HSLC Admit','mark_sheet_10' => '10th Marksheet','hslc_marksheet' => '10th Marksheet','certificate_10' => '10th Cert','hslc_pass_certificate' => '10th Cert','mark_sheet_12' => '12th Marksheet','hs_marksheet' => '12th Marksheet','certificate_12' => '12th Cert','hs_pass_certificate' => '12th Cert','graduation_marksheet' => 'Graduation Mark','graduation_certificate' => 'Graduation Cert','graduation_pass_certificate' => 'Graduation Cert','post_graduation_marksheet' => 'PG Mark','post_graduation_certificate' => 'PG Cert','post_graduation_pass_certificate' => 'PG Cert','hs_admit_card' => 'HS Admit','graduation_admit_card' => 'Grad Admit','post_graduation_admit_card' => 'PG Admit','transfer_certificate' => 'Transfer Cert','income_certificate' => 'Income Cert','aadhaar_card' => 'Aadhaar','passport' => 'Passport'];
+                    $docMap = ['photo' => 'photo','signature' => 'signature','caste_certificate' => 'caste_certificate','prc_certificate' => 'address_proof','address_proof' => 'address_proof','age_proof' => 'hslc_admit_card','hslc_admit_card' => 'hslc_admit_card','mark_sheet_10' => 'hslc_marksheet','hslc_marksheet' => 'hslc_marksheet','certificate_10' => 'hslc_pass_certificate','hslc_pass_certificate' => 'hslc_pass_certificate','mark_sheet_12' => 'hs_marksheet','hs_marksheet' => 'hs_marksheet','certificate_12' => 'hs_pass_certificate','hs_pass_certificate' => 'hs_pass_certificate','graduation_marksheet' => 'graduation_marksheet','graduation_certificate' => 'graduation_pass_certificate','graduation_pass_certificate' => 'graduation_pass_certificate','post_graduation_marksheet' => 'post_graduation_marksheet','post_graduation_certificate' => 'post_graduation_pass_certificate','post_graduation_pass_certificate' => 'post_graduation_pass_certificate','hs_admit_card' => 'hs_admit_card','graduation_admit_card' => 'graduation_admit_card','post_graduation_admit_card' => 'post_graduation_admit_card','income_certificate' => 'income_certificate','aadhaar_card' => 'aadhaar_card'];
+                    $docLbls = ['photo' => 'Photograph','signature' => 'Signature','caste_certificate' => 'Caste Certificate','prc_certificate' => 'PRC / Address','address_proof' => 'Address Proof','age_proof' => 'Age Proof','hslc_admit_card' => 'HSLC Admit','mark_sheet_10' => '10th Marksheet','hslc_marksheet' => '10th Marksheet','certificate_10' => '10th Cert','hslc_pass_certificate' => '10th Cert','mark_sheet_12' => '12th Marksheet','hs_marksheet' => '12th Marksheet','certificate_12' => '12th Cert','hs_pass_certificate' => '12th Cert','graduation_marksheet' => 'Graduation Mark','graduation_certificate' => 'Graduation Cert','graduation_pass_certificate' => 'Graduation Cert','post_graduation_marksheet' => 'PG Mark','post_graduation_certificate' => 'PG Cert','post_graduation_pass_certificate' => 'PG Cert','hs_admit_card' => 'HS Admit','graduation_admit_card' => 'Grad Admit','post_graduation_admit_card' => 'PG Admit','income_certificate' => 'Income Cert','aadhaar_card' => 'Aadhaar'];
                     $displayKeys = array_keys($docLbls);
                 @endphp
                 @if($docs)

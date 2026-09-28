@@ -98,14 +98,10 @@
                             'hs_pass_certificate' => 'HS Certificate', 'graduation_pass_certificate' => 'Graduation Certificate',
                             'post_graduation_pass_certificate' => 'PG Certificate', 'hslc_admit_card' => 'HSLC Admit Card',
                             'hs_admit_card' => 'HS Admit Card', 'graduation_admit_card' => 'Graduation Admit Card',
-                            'post_graduation_admit_card' => 'PG Admit Card', 'transfer_certificate' => 'Transfer Certificate',
+                            'post_graduation_admit_card' => 'PG Admit Card',
                             'caste_certificate' => 'Caste Certificate', 'income_certificate' => 'Income Certificate',
-                            'address_proof' => 'Address Proof', 'aadhaar_card' => 'Aadhaar Card', 'passport' => 'Passport',
-                            'bed_parangat_marksheet' => 'B.Ed./Parangat Mark Sheets', 'bed_parangat_certificate' => 'B.Ed./Parangat Certificate',
-                            'tet_certificate' => 'TET Certificate', 'pwd_certificate' => 'PwD Certificate',
-                            'ex_serviceman_certificate' => 'Ex-Serviceman Certificate', 'ncc_certificate_doc' => 'NCC Certificate',
-                            'sports_certificate' => 'Sports Certificate', 'cultural_certificate' => 'Fine Arts/Cultural Certificate',
-                            'btc_residential_certificate' => 'BTC Residential Certificate', 'language_diploma_certificate' => 'Language Diploma Certificate',
+                            'address_proof' => 'Address Proof', 'aadhaar_card' => 'Aadhaar Card',
+                            'btc_residential_certificate' => 'Permanent Resident Certificate',
                         ];
                     @endphp
                     <div class="lg:col-span-2">
