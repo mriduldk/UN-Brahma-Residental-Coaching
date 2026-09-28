@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Models\School;
+
+use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
+
+class FeedLike extends Model
+{
+    protected $table = 'school_feed_likes';
+
+    protected $fillable = [
+        'feed_id',
+        'user_id',
+    ];
+
+    public function feed()
+    {
+        return $this->belongsTo(SchoolFeed::class, 'feed_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}

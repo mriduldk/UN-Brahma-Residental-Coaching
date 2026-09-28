@@ -1,0 +1,334 @@
+@extends('layouts.institute')
+
+@section('title', isset($form) ? 'Edit Form' : 'Generate Form')
+
+@section('content')
+<div class="space-y-6">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center">
+            <a href="{{ route('institute.forms.index') }}" class="mr-4 text-slate-500 hover:text-slate-800 bg-white p-2 rounded-lg hover:shadow-sm transition-all">
+                <i data-lucide="arrow-left" size="24"></i>
+            </a>
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800">{{ isset($form) ? 'Edit Form Configuration' : 'Generate New Form' }}</h2>
+                <p class="text-slate-500">{{ isset($form) ? 'Update form details and field visibility' : 'Configure fields visible to students' }}</p>
+            </div>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ route('institute.forms.index') }}" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium">Cancel</a>
+            <button type="submit" form="create-form" id="submit-btn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200 flex items-center font-medium transition-all hover:-translate-y-0.5">
+                <i data-lucide="save" size="18" class="mr-2"></i> <span>{{ isset($form) ? 'Update Form' : 'Save Form' }}</span>
+            </button>
+        </div>
+    </div>
+
+    <form id="create-form" action="{{ isset($form) ? route('institute.forms.update', $form->id) : route('institute.forms.store') }}" method="POST" class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-8" onsubmit="return handleSubmit()">
+        @csrf
+        @if(isset($form))
+            @method('PUT')
+        @endif
+        
+        <!-- Form Basic Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Form Title</label>
+                <input type="text" name="application_name" value="{{ old('application_name', $form->application_name ?? '') }}" required placeholder="e.g., Admission Session 2025-26" class="w-full p-3 border border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all">
+            </div>
+            
+            <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Description</label>
+                <textarea name="application_description" rows="3" placeholder="Brief description..." class="w-full p-3 border border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all">{{ old('application_description', $form->application_description ?? '') }}</textarea>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Academic Session</label>
+                <select name="session" required class="w-full p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                    <option value="2025-2026" {{ (old('session', $form->session ?? '') == '2025-2026') ? 'selected' : '' }}>2025 - 2026</option>
+                    <option value="2026-2027" {{ (old('session', $form->session ?? '') == '2026-2027') ? 'selected' : '' }}>2026 - 2027</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Institution <span class="text-red-500">*</span></label>
+                <select name="institution_id" required class="w-full p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                    <option value="">Select Institution</option>
+                    @foreach($institutions as $inst)
+                        <option value="{{ $inst->id }}" {{ (old('institution_id', $form->institution_id ?? '') == $inst->id) ? 'selected' : '' }}>
+                            {{ $inst->institution_name }} ({{ $inst->institution_code }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <!-- Application Fee Config -->
+            <div class="md:col-span-1 space-y-3">
+                 <div class="flex items-center justify-between">
+                    <label class="block text-sm font-bold text-slate-700">Application Fee</label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_application_fee_required" value="1" id="app_fee_toggle" class="sr-only peer" {{ old('is_application_fee_required', $form->is_application_fee_required ?? true) ? 'checked' : '' }}>
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-2 text-xs font-medium text-slate-500">Required</span>
+                    </label>
+                 </div>
+                 <div class="relative transition-all" id="app_fee_container">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                    <input type="number" name="application_fee" id="application_fee" value="{{ old('application_fee', $form->application_fee ?? '') }}" min="0" step="0.01" placeholder="250" class="w-full pl-8 p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                </div>
+            </div>
+
+            <!-- Admission Fee Config -->
+            <div class="md:col-span-1 space-y-3">
+                 <div class="flex items-center justify-between">
+                    <label class="block text-sm font-bold text-slate-700">Admission Fee</label>
+                     <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_admission_required" value="1" id="adm_fee_toggle" class="sr-only peer" {{ old('is_admission_required', $form->is_admission_required ?? true) ? 'checked' : '' }}>
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-2 text-xs font-medium text-slate-500">Required</span>
+                    </label>
+                 </div>
+                 <div class="relative transition-all" id="adm_fee_container">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                    <input type="number" name="admission_fee" id="admission_fee" value="{{ old('admission_fee', $form->admission_fee ?? '') }}" min="0" step="0.01" placeholder="5000" class="w-full pl-8 p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Deadline</label>
+                <input type="date" name="deadline" value="{{ old('deadline', isset($form) && $form->deadline ? $form->deadline->format('Y-m-d') : '') }}" class="w-full p-3 border border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all">
+            </div>
+            @if(isset($form))
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Status</label>
+                <select name="status" required class="w-full p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                    <option value="draft" {{ $form->status == 'draft' ? 'selected' : '' }}>Draft</option>
+                    <option value="active" {{ $form->status == 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="closed" {{ $form->status == 'closed' ? 'selected' : '' }}>Closed</option>
+                </select>
+            </div>
+            @endif
+
+            <!-- Application Approval Config -->
+            <div class="md:col-span-2 space-y-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                 <div class="flex items-center justify-between">
+                    <div class="flex flex-col">
+                        <label class="block text-sm font-bold text-slate-700">Requires Admin Approval</label>
+                        <span class="text-xs text-slate-500">If enabled, submitted applications must be approved by an administrator before they are fully processed.</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_approval_required" value="1" class="sr-only peer" {{ old('is_approval_required', $form->is_approval_required ?? false) ? 'checked' : '' }}>
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-2 text-xs font-medium text-slate-500">Required</span>
+                    </label>
+                 </div>
+            </div>
+        </div>
+
+        <hr class="border-slate-100">
+
+        <!-- Field Configuration -->
+        <div class="space-y-8">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-slate-800 text-lg">Field Configuration</h3>
+                <span class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded font-medium">Select visible fields</span>
+            </div>
+
+            @php
+                $sections = [
+                    'personal' => ['title' => 'Personal Details', 'icon' => 'user', 'color' => 'blue', 'mandatory' => ['full_name', 'email', 'phone_number']],
+                    'address' => ['title' => 'Address Details', 'icon' => 'map-pin', 'color' => 'emerald', 'mandatory' => []],
+                    'academic' => ['title' => 'Academic Information', 'icon' => 'graduation-cap', 'color' => 'amber', 'mandatory' => []],
+                    'parents' => ['title' => 'Parent/Guardian Details', 'icon' => 'users', 'color' => 'indigo', 'mandatory' => []],
+                    'bank' => ['title' => 'Bank Details', 'icon' => 'university', 'color' => 'rose', 'mandatory' => []],
+                    'documents' => ['title' => 'Documents Upload', 'icon' => 'file', 'color' => 'slate', 'mandatory' => []],
+                ];
+
+                $defaults = [
+                    'personal' => ['full_name', 'gender', 'category', 'dob', 'phone_number', 'email'],
+                    'address' => [
+                        'permanent_village_town', 'permanent_district', 'permanent_state', 'permanent_country', 'permanent_pin_code',
+                        'present_village_town', 'present_district', 'present_state', 'present_country', 'present_pin_code'
+                    ],
+                    'academic' => ['examination', 'board_university', 'passing_year', 'percentage_grade', 'division'],
+                    'documents' => ['photo', 'signature'],
+                ];
+            @endphp
+
+            @foreach($sections as $key => $section)
+            @php
+                // If editing, use saved config to enable/disable section. If creating, use defaults (disable bank/parents)
+                if(isset($form) && $form->field_config) {
+                    $isSectionEnabled = isset($form->field_config[$key]['enabled']);
+                } else {
+                    $isSectionEnabled = !in_array($key, ['bank', 'parents']);
+                }
+            @endphp
+            <div class="bg-white border md:p-6 p-4 rounded-2xl border-slate-200 shadow-sm transition-all hover:shadow-md" id="section-{{ $key }}">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center">
+                        <div class="p-2 bg-{{ $section['color'] }}-50 text-{{ $section['color'] }}-600 rounded-lg mr-3">
+                            <i data-lucide="{{ $section['icon'] }}" size="20"></i>
+                        </div>
+                        {{ $section['title'] }}
+                    </h4>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="field_config[{{ $key }}][enabled]" value="1" class="sr-only peer section-toggle" data-target="{{ $key }}" {{ $isSectionEnabled ? 'checked' : '' }}>
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-medium text-slate-700">Enable</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 transition-all duration-300" id="fields-{{ $key }}">
+                    @if(isset($columns[$key]))
+                        @if(\Illuminate\Support\Arr::isAssoc($columns[$key]))
+                            {{-- Grouped Layout --}}
+                            @foreach($columns[$key] as $groupTitle => $groupFields)
+                                <div class="col-span-full mt-3 mb-1">
+                                    <h5 class="font-bold text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100 pb-1">{{ $groupTitle }}</h5>
+                                </div>
+                                @foreach($groupFields as $col)
+                                    @php
+                                        $label = ucwords(str_replace('_', ' ', $col));
+                                        $isMandatory = in_array($col, $section['mandatory']);
+                                        
+                                        if($isMandatory) {
+                                            $isChecked = true;
+                                        } elseif(isset($form) && $form->field_config) {
+                                            $isChecked = isset($form->field_config[$key]['fields']) && in_array($col, $form->field_config[$key]['fields']);
+                                        } else {
+                                            $isChecked = isset($defaults[$key]) && in_array($col, $defaults[$key]);
+                                        }
+                                    @endphp
+                                    <label class="flex items-start space-x-3 p-3 rounded-xl border border-slate-200 transition-all cursor-pointer {{ $isMandatory ? 'bg-slate-50 opacity-70' : 'hover:border-blue-400 hover:shadow-sm bg-white' }}">
+                                        <input type="checkbox" 
+                                            name="field_config[{{ $key }}][fields][]" 
+                                            value="{{ $col }}" 
+                                            {{ $isChecked ? 'checked' : '' }} 
+                                            {{ $isMandatory ? 'disabled' : '' }}
+                                            class="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                                        
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-slate-700 ">{{ $label }}</span>
+                                            @if($isMandatory)
+                                                <input type="hidden" name="field_config[{{ $key }}][fields][]" value="{{ $col }}">
+                                                <span class="text-[10px] text-red-500 font-bold uppercase mt-0.5">Mandatory</span>
+                                            @endif
+                                        </div>
+                                    </label>
+                                @endforeach
+                            @endforeach
+                        @else
+                            {{-- Flat Layout --}}
+                            @foreach($columns[$key] as $col)
+                                @php
+                                    $label = ucwords(str_replace('_', ' ', $col));
+                                    $isMandatory = in_array($col, $section['mandatory']);
+                                    
+                                     if($isMandatory) {
+                                        $isChecked = true;
+                                    } elseif(isset($form) && $form->field_config) {
+                                        $isChecked = isset($form->field_config[$key]['fields']) && in_array($col, $form->field_config[$key]['fields']);
+                                    } else {
+                                        $isChecked = isset($defaults[$key]) && in_array($col, $defaults[$key]);
+                                    }
+                                @endphp
+                                <label class="flex items-start space-x-3 p-3 rounded-xl border border-slate-200 transition-all cursor-pointer {{ $isMandatory ? 'bg-slate-50 opacity-70' : 'hover:border-blue-400 hover:shadow-sm bg-white' }}">
+                                    <input type="checkbox" 
+                                        name="field_config[{{ $key }}][fields][]" 
+                                        value="{{ $col }}" 
+                                        {{ $isChecked ? 'checked' : '' }} 
+                                        {{ $isMandatory ? 'disabled' : '' }}
+                                        class="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                                    
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-slate-700 ">{{ $label }}</span>
+                                        @if($isMandatory)
+                                            <input type="hidden" name="field_config[{{ $key }}][fields][]" value="{{ $col }}">
+                                            <span class="text-[10px] text-red-500 font-bold uppercase mt-0.5">Mandatory</span>
+                                        @endif
+                                    </div>
+                                </label>
+                            @endforeach
+                        @endif
+                    @else
+                        <p class="text-sm text-slate-400 italic">No configuration available for this section.</p>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+
+        </div>
+    </form>
+</div>
+
+@push('scripts')
+<script>
+    // Handle Section Toggles
+    document.querySelectorAll('.section-toggle').forEach(toggle => {
+        const targetId = toggle.dataset.target;
+        const fieldsContainer = document.getElementById(`fields-${targetId}`);
+        const card = document.getElementById(`section-${targetId}`);
+        
+        if(!toggle.checked) {
+            fieldsContainer.style.opacity = '0.5';
+            fieldsContainer.style.pointerEvents = 'none';
+            card.classList.add('opacity-50', 'grayscale');
+        }
+
+        toggle.addEventListener('change', function() {
+            const targetId = this.dataset.target;
+            const fieldsContainer = document.getElementById(`fields-${targetId}`);
+            const card = document.getElementById(`section-${targetId}`);
+            
+            if(this.checked) {
+                fieldsContainer.style.opacity = '1';
+                fieldsContainer.style.pointerEvents = 'auto';
+                card.classList.remove('opacity-50', 'grayscale');
+            } else {
+                fieldsContainer.style.opacity = '0.5';
+                fieldsContainer.style.pointerEvents = 'none';
+                card.classList.add('opacity-50', 'grayscale');
+            }
+        });
+    });
+
+    function handleSubmit() {
+        const btn = document.getElementById('submit-btn');
+        const icon = btn.querySelector('i');
+        const text = btn.querySelector('span');
+        
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-wait');
+        
+        icon.setAttribute('data-lucide', 'loader-2');
+        icon.classList.add('animate-spin');
+        lucide.createIcons();
+        
+        text.innerText = 'Saving...';
+        return true;
+    }
+
+    function setupFeeToggle(toggleId, inputId, containerId) {
+        const toggle = document.getElementById(toggleId);
+        const input = document.getElementById(inputId);
+        const container = document.getElementById(containerId);
+
+        function updateState() {
+            if(toggle.checked) {
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+                input.required = true;
+                if(input.value === '0') input.value = '';
+            } else {
+                container.style.opacity = '0.5';
+                container.style.pointerEvents = 'none';
+                input.required = false;
+            }
+        }
+
+        toggle.addEventListener('change', updateState);
+        updateState();
+    }
+
+    setupFeeToggle('app_fee_toggle', 'application_fee', 'app_fee_container');
+    setupFeeToggle('adm_fee_toggle', 'admission_fee', 'adm_fee_container');
+</script>
+@endpush
+@endsection

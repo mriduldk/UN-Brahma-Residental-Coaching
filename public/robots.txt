@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /administration/
+Disallow: /institute/
+Disallow: /student/
+Disallow: /login
+Disallow: /register
+
+Sitemap: {{ url('sitemap.xml') }}
