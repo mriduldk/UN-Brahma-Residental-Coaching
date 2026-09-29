@@ -82,7 +82,21 @@ class ApplicationFormController extends Controller
         $count = ApplicationForm::where('session', $validated['session'])->count() + 1;
         $code = 'ITI-' . $fy . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
 
-        $form = ApplicationForm::create([
+        $appliedForOptions = [];
+        if (!empty($request->applied_for_options)) {
+            if (is_array($request->applied_for_options)) {
+                $appliedForOptions = array_values(array_filter(array_map('trim', $request->applied_for_options)));
+            } elseif (is_string($request->applied_for_options)) {
+                $lines = preg_split('/[\r\n,]+/', $request->applied_for_options);
+                $appliedForOptions = array_values(array_filter(array_map('trim', $lines)));
+            }
+        }
+        $fieldConfig = $validated['field_config'] ?? [];
+        if (!empty($appliedForOptions)) {
+            $fieldConfig['applied_for_options'] = $appliedForOptions;
+        }
+
+        $createData = [
             'application_code' => $code,
             'application_name' => $validated['application_name'],
             'application_description' => $validated['application_description'],
@@ -95,10 +109,16 @@ class ApplicationFormController extends Controller
             'status' => 'active', 
             'deadline' => $validated['deadline'],
             'created_by' => $user->id,
-            'field_config' => $validated['field_config'] ?? [],
+            'field_config' => $fieldConfig,
             'institution_id' => $validated['institution_id'],
             'organization_id' => $institution->organization_id,
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('application_forms', 'applied_for_options')) {
+            $createData['applied_for_options'] = !empty($appliedForOptions) ? json_encode($appliedForOptions) : null;
+        }
+
+        $form = ApplicationForm::create($createData);
 
         return redirect()->route('institute.forms.index')->with('success', 'Form created successfully! Code: ' . $code);
     }
@@ -165,7 +185,19 @@ class ApplicationFormController extends Controller
             abort(403, 'Access Denied: You must be an administrator of this institution.');
         }
 
-        $form->update([
+        $appliedForOptions = [];
+        if (!empty($request->applied_for_options)) {
+            if (is_array($request->applied_for_options)) {
+                $appliedForOptions = array_values(array_filter(array_map('trim', $request->applied_for_options)));
+            } elseif (is_string($request->applied_for_options)) {
+                $lines = preg_split('/[\r\n,]+/', $request->applied_for_options);
+                $appliedForOptions = array_values(array_filter(array_map('trim', $lines)));
+            }
+        }
+        $fieldConfig = $validated['field_config'] ?? [];
+        $fieldConfig['applied_for_options'] = $appliedForOptions;
+
+        $updateData = [
             'application_name' => $validated['application_name'],
             'application_description' => $validated['application_description'],
             'session' => $validated['session'],
@@ -176,9 +208,15 @@ class ApplicationFormController extends Controller
             'is_approval_required' => $request->boolean('is_approval_required'),
             'deadline' => $validated['deadline'],
             'status' => $validated['status'],
-            'field_config' => $validated['field_config'] ?? [],
+            'field_config' => $fieldConfig,
             'institution_id' => $validated['institution_id'],
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('application_forms', 'applied_for_options')) {
+            $updateData['applied_for_options'] = !empty($appliedForOptions) ? json_encode($appliedForOptions) : null;
+        }
+
+        $form->update($updateData);
 
         return redirect()->route('institute.forms.index')->with('success', 'Form updated successfully!');
     }

@@ -8,7 +8,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Student Dashboard') - Director of Education, BTC</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('image/logo/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('image/logo/logo-em.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('image/logo/logo-em.png') }}">
     <meta name="robots" content="noindex, nofollow">
     <meta name="author" content="Director of Education, BTC">
     <!-- Tailwind CSS -->
@@ -137,11 +138,7 @@
                     <x-student-nav-link href="{{ route('student.applications.history') }}"
                         :active="request()->routeIs('student.applications.history') || request()->routeIs('student.application.show') || request()->routeIs('student.application.payment') || request()->routeIs('student.application.form') || request()->routeIs('student.application.preview*')" icon="folder-open">My
                         Applications</x-student-nav-link>
-                    <x-student-nav-link href="{{ route('student.documents') }}"
-                        :active="request()->routeIs('student.documents')" icon="folder">My Documents</x-student-nav-link>
-                    <x-student-nav-link href="{{ route('student.finance.index') }}"
-                        :active="request()->routeIs('student.finance.*')" icon="credit-card">Finance &
-                        Payments</x-student-nav-link>
+
 
                 </nav>
 

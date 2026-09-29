@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 tracking-tight">My Applications</h1>
-            <p class="text-slate-500 text-sm mt-1">Track the status and payment updates of your submitted forms.</p>
+            <p class="text-slate-500 text-sm mt-1">Track the status and updates of your submitted forms.</p>
         </div>
         
         <!-- Filter/Search -->
@@ -22,8 +22,9 @@
                 <select class="w-full sm:w-48 pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none shadow-sm cursor-pointer">
                     <option value="">All Status</option>
                     <option value="draft">Draft</option>
-                    <option value="payment_pending">Payment Pending</option>
                     <option value="submitted">Submitted</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
                 </select>
                 <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size="16"></i>
             </div>
@@ -67,7 +68,6 @@
                         <th class="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Application Details</th>
                         <th class="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Timeline</th>
                         <th class="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Status</th>
-                        <th class="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Payment</th>
                         <th class="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Actions</th>
                     </tr>
                 </thead>
@@ -84,10 +84,18 @@
                                     <h3 class="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
                                         {{ $app->application_form->application_name ?? 'Unknown Form' }}
                                     </h3>
-                                    <div class="flex items-center gap-2 mt-1">
+                                    <div class="flex flex-wrap items-center gap-2 mt-1">
                                         <span class="font-mono text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">
                                             {{ $app->application_code ?? '-----' }}
                                         </span>
+                                        @php
+                                            $appliedFor = $app->applied_for ?? $app->application_student?->applied_for;
+                                        @endphp
+                                        @if($appliedFor)
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
+                                                <i data-lucide="compass" size="11" class="text-indigo-600"></i> Applied For: {{ $appliedFor }}
+                                            </span>
+                                        @endif
                                     </div>
                                     
                                     @if($app->status == 'draft')
@@ -149,36 +157,6 @@
                             @endif
                         </td>
 
-                        <!-- Payment Status -->
-                        <td class="px-6 py-4">
-                            @php
-                                $form = $app->application_form;
-                                $fee = $form->is_application_fee_required ? $form->getApplicationFeeFor($app->student, $app) : 0;
-                                $feeRequired = $form->is_application_fee_required && $fee > 0;
-                            @endphp
-                            
-                            @if(!$feeRequired)
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                                    Not Required
-                                </span>
-                            @elseif($app->status == 'draft')
-                                <span class="text-slate-400 text-xs italic">-</span>
-                            @elseif($app->payment_status == 'paid')
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-700 border border-teal-100">
-                                    <i data-lucide="check" size="12"></i> Paid
-                                </span>
-                            @else
-                                <div class="flex flex-col items-start gap-1">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-100">
-                                        <i data-lucide="alert-circle" size="12"></i> Pending
-                                    </span>
-                                    @if($fee > 0)
-                                        <span class="text-[10px] font-bold text-slate-400 pl-1">₹{{ number_format($fee, 0) }} Due</span>
-                                    @endif
-                                </div>
-                            @endif
-                        </td>
-
                         <!-- Actions -->
                         <td class="px-6 py-4 text-right">
                             @php
@@ -199,10 +177,18 @@
                                     @endif
                                 @else
                                     <a href="{{ route('student.application.show', $app->id) }}" 
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg transition-all border border-emerald-200 shadow-sm hover:shadow text-xs font-bold" 
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 rounded-lg transition-all border border-emerald-200 shadow-sm hover:shadow text-xs font-bold" 
                                        title="View Details">
-                                        <i data-lucide="eye" size="16"></i> View
+                                        <i data-lucide="eye" size="14"></i> View
                                     </a>
+
+                                    @if(in_array($app->status, ['submitted', 'approved']))
+                                        <a href="{{ route('student.application.download', $app->id) }}" 
+                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-all shadow-sm shadow-blue-200 hover:shadow-blue-300 transform hover:-translate-y-0.5 text-xs font-bold" 
+                                           title="Download Acknowledgement">
+                                            <i data-lucide="download" size="14"></i> Download Acknowledgement
+                                        </a>
+                                    @endif
 
                                     @if($form->is_application_fee_required && $app->payment_status != 'paid')
                                         <a href="{{ route('student.application.payment', ['id' => $app->id]) }}" 
@@ -216,7 +202,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-16 text-center">
+                        <td colspan="4" class="px-6 py-16 text-center">
                             <div class="flex flex-col items-center justify-center max-w-sm mx-auto">
                                 <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100">
                                     <i data-lucide="folder-open" size="32" class="text-slate-300"></i>

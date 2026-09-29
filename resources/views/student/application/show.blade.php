@@ -16,10 +16,23 @@
         
         <div class="flex items-center gap-3">
             <a href="{{ route('student.application.download', $application->id) }}" id="downloadPdfBtn" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
-                <i data-lucide="download" class="mr-2" size="18"></i> Download Application PDF
+                <i data-lucide="download" class="mr-2" size="18"></i> Download Acknowledgement
             </a>
         </div>
     </div>
+
+    @if(session('success'))
+        <div class="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3 shadow-xs">
+            <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
+            <span class="font-semibold text-sm">{{ session('success') }}</span>
+        </div>
+    @endif
+    @if(session('info'))
+        <div class="mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-xl flex items-center gap-3 shadow-xs">
+            <i data-lucide="info" class="w-5 h-5 text-blue-600 flex-shrink-0"></i>
+            <span class="font-semibold text-sm">{{ session('info') }}</span>
+        </div>
+    @endif
 
     <!-- Application Summary Header Card -->
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-8">
@@ -74,6 +87,15 @@
                                 <i data-lucide="briefcase" size="18" class="text-indigo-500"></i>
                                 <span>{{ $application->application_form->application_name }}</span>
                             </div>
+                            @php
+                                $displayAppliedFor = $application->applied_for ?? $application->application_student?->applied_for ?? null;
+                            @endphp
+                            @if($displayAppliedFor)
+                            <div class="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 text-indigo-900 rounded-xl text-xs font-black shadow-2xs">
+                                <i data-lucide="compass" size="15" class="text-indigo-600"></i>
+                                <span>Applied For: <span class="text-indigo-700 underline decoration-indigo-300 font-extrabold">{{ $displayAppliedFor }}</span></span>
+                            </div>
+                            @endif
                         </div>
 
                         <div class="flex justify-center md:justify-start items-center gap-3">
@@ -84,16 +106,14 @@
                             @php
                                 $calculatedFee = $application->application_form->is_application_fee_required ? $application->application_form->getApplicationFeeFor($application->student, $application) : 0;
                             @endphp
-                            <div class="flex items-center gap-2 font-bold px-3 py-1.5 rounded-xl border {{ ($application->application_form->is_application_fee_required && $calculatedFee > 0) ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-600' }} shadow-sm">
+                            @if($application->application_form->is_application_fee_required && $calculatedFee > 0)
+                            <div class="flex items-center gap-2 font-bold px-3 py-1.5 rounded-xl border bg-blue-50 border-blue-200 text-blue-700 shadow-sm">
                                 <i data-lucide="banknote" size="16"></i>
                                 <span class="text-xs tracking-tight">
-                                    @if($application->application_form->is_application_fee_required && $calculatedFee > 0)
-                                        Fee: ₹{{ number_format($calculatedFee, 2) }}
-                                    @else
-                                        Fee: Not Required
-                                    @endif
+                                    Fee: ₹{{ number_format($calculatedFee, 2) }}
                                 </span>
                             </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -156,6 +176,27 @@
                 <h3 class="font-bold text-slate-800">Personal Information</h3>
             </div>
             <div class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-6 gap-x-8">
+                <!-- Applied For Display -->
+                @php
+                    $displayAppliedFor = $application->applied_for ?? $application->application_student?->applied_for ?? null;
+                @endphp
+                @if($displayAppliedFor)
+                <div class="col-span-2 sm:col-span-3 lg:col-span-4 p-3.5 bg-gradient-to-r from-indigo-50/80 to-blue-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs flex-shrink-0">
+                            <i data-lucide="compass" size="18"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest block">Selected Course / Stream (Applied For)</span>
+                            <span class="text-base font-extrabold text-slate-900">{{ $displayAppliedFor }}</span>
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
+                        <i data-lucide="lock" size="12" class="text-slate-400"></i> Fixed Upon Submission
+                    </span>
+                </div>
+                @endif
+
                 @php
                     $personalFields = [
                         'Email' => 'email',

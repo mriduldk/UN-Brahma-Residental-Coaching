@@ -16,13 +16,14 @@
                 <p class="text-slate-500 mt-2">Please double-check all information before final submission.</p>
             </div>
             
-            <div class="flex items-center gap-3">
-                <a href="{{ route('student.application.form', ['form_id' => $app->application_form_id]) }}" class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-50 transition-all">
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="{{ route('student.application.form', ['form_id' => $app->application_form_id]) }}" class="inline-flex items-center px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-50 transition-all shadow-2xs">
                     <i data-lucide="edit-3" class="mr-2" size="18"></i> Edit Application
                 </a>
-                <div class="px-4 py-2 bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold text-sm rounded-xl flex items-center">
-                    <i data-lucide="check-circle-2" class="mr-2 text-emerald-500" size="18"></i> 100% Complete
-                </div>
+                <button type="button" onclick="confirmSubmit()" class="submit-confirm-btn inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/25 transition-all hover:scale-105 active:scale-95 gap-2">
+                    <span>Submit</span>
+                    <i data-lucide="arrow-right" size="16"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -67,6 +68,15 @@
                                 <i data-lucide="briefcase" size="18" class="text-indigo-500"></i>
                                 <span>{{ $app->application_form->application_name }}</span>
                             </div>
+                            @php
+                                $displayAppliedFor = $app->applied_for ?? $data['applied_for'] ?? $app->application_student?->applied_for ?? null;
+                            @endphp
+                            @if($displayAppliedFor)
+                            <div class="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 text-indigo-900 rounded-xl text-xs font-black shadow-2xs">
+                                <i data-lucide="compass" size="15" class="text-indigo-600"></i>
+                                <span>Applied For: <span class="text-indigo-700 underline decoration-indigo-300 font-extrabold">{{ $displayAppliedFor }}</span></span>
+                            </div>
+                            @endif
                         </div>
 
                         <div class="flex justify-center md:justify-start items-center gap-3">
@@ -77,16 +87,14 @@
                             @php
                                 $calculatedFee = $app->application_form->is_application_fee_required ? $app->application_form->getApplicationFeeFor($app->student, $app) : 0;
                             @endphp
-                            <div class="flex items-center gap-2 font-bold px-3 py-1.5 rounded-xl border {{ ($app->application_form->is_application_fee_required && $calculatedFee > 0) ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-600' }} shadow-sm">
+                            @if($app->application_form->is_application_fee_required && $calculatedFee > 0)
+                            <div class="flex items-center gap-2 font-bold px-3 py-1.5 rounded-xl border bg-blue-50 border-blue-200 text-blue-700 shadow-sm">
                                 <i data-lucide="banknote" size="16"></i>
                                 <span class="text-xs tracking-tight">
-                                    @if($app->application_form->is_application_fee_required && $calculatedFee > 0)
-                                        Fee: ₹{{ number_format($calculatedFee, 2) }}
-                                    @else
-                                        Fee: Not Required
-                                    @endif
+                                    Fee: ₹{{ number_format($calculatedFee, 2) }}
                                 </span>
                             </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -105,6 +113,22 @@
                 <h3 class="font-bold text-slate-800">Personal Information</h3>
             </div>
             <div class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-6 gap-x-8">
+                <!-- Applied For Primary Display -->
+                <div class="col-span-2 sm:col-span-3 lg:col-span-4 p-3.5 bg-gradient-to-r from-indigo-50/80 to-blue-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs flex-shrink-0">
+                            <i data-lucide="compass" size="18"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest block">Selected Course / Stream (Applied For)</span>
+                            <span class="text-base font-extrabold text-slate-900">{{ $displayAppliedFor ?? 'N/A' }}</span>
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
+                        <i data-lucide="alert-triangle" size="12" class="text-amber-600"></i> Once submitted, cannot be changed
+                    </span>
+                </div>
+
                 @php
                     $personalFields = [
                         'Email' => 'email',
@@ -600,8 +624,15 @@
                 <form action="{{ route('student.application.store') }}" method="POST" id="finalSubmitForm">
                     @csrf
                     <input type="hidden" name="application_id" value="{{ $app->id }}">
-                    <button type="button" onclick="confirmSubmit()" class="w-full px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-                        Submit & Proceed <i data-lucide="arrow-right" size="18"></i>
+                    <input type="hidden" name="form_id" value="{{ $app->application_form_id }}">
+                    @php
+                        $hiddenAppliedFor = $app->applied_for ?? $data['applied_for'] ?? $app->application_student?->applied_for ?? '';
+                    @endphp
+                    @if($hiddenAppliedFor)
+                        <input type="hidden" name="applied_for" value="{{ $hiddenAppliedFor }}">
+                    @endif
+                    <button type="button" onclick="confirmSubmit()" class="submit-confirm-btn w-full px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                        Submit <i data-lucide="arrow-right" size="18"></i>
                     </button>
                 </form>
             </div>
@@ -612,7 +643,11 @@
 
 @push('scripts')
 <script>
+    let isSubmittingFinal = false;
+
     function confirmSubmit() {
+        if (isSubmittingFinal) return;
+
         // Use custom styled AppSwal from form.blade.php if available via global or local definition
         const PreviewSwal = Swal.mixin({
             customClass: {
@@ -643,11 +678,16 @@
             reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                // Show loading on button
-                const btn = document.querySelector('button[onclick="confirmSubmit()"]');
-                btn.innerHTML = '<i data-lucide="loader-2" class="mr-2 animate-spin" size="18"></i> Processing...';
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.7';
+                if (isSubmittingFinal) return;
+                isSubmittingFinal = true;
+
+                // Show loading on all submit buttons
+                document.querySelectorAll('.submit-confirm-btn').forEach(btn => {
+                    btn.innerHTML = '<i data-lucide="loader-2" class="mr-2 animate-spin" size="18"></i> Submitting...';
+                    btn.style.pointerEvents = 'none';
+                    btn.style.opacity = '0.7';
+                    btn.disabled = true;
+                });
                 lucide.createIcons();
                 
                 document.getElementById('finalSubmitForm').submit();

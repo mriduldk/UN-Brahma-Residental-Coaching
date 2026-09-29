@@ -415,7 +415,6 @@
               <li><span class="mk">✓</span> Secure document upload</li>
             </ul>
           </div>
-          <div class="seal">REF: ED/BTC/04/2026 &middot; KOKRAJHAR</div>
         </div>
 
         <div class="auth-form">
@@ -476,7 +475,7 @@
           </div>
 
           <div class="notice-box">
-            This is the only official portal for ED/BTC/04/2026 recruitment. The Education Department, BTC never requests OTP or passwords over phone calls.
+            This is the only official portal for Upendra Nath Brahma Residential Free Coaching. The Education Department, BTC never requests OTP or passwords over phone calls.
           </div>
         </div>
 

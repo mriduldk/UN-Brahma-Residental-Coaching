@@ -20,7 +20,13 @@ class StudentApplication extends Model
         'current_step',
         'approval_status',
         'approval_remarks',
+        'applied_for',
     ];
+
+    public function getAppliedForDisplayAttribute()
+    {
+        return $this->applied_for ?? $this->application_student?->applied_for ?? 'N/A';
+    }
 
     protected $casts = [
         'submitted_at' => 'datetime',

@@ -40,17 +40,20 @@
                 @endforeach
             </select>
 
-            <select name="approval_status" class="border flex-1 min-w-[150px] border-slate-200 rounded-xl px-4 py-2.5 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500 text-slate-600 cursor-pointer hover:border-blue-300 transition-colors" onchange="this.form.submit()">
-                <option value="">All Approval Status</option>
-                <option value="pending" {{ request('approval_status') == 'pending' ? 'selected' : '' }}>Approval Pending</option>
-                <option value="approved" {{ request('approval_status') == 'approved' ? 'selected' : '' }}>Approved</option>
-                <option value="rejected" {{ request('approval_status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+            <select name="applied_for" class="border flex-1 min-w-[150px] border-slate-200 rounded-xl px-4 py-2.5 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500 text-slate-600 cursor-pointer hover:border-blue-300 transition-colors" onchange="this.form.submit()">
+                <option value="">All Applied For</option>
+                @if(isset($appliedForOptions))
+                    @foreach($appliedForOptions as $opt)
+                        <option value="{{ $opt }}" {{ request('applied_for') == $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
+                @endif
             </select>
 
-            <select name="payment_status" class="border flex-1 min-w-[150px] border-slate-200 rounded-xl px-4 py-2.5 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500 text-slate-600 cursor-pointer hover:border-blue-300 transition-colors" onchange="this.form.submit()">
-                <option value="">All Payment Status</option>
-                <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>Payment Pending</option>
-                <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
+            <select name="status" class="border flex-1 min-w-[150px] border-slate-200 rounded-xl px-4 py-2.5 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500 text-slate-600 cursor-pointer hover:border-blue-300 transition-colors" onchange="this.form.submit()">
+                <option value="">All Status</option>
+                <option value="submitted" {{ request('status') == 'submitted' ? 'selected' : '' }}>Submitted</option>
+                <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
+                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
             </select>
 
             <button type="submit" formaction="{{ route('administration.applications.export') }}" class="bg-blue-600 flex-none text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 flex items-center justify-center text-sm font-medium shadow-md shadow-blue-200 transition-all hover:-translate-y-0.5 whitespace-nowrap">
@@ -68,10 +71,9 @@
                         <th class="px-6 py-4">Application ID</th>
                         <th class="px-6 py-4">Applicant</th>
                         <th class="px-6 py-4">Form</th>
+                        <th class="px-6 py-4">Applied For</th>
                         <!-- <th class="px-6 py-4">Category</th> -->
                         <th class="px-6 py-4">Status</th>
-                        <th class="px-6 py-4">Approval</th>
-                        <th class="px-6 py-4">Payment</th>
                         <th class="px-6 py-4 text-center">Action</th>
                     </tr>
                 </thead>
@@ -95,6 +97,18 @@
                                 {{ $app->application_form->application_name ?? 'N/A' }}
                             </span>
                         </td>
+                        <td class="px-6 py-4">
+                            @php
+                                $appliedFor = $app->applied_for ?? $app->application_student?->applied_for ?? null;
+                            @endphp
+                            @if($appliedFor)
+                                <span class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-indigo-100 shadow-2xs">
+                                    <i data-lucide="compass" size="13" class="text-indigo-600"></i> {{ $appliedFor }}
+                                </span>
+                            @else
+                                <span class="text-slate-400 text-xs italic">-</span>
+                            @endif
+                        </td>
                         <!-- <td class="px-6 py-4">
                             <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">
                                 {{ $app->application_student->category ?? 'N/A' }}
@@ -115,36 +129,6 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4">
-                            @if($app->application_form->is_approval_required)
-                                @if($app->approval_status == 'approved')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-100 shadow-sm">
-                                        <i data-lucide="check-circle" size="14" class="mr-1"></i> Approved
-                                    </span>
-                                @elseif($app->approval_status == 'rejected')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-100 shadow-sm">
-                                        <i data-lucide="x-circle" size="14" class="mr-1"></i> Rejected
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-100 shadow-sm">
-                                        <i data-lucide="clock" size="14" class="mr-1"></i> Pending
-                                    </span>
-                                @endif
-                            @else
-                                <span class="text-slate-400 text-xs font-semibold flex items-center bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg w-fit">
-                                    <i data-lucide="minus-circle" size="14" class="mr-1"></i> N/A
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            @if(!$app->application_form->is_application_fee_required)
-                                <span class="text-slate-500 font-bold text-xs flex items-center"><i data-lucide="minus-circle" size="14" class="inline mr-1"></i> Not Required</span>
-                            @elseif($app->payment_status == 'paid')
-                                <span class="text-green-600 font-bold text-xs flex items-center"><i data-lucide="check-circle" size="14" class="inline mr-1"></i> Paid</span>
-                            @else
-                                <span class="text-red-600 font-bold text-xs flex items-center"><i data-lucide="alert-circle" size="14" class="inline mr-1"></i> Pending</span>
-                            @endif
-                        </td>
                         <td class="px-6 py-4 text-center">
                             <a href="{{ route('administration.applications.detail', $app->id) }}" class="text-slate-400 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-all inline-block" title="View Details">
                                 <i data-lucide="eye" size="18"></i>
@@ -153,7 +137,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-8 text-slate-500">No applications found.</td>
+                        <td colspan="6" class="text-center py-8 text-slate-500">No applications found.</td>
                     </tr>
                     @endforelse
                 </tbody>

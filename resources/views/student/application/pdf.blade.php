@@ -102,15 +102,19 @@
         <!-- Meta Information (Below header to avoid overlap) -->
         <table class="meta-table">
             <tr>
-                <td width="30%">
+                <td width="25%">
                     <span class="label">Application No.</span>
-                    <span class="value" style="font-size: 12px; color: #2563eb;">{{ $application->application_code }}</span>
+                    <span class="value" style="font-size: 11px; color: #2563eb;">{{ $application->application_code }}</span>
                 </td>
-                <td width="30%" align="center">
+                <td width="30%">
+                    <span class="label">Applied For</span>
+                    <span class="value" style="font-size: 11px; color: #1e1b4b; font-weight: bold;">{{ strtoupper($application->applied_for ?? $application->application_student?->applied_for ?? '-') }}</span>
+                </td>
+                <td width="20%" align="center">
                     <span class="label">Application Date</span>
                     <span class="value">{{ $application->created_at->format('d/m/Y') }}</span>
                 </td>
-                <td width="40%" align="right">
+                <td width="25%" align="right">
                     @if($application->application_form->is_application_fee_required)
                      <span class="status-badge {{ $application->payment_status == 'paid' ? 'status-paid' : 'status-pending' }}">
                         Payment: {{ strtoupper($application->payment_status) }}

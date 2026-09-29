@@ -22,9 +22,18 @@
                 <div>
                     <h2 class="text-2xl font-bold text-slate-800">{{ $application->application_student->full_name ?? 'N/A' }}</h2>
                     <p class="text-slate-500 font-medium text-sm">Application ID: <span class="font-mono text-slate-700 font-bold bg-slate-100 px-2 py-0.5 rounded">{{ $application->application_code }}</span></p>
-                    <div class="mt-3 flex space-x-2">
+                    <div class="mt-3 flex flex-wrap gap-2 items-center">
                         <span class="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide border border-blue-200">{{ $application->application_form->application_name ?? 'N/A' }}</span>
                         
+                        @php
+                            $appliedForVal = $application->applied_for ?? $application->application_student?->applied_for ?? null;
+                        @endphp
+                        @if($appliedForVal)
+                            <span class="bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide border border-indigo-200 flex items-center shadow-2xs">
+                                <i data-lucide="compass" size="13" class="mr-1 text-indigo-600"></i> Applied For: {{ $appliedForVal }}
+                            </span>
+                        @endif
+
                          @if($application->status == 'approved')
                             <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide border border-green-200 flex items-center"><i data-lucide="check-circle" size="12" class="mr-1"></i> Approved</span>
                         @elseif($application->status == 'rejected')
@@ -58,6 +67,22 @@
                         <i data-lucide="user" size="16" class="mr-2"></i> Personal Details
                     </h3>
                     <div class="grid grid-cols-2 gap-y-6 text-sm">
+                        @if($appliedForVal)
+                        <div class="col-span-2 p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-100 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                                    <i data-lucide="compass" size="16"></i>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block">Course / Stream (Applied For)</span>
+                                    <span class="text-sm font-extrabold text-slate-900">{{ $appliedForVal }}</span>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2.5 py-1 rounded-full flex items-center gap-1 shadow-2xs">
+                                <i data-lucide="lock" size="11" class="text-slate-400"></i> Locked Choice
+                            </span>
+                        </div>
+                        @endif
                          <div><span class="text-slate-400 block text-xs uppercase font-bold mb-1">Father's Name</span><span class="font-medium text-slate-800 text-base">{{ $application->application_parent->father_name ?? 'N/A' }}</span></div>
                         <div><span class="text-slate-400 block text-xs uppercase font-bold mb-1">Mother's Name</span><span class="font-medium text-slate-800 text-base">{{ $application->application_parent->mother_name ?? 'N/A' }}</span></div>
                         <div><span class="text-slate-400 block text-xs uppercase font-bold mb-1">Date of Birth</span><span class="font-medium text-slate-800 text-base">{{ $application->application_student->dob ?? 'N/A' }}</span></div>

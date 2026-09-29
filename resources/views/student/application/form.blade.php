@@ -69,17 +69,145 @@
         </div>
     </div>
 
-    <form id="admissionForm" class="p-6 md:p-8" action="{{ route('student.application.preview') }}" method="POST" enctype="multipart/form-data">
+    <form id="admissionForm" novalidate class="p-6 md:p-8" action="{{ route('student.application.preview') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="form_id" value="{{ $form->id }}">
+        @if(isset($existingApp) && $existingApp)
+            <input type="hidden" name="application_id" value="{{ $existingApp->id }}">
+        @endif
         
         <!-- STEP 1: PERSONAL DETAILS -->
         <div id="step-1" class="step-content space-y-6">
-            <h3 class="text-lg font-bold text-slate-800 border-b pb-2 flex items-center">
-                <i data-lucide="user" class="mr-2" size="20"></i> Personal Details
-            </h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            @php
+                $appliedOptions = $form->getEffectiveAppliedForOptions();
+                $currentAppliedFor = old('applied_for', $existingApp?->applied_for ?? $existingApp?->application_student?->applied_for ?? '');
+                $isSubmitted = in_array($existingApp?->status ?? '', ['submitted', 'pending', 'approved']);
+            @endphp
+
+            <!-- "Applied For" Selection Card -->
+            <div id="applied-for-card" class="bg-gradient-to-br from-indigo-50/80 via-blue-50/50 to-slate-50 border-2 {{ !empty($currentAppliedFor) ? 'border-emerald-300 bg-emerald-50/15' : 'border-indigo-200' }} rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xs relative transition-all duration-300">
+                <!-- Background decorative glow -->
+                <div class="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl pointer-events-none">
+                    <div class="absolute -right-8 -top-8 w-32 h-32 bg-indigo-200/25 rounded-full blur-2xl"></div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5 sm:mb-4 pb-3 sm:pb-4 border-b border-indigo-100">
+                    <div class="flex items-center gap-2.5 sm:gap-3">
+                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 flex-shrink-0">
+                            <i data-lucide="compass" class="w-5 h-5 sm:w-5.5 sm:h-5.5"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[11px] font-bold text-red-500 bg-red-50 border border-red-200/60 px-2 py-0.5 rounded-full">* Mandatory</span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-black text-slate-800 tracking-tight mt-0.5">Applied For <span class="text-indigo-600 font-semibold text-xs sm:text-sm block sm:inline-block sm:ml-1">(Course / Stream Selection)</span></h3>
+                        </div>
+                    </div>
+                    <div id="applied-for-status-badge" class="self-start sm:self-auto">
+                        @if(!empty($currentAppliedFor))
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-full shadow-2xs">
+                                <i data-lucide="check-circle-2" size="14"></i>
+                                <span>Selected & Unlocked</span>
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold rounded-full shadow-2xs">
+                                <i data-lucide="lock" size="14"></i>
+                                <span>Selection Required</span>
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Prominent Warning Callout -->
+                <div class="bg-amber-50/95 border-2 border-amber-300/80 rounded-xl p-3 sm:p-4 mb-4 sm:mb-5 flex items-start gap-2.5 sm:gap-3.5 shadow-xs">
+                    <div class="p-1 sm:p-1.5 bg-amber-500 text-white rounded-lg flex-shrink-0 mt-0.5 shadow-sm">
+                        <i data-lucide="alert-triangle" size="16"></i>
+                    </div>
+                    <div class="text-xs text-amber-950 leading-relaxed">
+                        <p class="font-extrabold uppercase tracking-wider text-[10px] sm:text-[11px] text-amber-900 mb-0.5 flex flex-wrap items-center gap-1.5">
+                            <span>Important Warning</span>
+                            <span class="bg-amber-200 text-amber-900 px-2 py-0.5 text-[9px] rounded-full font-black uppercase">Cannot be changed</span>
+                        </p>
+                        <p class="font-semibold text-slate-700">
+                            <span class="text-amber-900 font-extrabold underline decoration-amber-400 decoration-2">Once submitted, this cannot be changed.</span> Please verify your choice thoroughly before filling out your personal details.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Dropdown Selection -->
+                <div>
+                    <div class="flex flex-wrap items-center justify-between gap-1.5 mb-2">
+                        <label for="applied_for_select" class="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                            Select Course / Stream Applied For <span class="text-red-500">*</span>
+                        </label>
+                        <span class="text-[10px] sm:text-[11px] text-indigo-600 font-bold flex items-center gap-1 bg-indigo-50/80 px-2 sm:px-2.5 py-0.5 rounded-full border border-indigo-100 shadow-2xs">
+                            <i data-lucide="search" size="11"></i> Type to Search
+                        </span>
+                    </div>
+                    <div class="relative w-full">
+                        <select 
+                            name="applied_for" 
+                            id="applied_for_select" 
+                            placeholder="Type to search or choose your course / stream..."
+                            class="applied-for-tom-select w-full"
+                            autocomplete="off"
+                        >
+                            <option value=""></option>
+                            @foreach($appliedOptions as $opt)
+                                <option value="{{ $opt }}" {{ $currentAppliedFor == $opt ? 'selected' : '' }}>
+                                    {{ $opt }}
+                                </option>
+                            @endforeach
+                            @if(!empty($currentAppliedFor) && !in_array($currentAppliedFor, $appliedOptions))
+                                <option value="{{ $currentAppliedFor }}" selected>{{ $currentAppliedFor }}</option>
+                            @endif
+                        </select>
+                        <div class="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none z-10">
+                            <i data-lucide="compass" size="18"></i>
+                        </div>
+                    </div>
+
+                    @if($isSubmitted)
+                        <input type="hidden" name="applied_for" value="{{ $currentAppliedFor }}">
+                        <p class="text-[11px] text-slate-500 mt-2 font-medium flex items-center gap-1.5">
+                            <i data-lucide="lock" size="13" class="text-slate-400"></i> Locked: Application has been submitted and cannot be modified.
+                        </p>
+                    @else
+                        <p class="text-[11px] text-slate-500 mt-2.5 font-medium flex items-center gap-1.5" id="applied_for_helper">
+                            @if(!empty($currentAppliedFor))
+                                <i data-lucide="check-circle" size="13" class="text-emerald-500"></i>
+                                <span class="text-emerald-700 font-bold">Selected: {{ $currentAppliedFor }}. Personal details unlocked below.</span>
+                            @else
+                                <i data-lucide="info" size="13" class="text-indigo-500"></i>
+                                <span>Search or select an option above to unlock the personal details section below.</span>
+                            @endif
+                        </p>
+                    @endif
+                </div>
+            </div>
+
+            <!-- PERSONAL DETAILS SECTION (GATED BY APPLIED FOR) -->
+            <div id="personal-details-wrapper" class="transition-all duration-500 relative">
+                
+                <!-- LOCKED OVERLAY BANNER (when not selected yet) -->
+                <div id="personal-locked-overlay" class="bg-gradient-to-br from-slate-50 to-indigo-50/40 border-2 border-dashed border-indigo-200 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center my-3 sm:my-4 transition-all duration-300 flex flex-col items-center justify-center gap-2.5 sm:gap-3 shadow-xs {{ !empty($currentAppliedFor) ? 'hidden' : '' }}">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner flex-shrink-0">
+                        <i data-lucide="lock" class="w-5 h-5 sm:w-6.5 sm:h-6.5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm sm:text-base font-bold text-slate-800 mb-1">Personal Details Locked</h4>
+                        <p class="text-xs text-slate-500 max-w-md">Please choose your <strong class="text-indigo-600 font-bold">"Applied For"</strong> option in the card above to unlock and fill in your Personal Details.</p>
+                    </div>
+                </div>
+
+                <!-- Form fields container -->
+                <div id="personal-fields-container" class="space-y-6 transition-all duration-500 {{ empty($currentAppliedFor) ? 'opacity-35 pointer-events-none filter blur-[1px]' : '' }}">
+                    <h3 class="text-lg font-bold text-slate-800 border-b pb-2 flex items-center">
+                        <i data-lucide="user" class="mr-2" size="20"></i> Personal Details
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Students Table Fields -->
                 @if($form->isFieldVisible('personal', 'full_name'))
                 <div class="md:col-span-2">
@@ -346,6 +474,9 @@
              </div>
              @endif
             @endif
+
+                </div><!-- /#personal-fields-container -->
+            </div><!-- /#personal-details-wrapper -->
 
             <div class="flex justify-end pt-4">
                 @if(isset($stepMap[2]))
@@ -967,6 +1098,131 @@
 .animate-progress-indefinite {
     animation: progress-indefinite 2s infinite linear;
 }
+
+/* Applied For Custom TomSelect Styling - Fully Mobile Responsive */
+.applied-for-ts.ts-wrapper {
+    position: relative;
+    width: 100%;
+}
+.applied-for-ts .ts-control {
+    padding: 0.75rem 2.4rem 0.75rem 2.6rem !important;
+    border-radius: 0.75rem !important;
+    border: 2px solid #a5b4fc !important;
+    font-size: 0.875rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.2s ease !important;
+    min-height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+@media (min-width: 640px) {
+    .applied-for-ts .ts-control {
+        min-height: 52px !important;
+        font-size: 0.925rem !important;
+        padding-left: 2.85rem !important;
+    }
+}
+.applied-for-ts.selected .ts-control {
+    border-color: #10b981 !important;
+    background-color: #ffffff !important;
+}
+.applied-for-ts.focus .ts-control {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18) !important;
+}
+.applied-for-ts.selected.focus .ts-control {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18) !important;
+}
+.applied-for-ts.disabled .ts-control,
+.applied-for-ts.locked .ts-control {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    cursor: not-allowed !important;
+    opacity: 0.9 !important;
+}
+.applied-for-ts.locked .clear-button,
+.applied-for-ts.disabled .clear-button {
+    display: none !important;
+}
+.applied-for-ts .ts-control input {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+}
+@media (min-width: 640px) {
+    .applied-for-ts .ts-control input {
+        font-size: 0.9rem !important;
+    }
+}
+.applied-for-ts .ts-control input::placeholder {
+    color: #94a3b8 !important;
+    font-weight: 500 !important;
+}
+.applied-for-ts .ts-dropdown {
+    border-radius: 0.875rem !important;
+    border: 1.5px solid #c7d2fe !important;
+    box-shadow: 0 16px 32px -4px rgba(30, 27, 75, 0.18), 0 8px 12px -6px rgba(30, 27, 75, 0.1) !important;
+    padding: 0.4rem !important;
+    margin-top: 6px !important;
+    background: #ffffff !important;
+    z-index: 100 !important;
+    max-height: 280px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+.applied-for-ts .ts-dropdown .option {
+    padding: 0.65rem 0.75rem !important;
+    border-radius: 0.6rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    margin-bottom: 2px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+@media (min-width: 640px) {
+    .applied-for-ts .ts-dropdown .option {
+        padding: 0.7rem 0.85rem !important;
+        font-size: 0.875rem !important;
+    }
+}
+.applied-for-ts .ts-dropdown .option:hover,
+.applied-for-ts .ts-dropdown .active {
+    background-color: #eef2ff !important;
+    color: #4338ca !important;
+}
+.applied-for-ts .ts-dropdown .selected {
+    background-color: #ecfdf5 !important;
+    color: #065f46 !important;
+    font-weight: 700 !important;
+}
+.applied-for-ts.single .ts-control::after {
+    border-color: #6366f1 transparent transparent !important;
+    border-width: 6px 5px 0 !important;
+    right: 12px !important;
+    transition: transform 0.2s ease !important;
+}
+.applied-for-ts.single.dropdown-active .ts-control::after {
+    transform: rotate(180deg) !important;
+    margin-top: -6px !important;
+}
+.applied-for-ts.has-items .clear-button {
+    font-size: 1.2rem !important;
+    color: #94a3b8 !important;
+    right: 28px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    line-height: 1 !important;
+    padding: 2px !important;
+    transition: color 0.15s ease !important;
+}
+.applied-for-ts.has-items .clear-button:hover {
+    color: #ef4444 !important;
+}
 </style>
 @endsection
 
@@ -974,6 +1230,50 @@
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
+    let appliedForTomSelect = null;
+    function initAppliedForTomSelect() {
+        const selectEl = document.getElementById('applied_for_select');
+        if (!selectEl || selectEl.tomselect) return;
+
+        const isFormSubmitted = @json($isSubmitted);
+        const plugins = [];
+        if (!isFormSubmitted) {
+            plugins.push('clear_button');
+        }
+
+        appliedForTomSelect = new TomSelect(selectEl, {
+            create: false,
+            maxItems: 1,
+            plugins: plugins,
+            placeholder: 'Type to search or choose your course / stream...',
+            allowEmptyOption: false,
+            selectOnTab: true,
+            searchField: ['text', 'value'],
+            wrapperClass: 'ts-wrapper applied-for-ts',
+            render: {
+                no_results: function(data, escape) {
+                    return '<div class="no-results text-slate-500 py-3 px-2 text-xs flex items-center justify-center gap-1.5 bg-slate-50 rounded-lg m-1 border border-dashed border-slate-200"><svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> No course found matching "<strong class="text-indigo-600">' + escape(data.input) + '</strong>"</div>';
+                },
+                option: function(data, escape) {
+                    const label = escape(data.text || data.value || '');
+                    return '<div class="flex items-center justify-between py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-lg gap-2"><div class="flex items-center gap-2 min-w-0"><span class="w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 text-xs font-bold border border-indigo-100 shadow-2xs"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></span><span class="font-bold text-slate-800 text-xs sm:text-sm truncate">' + label + '</span></div><span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200/70 px-1.5 sm:px-2 py-0.5 rounded-full flex-shrink-0">Stream</span></div>';
+                },
+                item: function(data, escape) {
+                    const label = escape(data.text || data.value || '');
+                    return '<div class="item font-bold text-slate-900 flex items-center gap-2 text-xs sm:text-sm">' + label + '</div>';
+                }
+            }
+        });
+
+        appliedForTomSelect.on('change', function(value) {
+            handleAppliedForChange(value);
+        });
+
+        if (isFormSubmitted) {
+            appliedForTomSelect.lock();
+        }
+    }
+
     function initTomSelectExam(element) {
         if (element.tomselect) return;
         const currentVal = element.value;
@@ -989,6 +1289,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
+        initAppliedForTomSelect();
         document.querySelectorAll('.exam-tom-select').forEach(el => initTomSelectExam(el));
         
         // Initialize District dropdowns
@@ -1002,6 +1303,9 @@
                 placeholder: 'Select District'
             });
         });
+
+        const initialAppliedVal = appliedForTomSelect ? appliedForTomSelect.getValue() : (document.getElementById('applied_for_select')?.value ?? '');
+        handleAppliedForChange(initialAppliedVal);
     });
     // --- UI/UX Enhancements ---
     // Custom SweetAlert Mixin for "Beautiful" UI
@@ -1030,6 +1334,10 @@
         } else {
             currentStep = 1;
         }
+    }
+    const hasAppliedFor = @json(!empty($currentAppliedFor));
+    if (!hasAppliedFor) {
+        currentStep = 1;
     }
     const totalVisibleSteps = {{ count($steps) }};
     
@@ -1088,9 +1396,107 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function handleAppliedForChange(val) {
+        const overlay = document.getElementById('personal-locked-overlay');
+        const container = document.getElementById('personal-fields-container');
+        const badge = document.getElementById('applied-for-status-badge');
+        const helper = document.getElementById('applied_for_helper');
+        const select = document.getElementById('applied_for_select');
+        const card = document.getElementById('applied-for-card');
+
+        if (!val || String(val).trim() === '') {
+            if (overlay) overlay.classList.remove('hidden');
+            if (container) {
+                container.classList.add('opacity-35', 'pointer-events-none', 'filter', 'blur-[1px]');
+            }
+            if (card) {
+                card.classList.remove('border-emerald-300', 'bg-emerald-50/15');
+                card.classList.add('border-indigo-200');
+            }
+            if (select && select.tomselect) {
+                select.tomselect.wrapper.classList.remove('selected');
+            }
+            if (badge) {
+                badge.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold rounded-full shadow-2xs">
+                        <i data-lucide="lock" size="14"></i>
+                        <span>Selection Required</span>
+                    </span>
+                `;
+            }
+            if (helper) {
+                helper.innerHTML = `
+                    <i data-lucide="info" size="13" class="text-indigo-500"></i>
+                    <span>Search or select an option above to unlock the personal details section below.</span>
+                `;
+            }
+            if (select) {
+                select.classList.remove('border-emerald-500', 'border-emerald-300');
+                select.classList.add('border-indigo-300');
+            }
+        } else {
+            if (overlay) overlay.classList.add('hidden');
+            if (container) {
+                container.classList.remove('opacity-35', 'pointer-events-none', 'filter', 'blur-[1px]');
+            }
+            if (card) {
+                card.classList.remove('border-indigo-200');
+                card.classList.add('border-emerald-300', 'bg-emerald-50/15');
+            }
+            if (select && select.tomselect) {
+                select.tomselect.wrapper.classList.add('selected');
+            }
+            if (badge) {
+                badge.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-full shadow-2xs">
+                        <i data-lucide="check-circle-2" size="14"></i>
+                        <span>Selected & Unlocked</span>
+                    </span>
+                `;
+            }
+            if (helper) {
+                const safeVal = String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                helper.innerHTML = `
+                    <i data-lucide="check-circle" size="13" class="text-emerald-500"></i>
+                    <span class="text-emerald-700 font-bold">Selected: ${safeVal}. Personal details unlocked below.</span>
+                `;
+            }
+            if (select) {
+                select.classList.remove('border-indigo-300');
+                select.classList.add('border-emerald-500');
+            }
+        }
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
     function nextStep(step, btn) {
         // Current step is stored in global 'currentStep'
         const currentStepEl = document.getElementById(`step-${currentStep}`);
+
+        // Check if on Step 1: applied_for is strictly required before moving forward
+        const appliedForSelect = document.getElementById('applied_for_select');
+        if (appliedForSelect && currentStep == 1 && (!appliedForSelect.value || !appliedForSelect.value.trim())) {
+            AppSwal.fire({
+                icon: 'warning',
+                title: 'Course Selection Required',
+                text: 'Please select what you are "Applied For" before proceeding. Once submitted, this cannot be changed.',
+                confirmButtonColor: '#4f46e5'
+            });
+            const card = document.getElementById('applied-for-card');
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            if (appliedForSelect.tomselect) {
+                appliedForSelect.tomselect.focus();
+                appliedForSelect.tomselect.open();
+            } else {
+                appliedForSelect.focus();
+            }
+            return;
+        }
+
         const inputs = currentStepEl.querySelectorAll('input[required], select[required], textarea[required]');
         let isValid = true;
         let firstInvalid = null;
@@ -1206,6 +1612,11 @@
         const formData = new FormData(form);
         formData.append('step', step);
 
+        const appliedForEl = document.getElementById('applied_for_select');
+        if (appliedForEl && appliedForEl.value && !formData.get('applied_for')) {
+            formData.append('applied_for', appliedForEl.value);
+        }
+
         try {
             const response = await fetch("{{ route('student.application.save-step') }}", {
                 method: 'POST',
@@ -1307,6 +1718,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        const appliedForSelect = document.getElementById('applied_for_select');
+        if (appliedForSelect) {
+            handleAppliedForChange(appliedForSelect.value);
+        }
+
         if(document.getElementById('sameAddress') && document.getElementById('sameAddress').checked) {
             toggleSameAddress();
         }
@@ -1583,6 +1999,31 @@
 
     // Submit Button Loading State
     document.getElementById('admissionForm').addEventListener('submit', function(e) {
+        // Guard: Verify Applied For is selected
+        const appliedForSelect = document.getElementById('applied_for_select');
+        if (appliedForSelect && (!appliedForSelect.value || !appliedForSelect.value.trim())) {
+            e.preventDefault();
+            currentStep = 1;
+            updateSteps();
+            AppSwal.fire({
+                icon: 'warning',
+                title: 'Course Selection Required',
+                text: 'Please select what you are "Applied For" in Step 1 before proceeding.',
+                confirmButtonColor: '#4f46e5'
+            });
+            const card = document.getElementById('applied-for-card');
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            if (appliedForSelect.tomselect) {
+                appliedForSelect.tomselect.focus();
+                appliedForSelect.tomselect.open();
+            } else {
+                appliedForSelect.focus();
+            }
+            return;
+        }
+
         // Final Step Validation (Last Step)
         // Find the last step number from our steps array
         if(steps.length === 0) return;

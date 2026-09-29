@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Laravel') }} - Super Admin</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('image/logo/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('image/logo/logo-em.png') }}">
     <meta name="robots" content="noindex, nofollow">
     <meta name="author" content="Director of Education, BTC">
     <!-- Tailwind CSS -->

@@ -36,6 +36,7 @@ class ApplicationStudent extends Model
         'ncc_certificate',
         'has_national_sports_achievement',
         'has_fine_arts_cultural_achievement',
+        'applied_for',
     ];
 
     /**

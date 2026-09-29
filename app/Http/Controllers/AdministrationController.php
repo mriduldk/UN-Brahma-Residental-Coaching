@@ -404,7 +404,21 @@ class AdministrationController extends Controller
             }
         }
 
-        $form = \App\Models\ApplicationForm::create([
+        $appliedForOptions = [];
+        if (!empty($data['applied_for_options'])) {
+            if (is_array($data['applied_for_options'])) {
+                $appliedForOptions = array_values(array_filter(array_map('trim', $data['applied_for_options'])));
+            } elseif (is_string($data['applied_for_options'])) {
+                $lines = preg_split('/[\r\n,]+/', $data['applied_for_options']);
+                $appliedForOptions = array_values(array_filter(array_map('trim', $lines)));
+            }
+        }
+        $fieldConfig = $data['field_config'] ?? [];
+        if (!empty($appliedForOptions)) {
+            $fieldConfig['applied_for_options'] = $appliedForOptions;
+        }
+
+        $createPayload = [
             'application_code' => $code,
             'application_name' => $data['application_name'],
             'application_description' => $data['application_description'],
@@ -419,12 +433,18 @@ class AdministrationController extends Controller
 
             'deadline' => $data['deadline'],
             'created_by' => $user->id,
-            'field_config' => $data['field_config'] ?? [],
+            'field_config' => $fieldConfig,
             'institution_id' => $data['institution_id'],
             'organization_id' => $org->id,
             'advertisement_pdf' => $advertisementPdf,
             'no_of_vacancies' => $data['no_of_vacancies'] ?? null,
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('application_forms', 'applied_for_options')) {
+            $createPayload['applied_for_options'] = !empty($appliedForOptions) ? json_encode($appliedForOptions) : null;
+        }
+
+        $form = \App\Models\ApplicationForm::create($createPayload);
 
         if ($org->quota) {
             $org->quota->increment('used_forms');
@@ -562,6 +582,18 @@ class AdministrationController extends Controller
             'no_of_vacancies' => 'nullable|integer|min:1',
         ]);
 
+        $appliedForOptions = [];
+        if (!empty($request->applied_for_options)) {
+            if (is_array($request->applied_for_options)) {
+                $appliedForOptions = array_values(array_filter(array_map('trim', $request->applied_for_options)));
+            } elseif (is_string($request->applied_for_options)) {
+                $lines = preg_split('/[\r\n,]+/', $request->applied_for_options);
+                $appliedForOptions = array_values(array_filter(array_map('trim', $lines)));
+            }
+        }
+        $fieldConfig = $validated['field_config'] ?? [];
+        $fieldConfig['applied_for_options'] = $appliedForOptions;
+
         $updateData = [
             'application_name' => $validated['application_name'],
             'application_description' => $validated['application_description'],
@@ -574,10 +606,14 @@ class AdministrationController extends Controller
             'is_approval_required' => $request->boolean('is_approval_required'),
             'deadline' => $validated['deadline'],
             'status' => $validated['status'],
-            'field_config' => $validated['field_config'] ?? [],
+            'field_config' => $fieldConfig,
             'institution_id' => $validated['institution_id'],
             'no_of_vacancies' => $validated['no_of_vacancies'] ?? null,
         ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('application_forms', 'applied_for_options')) {
+            $updateData['applied_for_options'] = !empty($appliedForOptions) ? json_encode($appliedForOptions) : null;
+        }
 
         // Handle advertisement PDF upload
         if ($request->hasFile('advertisement_pdf')) {
@@ -793,15 +829,28 @@ class AdministrationController extends Controller
             $query->where('approval_status', $request->approval_status);
         }
 
-        // 3. Search (Code, Name, Phone, Email)
+        // Filter by Applied For
+        if ($request->filled('applied_for')) {
+            $appliedForVal = $request->applied_for;
+            $query->where(function($q) use ($appliedForVal) {
+                $q->where('applied_for', $appliedForVal)
+                  ->orWhereHas('application_student', function($qs) use ($appliedForVal) {
+                      $qs->where('applied_for', $appliedForVal);
+                  });
+            });
+        }
+
+        // 3. Search (Code, Name, Phone, Email, Applied For)
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('application_code', 'like', "%{$search}%")
+                  ->orWhere('applied_for', 'like', "%{$search}%")
                   ->orWhereHas('application_student', function($qs) use ($search) {
                       $qs->where('full_name', 'like', "%{$search}%")
                          ->orWhere('phone_number', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%");
+                         ->orWhere('email', 'like', "%{$search}%")
+                         ->orWhere('applied_for', 'like', "%{$search}%");
                   });
             });
         }
@@ -815,7 +864,31 @@ class AdministrationController extends Controller
         }
         $institutions = $org->institutions()->select('id', 'institution_name')->get();
 
-        return view('administration.applications.index', compact('applications', 'forms', 'institutions'));
+        // Get unique applied_for options for the filter
+        $appliedForList = \App\Models\StudentApplication::whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereNotNull('applied_for')
+            ->where('applied_for', '!=', '')
+            ->distinct()
+            ->pluck('applied_for');
+
+        $studentAppliedFor = \App\Models\ApplicationStudent::whereHas('student_application.application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereNotNull('applied_for')
+            ->where('applied_for', '!=', '')
+            ->distinct()
+            ->pluck('applied_for');
+
+        $allForms = $org->applicationForms()->get();
+        $formAppliedFor = collect([]);
+        foreach ($allForms as $f) {
+            $opts = $f->field_config['applied_for_options'] ?? (is_array($f->applied_for_options) ? $f->applied_for_options : json_decode($f->applied_for_options ?? '[]', true));
+            if (!empty($opts) && is_array($opts)) {
+                $formAppliedFor = $formAppliedFor->merge($opts);
+            }
+        }
+
+        $appliedForOptions = $appliedForList->merge($studentAppliedFor)->merge($formAppliedFor)->filter()->unique()->values();
+
+        return view('administration.applications.index', compact('applications', 'forms', 'institutions', 'appliedForOptions'));
     }
 
     public function exportApplications(Request $request)
@@ -844,6 +917,15 @@ class AdministrationController extends Controller
         if ($request->has('status') && $request->status != '') {
             $query->where('status', $request->status);
         }
+        if ($request->filled('applied_for')) {
+            $appliedForVal = $request->applied_for;
+            $query->where(function($q) use ($appliedForVal) {
+                $q->where('applied_for', $appliedForVal)
+                  ->orWhereHas('application_student', function($qs) use ($appliedForVal) {
+                      $qs->where('applied_for', $appliedForVal);
+                  });
+            });
+        }
         if ($request->has('institution_id') && $request->institution_id != '') {
             $query->whereHas('application_form', function ($q) use ($request) {
                 $q->where('institution_id', $request->institution_id);
@@ -859,10 +941,12 @@ class AdministrationController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('application_code', 'like', "%{$search}%")
+                  ->orWhere('applied_for', 'like', "%{$search}%")
                   ->orWhereHas('application_student', function($qs) use ($search) {
                       $qs->where('full_name', 'like', "%{$search}%")
                          ->orWhere('phone_number', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%");
+                         ->orWhere('email', 'like', "%{$search}%")
+                         ->orWhere('applied_for', 'like', "%{$search}%");
                   });
             });
         }
@@ -885,6 +969,7 @@ class AdministrationController extends Controller
             fputcsv($file, [
                 'Application Code', 
                 'Form / Trade', 
+                'Applied For',
                 'Applicant Name', 
                 'Phone', 
                 'Email', 
@@ -900,6 +985,7 @@ class AdministrationController extends Controller
                 fputcsv($file, [
                     $app->application_code,
                     $app->application_form->application_name ?? 'N/A',
+                    $app->applied_for ?? $app->application_student?->applied_for ?? 'N/A',
                     $app->application_student->full_name ?? 'N/A',
                     $app->application_student->phone_number ?? 'N/A',
                     $app->application_student->email ?? 'N/A',

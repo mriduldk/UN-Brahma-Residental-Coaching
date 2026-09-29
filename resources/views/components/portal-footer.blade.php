@@ -71,7 +71,7 @@
     <div class="col">
       <img src="/image/logo/logo-em.png" alt="BTC Emblem" class="emblem">
       <h5>UN Brahma Residential Free Coaching</h5>
-      <p>Department of Education, Bodoland Territorial Council<br>Kokrajhar, BTR, Assam — 783370</p>
+      <p>Department of Education, Bodoland Territorial Council<br>Kokrajhar, BTC, Assam — 783370</p>
     </div>
     <div class="col">
       <h5>Programmes &amp; Disciplines</h5>

@@ -183,6 +183,90 @@
                 <p class="text-xs text-slate-400 mt-1">Upload the official brochure or advertisement PDF (max 10 MB).{{ isset($form) ? ' Leave blank to keep existing.' : '' }}</p>
             </div>
 
+            <!-- "Applied For" (Course / Stream / Programme) Options Configuration -->
+            <div class="md:col-span-2 bg-gradient-to-br from-indigo-50/70 via-blue-50/40 to-slate-50 border-2 border-indigo-200/80 rounded-2xl p-6 shadow-xs space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 flex-shrink-0">
+                            <i data-lucide="layers" size="20"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-base font-extrabold text-slate-800">"Applied For" Writable Options</h3>
+                                <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Required Student Choice</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-0.5">Write the courses, streams, or programs applicants can choose from. Applicants must select one before filling personal details.</p>
+                        </div>
+                    </div>
+                    <div class="self-start sm:self-auto flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-1.5">
+                            <span id="applied-options-count" class="text-indigo-600 font-black">0</span> options active
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Writable Input -->
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Writable Options List <span class="text-slate-400 font-normal lowercase">(one per line or comma-separated)</span>
+                            </label>
+                            <span class="text-[11px] text-amber-600 font-medium flex items-center gap-1">
+                                <i data-lucide="alert-circle" size="13"></i>
+                                Once submitted, student cannot change their selection
+                            </span>
+                        </div>
+                        @php
+                            $existingOptionsStr = '';
+                            if (isset($form)) {
+                                $existingOpts = $form->getAppliedForOptions();
+                                if (!empty($existingOpts)) {
+                                    $existingOptionsStr = implode("\n", $existingOpts);
+                                }
+                            } else {
+                                $existingOptionsStr = "Engineering (JEE)\nMedical (NEET)";
+                            }
+                        @endphp
+                        <textarea 
+                            name="applied_for_options" 
+                            id="applied_for_options_textarea" 
+                            rows="4" 
+                            placeholder="Type options here, e.g.:&#10;Engineering (JEE)&#10;Medical (NEET)&#10;Arts / Humanities&#10;Commerce" 
+                            class="w-full p-3.5 border border-slate-300 bg-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm font-medium leading-relaxed font-sans placeholder:text-slate-400"
+                        >{{ old('applied_for_options', $existingOptionsStr) }}</textarea>
+                    </div>
+
+                    <!-- Preset Buttons -->
+                    <div class="flex flex-wrap items-center gap-2 pt-0.5">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Presets:</span>
+                        <button type="button" onclick="appendPreset('Engineering (JEE)\nMedical (NEET)')" class="px-2.5 py-1 text-xs font-medium bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-lg transition-all shadow-2xs cursor-pointer">
+                            + JEE & NEET
+                        </button>
+                        <button type="button" onclick="appendPreset('Class XI - Science\nClass XI - Arts\nClass XI - Commerce')" class="px-2.5 py-1 text-xs font-medium bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-lg transition-all shadow-2xs cursor-pointer">
+                            + Science / Arts / Commerce
+                        </button>
+                        <button type="button" onclick="appendPreset('Civil Services (UPSC)\nCivil Services (APSC)')" class="px-2.5 py-1 text-xs font-medium bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-lg transition-all shadow-2xs cursor-pointer">
+                            + UPSC / APSC
+                        </button>
+                        <button type="button" onclick="clearAppliedOptions()" class="px-2.5 py-1 text-xs font-medium text-slate-400 hover:text-red-600 ml-auto transition-colors cursor-pointer">
+                            Clear
+                        </button>
+                    </div>
+
+                    <!-- Live Student Preview Chips -->
+                    <div class="bg-white/90 border border-indigo-100 rounded-xl p-3.5">
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i data-lucide="eye" size="13" class="text-indigo-500"></i> Live Applicant Preview</span>
+                            <span class="text-[10px] text-indigo-600 font-semibold lowercase">updates instantly</span>
+                        </div>
+                        <div id="applied-options-preview-container" class="flex flex-wrap gap-2 min-h-[32px] items-center">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Application Approval Config -->
             <div class="md:col-span-2 space-y-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                  <div class="flex items-center justify-between">
@@ -491,6 +575,80 @@
 
     setupFeeToggle('app_fee_toggle', 'app_fee_container');
     setupFeeToggle('adm_fee_toggle', 'adm_fee_container');
+
+    // Applied For Options Live Preview & Presets
+    const appliedTextarea = document.getElementById('applied_for_options_textarea');
+    const appliedPreview = document.getElementById('applied-options-preview-container');
+    const appliedCountBadge = document.getElementById('applied-options-count');
+
+    function updateAppliedForPreview() {
+        if (!appliedTextarea || !appliedPreview) return;
+        const raw = appliedTextarea.value || '';
+        const lines = raw.split(/[\r\n,]+/).map(s => s.trim()).filter(s => s.length > 0);
+
+        if (appliedCountBadge) {
+            appliedCountBadge.innerText = lines.length;
+        }
+
+        if (lines.length === 0) {
+            appliedPreview.innerHTML = `
+                <div class="text-xs text-slate-400 italic flex items-center gap-1.5 py-1">
+                    <i data-lucide="info" size="14"></i>
+                    <span>No options entered yet. Type in the box above or use presets. (If left blank, form title will be used as default option).</span>
+                </div>
+            `;
+        } else {
+            appliedPreview.innerHTML = lines.map((opt, idx) => `
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-bold rounded-lg shadow-2xs group">
+                    <span class="w-4 h-4 rounded-full bg-indigo-200 text-indigo-700 text-[10px] flex items-center justify-center font-bold">${idx + 1}</span>
+                    <span>${escapeHtml(opt)}</span>
+                    <button type="button" onclick="removeOptionByIndex(${idx})" class="ml-1 text-indigo-400 hover:text-red-500 transition-colors p-0.5 rounded cursor-pointer" title="Remove this option">
+                        <i data-lucide="x" size="12"></i>
+                    </button>
+                </span>
+            `).join('');
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function appendPreset(presetText) {
+        if (!appliedTextarea) return;
+        const current = (appliedTextarea.value || '').trim();
+        if (current.length > 0) {
+            appliedTextarea.value = current + '\n' + presetText;
+        } else {
+            appliedTextarea.value = presetText;
+        }
+        updateAppliedForPreview();
+    }
+
+    function clearAppliedOptions() {
+        if (!appliedTextarea) return;
+        appliedTextarea.value = '';
+        updateAppliedForPreview();
+    }
+
+    function removeOptionByIndex(index) {
+        if (!appliedTextarea) return;
+        const raw = appliedTextarea.value || '';
+        const lines = raw.split(/[\r\n,]+/).map(s => s.trim()).filter(s => s.length > 0);
+        if (index >= 0 && index < lines.length) {
+            lines.splice(index, 1);
+            appliedTextarea.value = lines.join('\n');
+            updateAppliedForPreview();
+        }
+    }
+
+    if (appliedTextarea) {
+        appliedTextarea.addEventListener('input', updateAppliedForPreview);
+        updateAppliedForPreview();
+    }
 </script>
 @endpush
 @endsection

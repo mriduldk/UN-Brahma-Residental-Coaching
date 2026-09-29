@@ -180,7 +180,7 @@ class StudentController extends Controller
         
         $applications = collect();
         if ($student) {
-            $applications = \App\Models\StudentApplication::with('application_form')
+            $applications = \App\Models\StudentApplication::with(['application_form', 'student', 'application_student'])
                                 ->where('student_id', $student->id)
                                 ->orderBy('created_at', 'desc')
                                 ->get();
@@ -466,6 +466,7 @@ class StudentController extends Controller
         // Prepare data array similar to preview for consistent view logic
         $data = [
             'trade' => $application->application_form->application_name ?? 'N/A',
+            'applied_for' => $application->applied_for ?? $application->application_student?->applied_for ?? $application->application_form->application_name ?? 'N/A',
             'full_name' => $application->application_student->full_name ?? '',
             'phone_number' => $application->application_student->phone_number ?? '',
             'email' => $application->application_student->email ?? '',
@@ -582,24 +583,59 @@ class StudentController extends Controller
     public function applicationPreview(Request $request)
     {
         if ($request->isMethod('get')) {
-            $data = session('application_data');
+            $data = session('application_data') ?? [];
             $app = null;
+            $user = auth()->user();
+            $student = \App\Models\Student::where('user_id', $user->id)->first();
 
-            if (isset($data['application_id'])) {
-                $app = \App\Models\StudentApplication::with(['application_form', 'application_documents'])->find($data['application_id']);
-            } elseif ($request->has('application_id')) {
-                 $app = \App\Models\StudentApplication::with(['application_form', 'application_documents'])->find($request->application_id);
-                 // If found via query param, also populate $data locally or in session if missing
-                 if ($app) {
-                     $data = $data ?? [];
-                     $data['application_id'] = $app->id;
-                     $data['form_id'] = $app->application_form_id;
-                     session(['application_data' => $data]);
-                 }
+            $appId = $data['application_id'] ?? $request->query('application_id');
+            if ($appId) {
+                $app = \App\Models\StudentApplication::with(['application_form', 'application_documents', 'application_student'])
+                    ->where('id', $appId)
+                    ->when($student, fn($q) => $q->where('student_id', $student->id))
+                    ->first();
+            }
+
+            // Fallback 1: check by form_id for current student
+            if (!$app && $student) {
+                $formId = $request->query('form_id') ?? ($data['form_id'] ?? null);
+                if ($formId) {
+                    $app = \App\Models\StudentApplication::with(['application_form', 'application_documents', 'application_student'])
+                        ->where('student_id', $student->id)
+                        ->where('application_form_id', $formId)
+                        ->latest()
+                        ->first();
+                }
+            }
+
+            // Fallback 2: student's latest application
+            if (!$app && $student) {
+                $app = \App\Models\StudentApplication::with(['application_form', 'application_documents', 'application_student'])
+                    ->where('student_id', $student->id)
+                    ->latest()
+                    ->first();
+            }
+
+            // If app was found and is ALREADY submitted, approved, or pending:
+            if ($app && in_array($app->status, ['submitted', 'pending', 'approved'])) {
+                return redirect()->route('student.application.show', $app->id)
+                    ->with('success', 'Application has already been submitted successfully.');
             }
 
             if (!$app) {
-                 return redirect()->route('student.applications.history')->with('error', 'Application not found. Please try again.');
+                return redirect()->route('student.applications.history')
+                    ->with('info', 'Please select an application to continue or review.');
+            }
+
+            $data['application_id'] = $app->id;
+            $data['form_id'] = $app->application_form_id;
+            session(['application_data' => $data]);
+
+            if (empty($data['applied_for'])) {
+                $data['applied_for'] = $app->applied_for ?? $app->application_student?->applied_for ?? $app->application_form?->application_name;
+            }
+            if (empty($data['full_name'])) {
+                $data['full_name'] = $app->application_student?->full_name ?? auth()->user()->name ?? '';
             }
             
             return view('student.application.preview', compact('data', 'app'));
@@ -616,24 +652,51 @@ class StudentController extends Controller
         $data = $request->all();
 
         // Ensure application_id is passed if available
-        // ... (existing logic to find app) ...
         $app = null;
+        $user = auth()->user();
+        $student = \App\Models\Student::where('user_id', $user->id)->first();
+
         if (isset($data['application_id'])) {
-            $app = \App\Models\StudentApplication::with(['application_form', 'application_documents'])->find($data['application_id']);
-        } elseif (isset($data['form_id'])) {
-            $user = auth()->user();
-            $student = \App\Models\Student::where('user_id', $user->id)->first();
-            if ($student) {
-                $app = \App\Models\StudentApplication::with(['application_form', 'application_documents'])
-                                                    ->where('student_id', $student->id)
-                                                    ->where('application_form_id', $data['form_id'])
-                                                    ->where('status', 'draft')
-                                                    ->first();
+            $app = \App\Models\StudentApplication::with(['application_form', 'application_documents'])
+                ->where('id', $data['application_id'])
+                ->when($student, fn($q) => $q->where('student_id', $student->id))
+                ->first();
+        } elseif (isset($data['form_id']) && $student) {
+            $app = \App\Models\StudentApplication::with(['application_form', 'application_documents'])
+                ->where('student_id', $student->id)
+                ->where('application_form_id', $data['form_id'])
+                ->where('status', 'draft')
+                ->latest()
+                ->first();
+
+            // If no draft found, maybe it was already submitted?
+            if (!$app) {
+                $submittedApp = \App\Models\StudentApplication::where('student_id', $student->id)
+                    ->where('application_form_id', $data['form_id'])
+                    ->whereIn('status', ['submitted', 'pending', 'approved'])
+                    ->latest()
+                    ->first();
+                if ($submittedApp) {
+                    return redirect()->route('student.application.show', $submittedApp->id)
+                        ->with('success', 'Application has already been submitted successfully.');
+                }
             }
         }
 
         if ($app) {
             $data['application_id'] = $app->id;
+
+            if ($request->filled('applied_for')) {
+                $data['applied_for'] = $request->applied_for;
+                if (\Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'applied_for')) {
+                    $app->update(['applied_for' => $request->applied_for]);
+                }
+                if ($app->application_student && \Illuminate\Support\Facades\Schema::hasColumn('application_students', 'applied_for')) {
+                    $app->application_student->update(['applied_for' => $request->applied_for]);
+                }
+            } else {
+                $data['applied_for'] = $app->applied_for ?? $app->application_student?->applied_for ?? ($data['applied_for'] ?? '');
+            }
             
             // Handle Document Uploads - Validate and Save to DB directly
             $form = \App\Models\ApplicationForm::find($app->application_form_id);
@@ -753,6 +816,11 @@ class StudentController extends Controller
 
         // Exclude files from session data to prevent serialization error
         $dataToStore = $request->except(array_keys($request->file()));
+        if ($app) {
+            $dataToStore['application_id'] = $app->id;
+            $dataToStore['form_id'] = $app->application_form_id;
+            $dataToStore['applied_for'] = $data['applied_for'] ?? ($app->applied_for ?? '');
+        }
         session(['application_data' => $dataToStore]);
                 
         return view('student.application.preview', compact('data', 'app'));
@@ -760,28 +828,60 @@ class StudentController extends Controller
 
     public function storeApplication(Request $request)
     {
-        $data = session('application_data');
-
-        // Fallback: if session expired, check if we can get ID from request directly (if form passed it)
-        // But preview form currently doesn't pass it in hidden field.
-        // We rely on session or we must ensure preview form has it.
-        // For safety, let's trust session or redirect.
+        $data = session('application_data') ?? [];
+        $user = auth()->user();
+        $student = \App\Models\Student::where('user_id', $user->id)->firstOrFail();
         
-        if (!$data && !$request->application_id) {
-            return redirect()->route('student.application.form')->with('error', 'Session expired. Please fill the form again.');
+        $appId = $request->input('application_id') ?? ($data['application_id'] ?? null);
+
+        // Fallback 1: Lookup by form_id for current student
+        if (!$appId) {
+            $formId = $request->input('form_id') ?? ($data['form_id'] ?? null);
+            if ($formId) {
+                $appId = \App\Models\StudentApplication::where('student_id', $student->id)
+                    ->where('application_form_id', $formId)
+                    ->where('status', 'draft')
+                    ->latest()
+                    ->value('id');
+            }
         }
+
+        // Fallback 2: Lookup latest draft application for current student
+        if (!$appId) {
+            $appId = \App\Models\StudentApplication::where('student_id', $student->id)
+                ->where('status', 'draft')
+                ->latest()
+                ->value('id');
+        }
+
+        // Fallback 3: If no draft exists, check if already submitted recently
+        if (!$appId) {
+            $latestSubmitted = \App\Models\StudentApplication::where('student_id', $student->id)
+                ->whereIn('status', ['submitted', 'pending', 'approved'])
+                ->latest()
+                ->first();
+            if ($latestSubmitted) {
+                session()->forget('application_data');
+                return redirect()->route('student.applications.history')->with('success', 'Application submitted successfully!');
+            }
+
+            return redirect()->route('student.applications.history')->with('error', 'Session expired or application not found. Please try again.');
+        }
+
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
-
-            $user = auth()->user();
-            $student = \App\Models\Student::where('user_id', $user->id)->firstOrFail();
-            
-            $appId = $data['application_id'] ?? $request->application_id;
 
             $application = \App\Models\StudentApplication::with('application_form')
                                                         ->where('id', $appId)
                                                         ->where('student_id', $student->id)
                                                         ->firstOrFail();
+
+            // If already submitted (e.g. double submit or rapid clicking), return success gracefully
+            if (in_array($application->status, ['submitted', 'pending', 'approved'])) {
+                \Illuminate\Support\Facades\DB::rollBack();
+                session()->forget('application_data');
+                return redirect()->route('student.applications.history')->with('success', 'Application submitted successfully!');
+            }
 
             $form = $application->application_form;
             if ($form->status !== 'active' || ($form->deadline && $form->deadline->isPast())) {
@@ -789,11 +889,19 @@ class StudentController extends Controller
                 return redirect()->route('student.applications.history')->with('error', 'Application submission failed. The form is no longer active or the deadline has passed.');
             }
 
-            // Just update the status
-            $application->update([
+            // Just update the status and ensure applied_for is locked in
+            $appliedForVal = $request->input('applied_for') ?? ($data['applied_for'] ?? $application->applied_for);
+            $updatePayload = [
                 'status' => 'submitted',
                 'submitted_at' => now(),
-            ]);
+            ];
+            if ($appliedForVal && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'applied_for')) {
+                $updatePayload['applied_for'] = $appliedForVal;
+            }
+            $application->update($updatePayload);
+            if ($appliedForVal && $application->application_student && \Illuminate\Support\Facades\Schema::hasColumn('application_students', 'applied_for')) {
+                $application->application_student->update(['applied_for' => $appliedForVal]);
+            }
 
             \Illuminate\Support\Facades\DB::commit();
             
@@ -814,7 +922,7 @@ class StudentController extends Controller
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
-            return back()->with('error', 'Failed to submit application: ' . $e->getMessage());
+            return redirect()->route('student.applications.history')->with('error', 'Failed to submit application: ' . $e->getMessage());
         }
     }
 
@@ -871,6 +979,8 @@ class StudentController extends Controller
                 'identification_mark', 'alternate_mobile_number',
                 'is_permanent_resident_of_assam', 'is_btc_resident',
             ];
+
+            $rules['applied_for'] = 'required|string|max:255';
 
             foreach($personalFields as $field) {
                 if($form->isFieldVisible('personal', $field)) {
@@ -972,6 +1082,7 @@ class StudentController extends Controller
             'present_city' => 'Present Post Office',
             'present_country' => 'Present Police Station',
             'permanent_district' => 'Permanent Address District',
+            'applied_for' => 'Course / Stream Applied For',
         ];
 
         if (!empty($rules)) {
@@ -987,35 +1098,50 @@ class StudentController extends Controller
                 $fixedPhone = $student->phone_number ?? auth()->user()->mobile_number ?? $request->phone_number;
                 $fixedEmail = $student->email ?? auth()->user()->email ?? $request->email;
 
+                $appStudentData = [
+                    'full_name' => $request->full_name,
+                    'phone_number' => $fixedPhone,
+                    'email' => $fixedEmail,
+                    'dob' => $request->dob,
+                    'gender' => $request->gender,
+                    'category' => $request->category,
+                    'religion' => $request->religion,
+                    'marital_status' => $request->marital_status,
+                    'age' => $request->age,
+                    'blood_group' => $request->blood_group,
+                    'community' => $request->community ?? $request->nationality,
+                    'nationality' => $request->community ?? $request->nationality,
+                    'mother_tongue' => $request->mother_tongue,
+                    'identification_mark' => $request->identification_mark,
+                    'alternate_mobile_number' => $request->alternate_mobile_number,
+                    'is_pwd' => $request->has('is_pwd') ? $request->boolean('is_pwd') : null,
+                    'employment_exchange_no' => $request->employment_exchange_no,
+                    'is_permanent_resident_of_assam' => $request->filled('is_permanent_resident_of_assam') ? $request->boolean('is_permanent_resident_of_assam') : null,
+                    'is_btc_resident' => $request->filled('is_btc_resident') ? $request->boolean('is_btc_resident') : null,
+                    'is_ex_serviceman' => $request->has('is_ex_serviceman') ? $request->boolean('is_ex_serviceman') : null,
+                    'ncc_certificate' => $request->ncc_certificate,
+                    'has_national_sports_achievement' => $request->has('has_national_sports_achievement') ? $request->boolean('has_national_sports_achievement') : null,
+                    'has_fine_arts_cultural_achievement' => $request->has('has_fine_arts_cultural_achievement') ? $request->boolean('has_fine_arts_cultural_achievement') : null,
+                ];
+
+                if ($request->filled('applied_for') && \Illuminate\Support\Facades\Schema::hasColumn('application_students', 'applied_for')) {
+                    $appStudentData['applied_for'] = $request->applied_for;
+                }
+
                 // Update Application Snapshot ONLY
                 \App\Models\ApplicationStudent::updateOrCreate(
                     ['student_application_id' => $application->id],
-                    [
-                        'full_name' => $request->full_name,
-                        'phone_number' => $fixedPhone,
-                        'email' => $fixedEmail,
-                        'dob' => $request->dob,
-                        'gender' => $request->gender,
-                        'category' => $request->category,
-                        'religion' => $request->religion,
-                        'marital_status' => $request->marital_status,
-                        'age' => $request->age,
-                        'blood_group' => $request->blood_group,
-                        'community' => $request->community ?? $request->nationality,
-                        'nationality' => $request->community ?? $request->nationality,
-                        'mother_tongue' => $request->mother_tongue,
-                        'identification_mark' => $request->identification_mark,
-                        'alternate_mobile_number' => $request->alternate_mobile_number,
-                        'is_pwd' => $request->has('is_pwd') ? $request->boolean('is_pwd') : null,
-                        'employment_exchange_no' => $request->employment_exchange_no,
-                        'is_permanent_resident_of_assam' => $request->filled('is_permanent_resident_of_assam') ? $request->boolean('is_permanent_resident_of_assam') : null,
-                        'is_btc_resident' => $request->filled('is_btc_resident') ? $request->boolean('is_btc_resident') : null,
-                        'is_ex_serviceman' => $request->has('is_ex_serviceman') ? $request->boolean('is_ex_serviceman') : null,
-                        'ncc_certificate' => $request->ncc_certificate,
-                        'has_national_sports_achievement' => $request->has('has_national_sports_achievement') ? $request->boolean('has_national_sports_achievement') : null,
-                        'has_fine_arts_cultural_achievement' => $request->has('has_fine_arts_cultural_achievement') ? $request->boolean('has_fine_arts_cultural_achievement') : null,
-                    ]
+                    $appStudentData
                 );
+
+                if ($request->filled('applied_for')) {
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'applied_for')) {
+                        $application->update(['applied_for' => $request->applied_for]);
+                    }
+                    $sessionData = session('application_data', []);
+                    $sessionData['applied_for'] = $request->applied_for;
+                    session(['application_data' => $sessionData]);
+                }
 
                 // Update Application Parents Snapshot ONLY
                 \App\Models\ApplicationParent::updateOrCreate(

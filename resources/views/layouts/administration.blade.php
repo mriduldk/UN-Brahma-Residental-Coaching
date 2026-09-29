@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Admin Dashboard') - Director of Education, BTC</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('image/logo/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('image/logo/logo-em.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('image/logo/logo-em.png') }}">
     <meta name="robots" content="noindex, nofollow">
     <meta name="author" content="Director of Education, BTC">
     <!-- Tailwind CSS -->

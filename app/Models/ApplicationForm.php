@@ -45,6 +45,7 @@ class ApplicationForm extends Model
         'is_admission_required',
         'admission_fee',
         'is_approval_required',
+        'applied_for_options',
     ];
 
     public function institution()
@@ -152,6 +153,63 @@ class ApplicationForm extends Model
             return $this->field_config['academic']['default_qualifications'];
         }
         return ['HSLC', 'HS', 'GRADUATION'];
+    }
+
+    /**
+     * Get configured Applied For options for this form.
+     */
+    public function getAppliedForOptions(): array
+    {
+        // 1. Direct column if set
+        if (!empty($this->attributes['applied_for_options'])) {
+            $val = $this->attributes['applied_for_options'];
+            if (is_array($val)) return array_values(array_filter(array_map('trim', $val)));
+            $decoded = json_decode($val, true);
+            if (is_array($decoded)) return array_values(array_filter(array_map('trim', $decoded)));
+            if (is_string($val)) {
+                $lines = preg_split('/[\r\n,]+/', $val);
+                return array_values(array_filter(array_map('trim', $lines)));
+            }
+        }
+
+        // 2. field_config['applied_for_options']
+        if (isset($this->field_config['applied_for_options'])) {
+            $val = $this->field_config['applied_for_options'];
+            if (is_array($val)) return array_values(array_filter(array_map('trim', $val)));
+            if (is_string($val)) {
+                $lines = preg_split('/[\r\n,]+/', $val);
+                return array_values(array_filter(array_map('trim', $lines)));
+            }
+        }
+
+        // 3. field_config['personal']['applied_for_options']
+        if (isset($this->field_config['personal']['applied_for_options'])) {
+            $val = $this->field_config['personal']['applied_for_options'];
+            if (is_array($val)) return array_values(array_filter(array_map('trim', $val)));
+            if (is_string($val)) {
+                $lines = preg_split('/[\r\n,]+/', $val);
+                return array_values(array_filter(array_map('trim', $lines)));
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Get effective Applied For options with graceful fallbacks.
+     */
+    public function getEffectiveAppliedForOptions(): array
+    {
+        $options = $this->getAppliedForOptions();
+        if (!empty($options)) {
+            return $options;
+        }
+
+        if (!empty($this->application_name)) {
+            return [$this->application_name];
+        }
+
+        return ['General Coaching'];
     }
 
     public function formLinks()

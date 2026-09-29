@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Upendra Nath Brahma Residential Free Coaching 2026 — Department of Education, BTC</title>
-<link rel="icon" type="image/png" href="{{ asset('image/logo/logo.png') }}">
+<link rel="icon" type="image/png" href="{{ asset('image/logo/logo-em.png') }}">
+<link rel="shortcut icon" type="image/png" href="{{ asset('image/logo/logo-em.png') }}">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
@@ -638,7 +639,7 @@ body {
       <div class="hero-eyebrow">BTC Education Initiative 2026</div>
       <h2>Upendra Nath Brahma<br><em>Residential Free Coaching</em><br>Programmes 2026</h2>
       <p class="hero-desc">
-        A transformative, 100% free residential coaching program under the Department of Education, Bodoland Territorial Council (BTC). Preparing promising students of BTR &amp; Assam for national-level <strong>Engineering (JEE)</strong>, <strong>Medical (NEET)</strong>, <strong>APSC (CCE)</strong>, and <strong>UPSC (Civil Services)</strong> examinations with free lodging, boarding, library, and premier faculty mentorship.
+        A transformative, 100% free residential coaching program under the Department of Education, Bodoland Territorial Council (BTC). Preparing promising students of BTC &amp; Assam for national-level <strong>Engineering (JEE)</strong>, <strong>Medical (NEET)</strong>, <strong>APSC (CCE)</strong>, and <strong>UPSC (Civil Services)</strong> examinations with free lodging, boarding, library, and premier faculty mentorship.
       </p>
       <div class="hero-tags">
         <span class="hero-tag highlight">Engineering (JEE)</span>
@@ -761,7 +762,7 @@ body {
       </div>
       <div class="feat-box">
         <h4>🎯 Screening &amp; Merit Selection</h4>
-        <p>Transparent selection through Common Entrance Screening Test and personal interview across BTR districts to identify meritorious talent.</p>
+        <p>Transparent selection through Common Entrance Screening Test and personal interview across BTC districts to identify meritorious talent.</p>
       </div>
     </div>
   </div>
@@ -873,7 +874,7 @@ body {
           <ol>
             <li><strong>Register Online</strong> — Create candidate account with valid mobile number and email.</li>
             <li><strong>Select Stream</strong> — Choose your target coaching stream: Engineering (JEE), Medical (NEET), APSC (CCE), or UPSC (CSE).</li>
-            <li><strong>Enter Details</strong> — Provide academic credentials (10th/12th/Graduation), address, and BTR/Assam residency proof.</li>
+            <li><strong>Enter Details</strong> — Provide academic credentials (10th/12th/Graduation), address, and BTC/Assam residency proof.</li>
             <li><strong>Upload Documents</strong> — Attach passport photo, signature, marksheets, and category/residency certificates.</li>
             <li><strong>Submit Application</strong> — Verify details and submit application to receive your Application Number &amp; Acknowledgement.</li>
             <li><strong>Entrance Screening Test</strong> — Download admit card when scheduled, appear for the Common Entrance Test and Interview.</li>
@@ -888,7 +889,7 @@ body {
 <section class="cta-strip">
   <div class="inner">
     <h2>Empower Your Ambition with UN Brahma Free Coaching</h2>
-    <p>Join hundreds of successful scholars from Bodoland Territorial Region achieving their dreams in Engineering, Medicine, and Civil Services through comprehensive residential mentorship.</p>
+    <p>Join hundreds of successful scholars from Bodoland Territorial Council achieving their dreams in Engineering, Medicine, and Civil Services through comprehensive residential mentorship.</p>
     <a href="#programmes" class="btn-primary">Apply for 2026 Batch →</a>
   </div>
 </section>
@@ -901,7 +902,7 @@ const notices = [
   { text: "Upendra Nath Brahma Residential Free Coaching 2026 — Applications Invited for Engineering, Medical, APSC & UPSC Batches", isNew: true },
   { text: "100% Free Residential Coaching with Free Lodging, Fooding, Test Series & Mentorship by BTC Government", isNew: true },
   { text: "Engineering (JEE Main & Advanced) & Medical (NEET-UG) batches for 10+2 Science students", isNew: false },
-  { text: "APSC (CCE) & UPSC (CSE) Civil Services residential batches for graduates across BTR & Assam", isNew: false },
+  { text: "APSC (CCE) & UPSC (CSE) Civil Services residential batches for graduates across BTC & Assam", isNew: false },
   { text: "Selection through Common Entrance Screening Examination & Personal Interview across district centres", isNew: false },
   { text: "Keep scanned passport photograph, signature, marksheet, and category/residency certificates ready before applying", isNew: false },
   { text: "Candidate Helpdesk: Department of Education, BTC, Kokrajhar | 10 AM–5 PM Mon–Fri", isNew: false },

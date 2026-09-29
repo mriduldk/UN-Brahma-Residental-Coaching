@@ -28,7 +28,8 @@
         <meta name="twitter:image" content="{{ asset('image/logo/logo.png') }}">
 
         <!-- Favicon -->
-        <link rel="icon" type="image/png" href="{{ asset('image/logo/logo.png') }}">
+        <link rel="icon" type="image/png" href="{{ asset('image/logo/logo-em.png') }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('image/logo/logo-em.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">

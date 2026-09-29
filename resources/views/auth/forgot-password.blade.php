@@ -281,7 +281,7 @@
             <li><span class="mk">✓</span> Check your spam folder if delayed</li>
           </ul>
         </div>
-        <div class="seal">REF: ED/BTC/04/2026 &middot; KOKRAJHAR</div>
+        
       </div>
 
       <div class="auth-form">
