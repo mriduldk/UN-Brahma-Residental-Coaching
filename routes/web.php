@@ -75,11 +75,6 @@ Route::middleware(['auth', 'role:admin', 'mobile.verified'])->prefix('admin')->n
 // Impersonation Action Routes
 Route::post('/impersonate/leave', [\App\Http\Controllers\AdminController::class, 'leaveImpersonation'])->name('impersonate.leave')->middleware('auth');
 
-Route::middleware(['auth', 'role:administration', 'mobile.verified'])->prefix('administration')->name('administration.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('administration.dashboard');
-    })->name('dashboard');
-});
 
 
 Route::middleware(['auth', 'role:institute', 'mobile.verified'])->prefix('institute')->name('institute.')->group(function () {
