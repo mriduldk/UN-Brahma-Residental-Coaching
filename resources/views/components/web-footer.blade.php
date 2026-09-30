@@ -45,11 +45,11 @@
                     <ul class="space-y-4 text-sm text-slate-500">
                         <li class="flex items-start">
                             <i data-lucide="phone" size="18" class="mr-3 text-blue-600"></i>
-                            <span>+91 60010 25603</span>
+                            <span>+91 91016 72624</span>
                         </li>
                         <li class="flex items-start">
                             <i data-lucide="mail" size="18" class="mr-3 text-blue-600"></i>
-                            <span>info.onlinesetu@gmail.com</span>
+                            <span>info.jypko@gmail.com</span>
                         </li>
                         <li class="flex items-start">
                             <i data-lucide="help-circle" size="18" class="mr-3 text-blue-600"></i>

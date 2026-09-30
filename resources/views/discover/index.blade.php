@@ -166,12 +166,14 @@
                                     @if($form->deadline)
                                         @php
                                             $daysLeftFloat = now()->floatDiffInDays($form->deadline, false);
-                                            $isUrgent = $daysLeftFloat <= 3 && $daysLeftFloat >= 0;
+                                            $isUrgent = ($form->deadline->isToday() || $daysLeftFloat <= 3) && !$form->isDeadlinePassed();
                                         @endphp
                                         <div class="shrink-0 flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md {{ $isUrgent ? 'bg-red-50 text-red-600' : 'text-slate-500' }}">
                                             <i data-lucide="clock" size="12" class="{{ $isUrgent ? 'text-red-500' : 'text-slate-400' }}"></i>
-                                            @if($daysLeftFloat < 0)
+                                            @if($form->isDeadlinePassed())
                                                 Closed
+                                            @elseif($form->deadline->isToday())
+                                                Closes Today
                                             @elseif($daysLeftFloat <= 3)
                                                 {{ number_format($daysLeftFloat, 2) }} days left
                                             @else

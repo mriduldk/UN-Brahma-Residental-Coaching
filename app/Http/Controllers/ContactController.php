@@ -20,7 +20,7 @@ class ContactController extends Controller
         ]);
 
         try {
-            Mail::to('info.onlinesetu@gmail.com')->send(new InquiryMail($validated));
+            Mail::to('info.jypko@gmail.com')->send(new InquiryMail($validated));
             
             return response()->json([
                 'success' => true,

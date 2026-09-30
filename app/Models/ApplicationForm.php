@@ -70,7 +70,6 @@ class ApplicationForm extends Model
 
     protected $casts = [
         'field_config' => 'array',
-        'deadline' => 'date',
         'application_fee' => 'decimal:2',
         'course_fee' => 'decimal:2',
         'organization_id' => 'integer',
@@ -80,6 +79,51 @@ class ApplicationForm extends Model
         'is_approval_required' => 'boolean',
         'category_fees' => 'array',
     ];
+
+    /**
+     * Interact with the deadline attribute.
+     * When deadline is set, parse it to end of day (23:59:59) so forms remain open until 11:59 PM on deadline day.
+     */
+    protected function deadline(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: function ($value) {
+                if (!$value) {
+                    return null;
+                }
+                return \Illuminate\Support\Carbon::parse($value)->endOfDay();
+            },
+            set: function ($value) {
+                if (!$value) {
+                    return null;
+                }
+                return $value instanceof \DateTimeInterface 
+                    ? $value->format('Y-m-d') 
+                    : \Illuminate\Support\Carbon::parse($value)->format('Y-m-d');
+            }
+        );
+    }
+
+    /**
+     * Check if the application deadline has passed.
+     * If the deadline is today, the application stays open until 11:59:59 PM today.
+     */
+    public function isDeadlinePassed(): bool
+    {
+        if (!$this->deadline) {
+            return false;
+        }
+
+        return $this->deadline->copy()->endOfDay()->isPast();
+    }
+
+    /**
+     * Check if the form is expired or inactive.
+     */
+    public function isExpired(): bool
+    {
+        return $this->status !== 'active' || $this->isDeadlinePassed();
+    }
 
     public function creator()
     {

@@ -161,7 +161,7 @@
                         <td class="px-6 py-4 text-right">
                             @php
                                 $form = $app->application_form;
-                                $isExpired = $form->status !== 'active' || ($form->deadline && $form->deadline->isPast());
+                                $isExpired = $form->isExpired();
                             @endphp
                             <div class="flex items-center justify-end gap-2">
                                 @if($app->status == 'draft')

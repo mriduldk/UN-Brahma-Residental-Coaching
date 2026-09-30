@@ -120,15 +120,18 @@
                                     <i data-lucide="calendar-days" size="20"></i>
                                 </div>
                                 <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Deadline</span>
-                                <span class="text-2xl font-bold text-slate-800 {{ $form->deadline && $form->deadline->isPast() ? 'text-red-500' : '' }}">
+                                <span class="text-2xl font-bold text-slate-800 {{ $form->isDeadlinePassed() ? 'text-red-500' : '' }}">
                                     {{ $form->deadline ? $form->deadline->format('d M, Y') : 'No Deadline' }}
+                                    @if($form->deadline && $form->deadline->isToday())
+                                        <span class="text-xs text-amber-600 font-semibold block mt-0.5">(Closes Today 11:59 PM)</span>
+                                    @endif
                                 </span>
                             </div>
                         </div>
 
                         <!-- CTA Section -->
                         <div class="flex flex-col sm:flex-row items-center gap-4">
-                            @if($form->deadline && $form->deadline->isPast())
+                            @if($form->isDeadlinePassed())
                                 <div class="w-full flex items-center justify-center gap-3 py-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 font-bold">
                                     <i data-lucide="alert-circle" size="20"></i>
                                     Application Period Ended

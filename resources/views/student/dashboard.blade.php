@@ -43,7 +43,7 @@
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <!-- Drafts -->
         <a href="{{ route('student.applications.history') }}" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all group relative overflow-hidden">
             <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
@@ -56,26 +56,6 @@
                 <div>
                     <h3 class="text-3xl font-black text-slate-800 mb-1">{{ $stats['draft'] }}</h3>
                     <p class="text-sm font-bold text-slate-400 uppercase tracking-wide">Drafts</p>
-                </div>
-            </div>
-        </a>
-
-        <!-- Pending Payment -->
-        <a href="{{ route('student.applications.history') }}" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all group relative overflow-hidden">
-            <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-            <div class="relative flex flex-col h-full justify-between">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-red-100/80 rounded-2xl flex items-center justify-center text-red-600 shadow-sm">
-                        <i data-lucide="credit-card" size="24"></i>
-                    </div>
-                     @if($stats['payment_pending'] > 0)
-                        <span class="inline-flex w-3 h-3 bg-red-500 rounded-full animate-ping absolute top-0 right-0 -mt-1 -mr-1"></span>
-                        <span class="inline-flex w-3 h-3 bg-red-500 rounded-full absolute top-0 right-0 -mt-1 -mr-1"></span>
-                    @endif
-                </div>
-                <div>
-                    <h3 class="text-3xl font-black text-slate-800 mb-1">{{ $stats['payment_pending'] }}</h3>
-                    <p class="text-sm font-bold text-slate-400 uppercase tracking-wide">Payment Pending</p>
                 </div>
             </div>
         </a>
@@ -95,23 +75,6 @@
                 </div>
             </div>
         </a>
-
-        <!-- Approved -->
-        <a href="{{ route('student.applications.history') }}" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all group relative overflow-hidden">
-            <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-            <div class="relative flex flex-col h-full justify-between">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-emerald-100/80 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm">
-                        <i data-lucide="check-circle-2" size="24"></i>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-3xl font-black text-slate-800 mb-1">{{ $stats['approved'] }}</h3>
-                    <p class="text-sm font-bold text-slate-400 uppercase tracking-wide">Approved</p>
-                </div>
-            </div>
-        </a>
-
     </div>
 
     @if($admissions->isNotEmpty())
@@ -277,8 +240,8 @@
                                     {{ $form->application_name }}
                                 </h4>
                                 <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-[10px] font-bold {{ $form->deadline && $form->deadline->isPast() ? 'text-red-500 bg-red-50' : 'text-emerald-600 bg-emerald-50' }} px-2 py-0.5 rounded-full">
-                                        {{ $form->deadline ? ($form->deadline->isPast() ? 'Closed' : $form->deadline->diffForHumans()) : 'No Deadline' }}
+                                    <span class="text-[10px] font-bold {{ $form->isDeadlinePassed() ? 'text-red-500 bg-red-50' : 'text-emerald-600 bg-emerald-50' }} px-2 py-0.5 rounded-full">
+                                        {{ $form->deadline ? ($form->isDeadlinePassed() ? 'Closed' : ($form->deadline->isToday() ? 'Closes Today 11:59 PM' : $form->deadline->diffForHumans())) : 'No Deadline' }}
                                     </span>
                                 </div>
                             </div>
@@ -305,10 +268,10 @@
                 </p>
                 <div class="flex flex-col gap-2 text-sm font-semibold text-indigo-800">
                     <div class="flex items-center gap-2">
-                         <i data-lucide="phone" size="14" class="opacity-70"></i> +91 6001025603
+                         <i data-lucide="phone" size="14" class="opacity-70"></i> +91 9101672624
                     </div>
                     <div class="flex items-center gap-2">
-                         <i data-lucide="mail" size="14" class="opacity-70"></i> info.onlinesetu@gmail.com
+                         <i data-lucide="mail" size="14" class="opacity-70"></i> info.jypko@gmail.com
                     </div>
                 </div>
             </div>

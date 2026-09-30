@@ -788,14 +788,14 @@ body {
 
       @forelse($applicationForms as $form)
         @php
-            $isClosed = $form->status !== 'active' || ($form->deadline && $form->deadline->isPast());
+            $isClosed = $form->isExpired();
             $statusLabel = 'Open';
             $statusClass = 'status-open';
             if ($isClosed) {
                 $statusLabel = 'Closed';
                 $statusClass = 'status-closed';
-            } elseif ($form->deadline && now()->diffInDays($form->deadline) <= 3) {
-                $statusLabel = 'Closing Soon';
+            } elseif ($form->deadline && ($form->deadline->isToday() || now()->diffInDays($form->deadline) <= 3)) {
+                $statusLabel = $form->deadline->isToday() ? 'Closing Today' : 'Closing Soon';
                 $statusClass = 'status-closing';
             }
         @endphp

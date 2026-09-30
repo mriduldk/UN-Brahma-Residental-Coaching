@@ -128,8 +128,7 @@
                         <div class="logo-text">Director of Education, BTC</div>
                         <div class="value-small">
                             Digital Management System for Institutions<br>
-                            Support: info.onlinesetu@gmail.com<br>
-                            www.onlinesetu.in
+                            Support: info.jypko@gmail.com<br>
                         </div>
                     </td>
                     <td class="text-right">

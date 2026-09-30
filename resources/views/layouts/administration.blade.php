@@ -123,13 +123,13 @@
                 <a href="{{ route('administration.forms') }}" class="{{ request()->routeIs('administration.forms*', 'administration.configuration*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center px-3 py-2.5 rounded-xl font-medium text-sm transition-all group overflow-hidden whitespace-nowrap"
                     :class="sidebarCollapsed ? 'justify-center mx-auto' : 'gap-3'">
                     <i data-lucide="file-plus" size="18" class="{{ request()->routeIs('administration.forms*', 'administration.configuration*') ? 'text-white' : 'text-blue-400 group-hover:text-white transition-colors' }}"></i>
-                    <span x-show="!sidebarCollapsed" x-transition:enter="transition-all ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">Dynamic Forms</span>
+                    <span x-show="!sidebarCollapsed" x-transition:enter="transition-all ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">Course Registration</span>
                 </a>
 
                 <a href="{{ route('administration.applications') }}" class="{{ request()->routeIs('administration.applications*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center px-3 py-2.5 rounded-xl font-medium text-sm transition-all group overflow-hidden whitespace-nowrap"
                     :class="sidebarCollapsed ? 'justify-center mx-auto' : 'gap-3'">
                     <i data-lucide="files" size="18" class="{{ request()->routeIs('administration.applications*') ? 'text-white' : 'text-blue-400 group-hover:text-white transition-colors' }}"></i>
-                    <span x-show="!sidebarCollapsed" x-transition:enter="transition-all ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">Applications</span>
+                    <span x-show="!sidebarCollapsed" x-transition:enter="transition-all ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">All Applications</span>
                 </a>
 
                 <a href="{{ route('administration.reports') }}" class="{{ request()->routeIs('administration.reports*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center px-3 py-2.5 rounded-xl font-medium text-sm transition-all group overflow-hidden whitespace-nowrap"
@@ -168,14 +168,9 @@
                 <a href="{{ route('administration.notices.index') }}" class="{{ request()->routeIs('administration.notices*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center px-3 py-2.5 rounded-xl font-medium text-sm transition-all group overflow-hidden whitespace-nowrap"
                     :class="sidebarCollapsed ? 'justify-center mx-auto' : 'gap-3'">
                     <i data-lucide="bell" size="18" class="{{ request()->routeIs('administration.notices*') ? 'text-white' : 'text-blue-400 group-hover:text-white transition-colors' }}"></i>
-                    <span x-show="!sidebarCollapsed" x-transition:enter="transition-all ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">Notifications</span>
+                    <span x-show="!sidebarCollapsed" x-transition:enter="transition-all ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">Notice</span>
                 </a>
 
-                <a href="{{ route('administration.finance') }}" class="{{ request()->routeIs('administration.finance*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center px-3 py-2.5 rounded-xl font-medium text-sm transition-all group overflow-hidden whitespace-nowrap"
-                    :class="sidebarCollapsed ? 'justify-center mx-auto' : 'gap-3'">
-                    <i data-lucide="indian-rupee" size="18" class="{{ request()->routeIs('administration.finance*') ? 'text-white' : 'text-blue-400 group-hover:text-white transition-colors' }}"></i>
-                    <span x-show="!sidebarCollapsed" x-transition:enter="transition-all ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">Finance & Payments</span>
-                </a>
 
             </nav>
 

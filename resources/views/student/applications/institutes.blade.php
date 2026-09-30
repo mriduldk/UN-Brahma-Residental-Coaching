@@ -158,7 +158,12 @@
                 <div class="flex items-center text-sm text-slate-600 bg-slate-50 p-2.5 rounded-lg">
                     <i data-lucide="calendar" size="14" class="mr-2.5 text-slate-400"></i>
                     <span class="font-medium">Deadline:</span>
-                    <span class="ml-auto font-bold">{{ $form->deadline ? $form->deadline->format('d M, Y') : 'N/A' }}</span>
+                    <span class="ml-auto font-bold text-right">
+                        {{ $form->deadline ? $form->deadline->format('d M, Y') : 'N/A' }}
+                        @if($form->deadline && $form->deadline->isToday())
+                            <span class="text-[11px] text-amber-600 font-semibold block">Closes Today 11:59 PM</span>
+                        @endif
+                    </span>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3 text-xs text-slate-500">
@@ -192,7 +197,7 @@
                 </div>
 
                 @php
-                    $isExpired = $form->status !== 'active' || ($form->deadline && $form->deadline->isPast());
+                    $isExpired = $form->isExpired();
                 @endphp
 
                 @if(isset($studentApplications[$form->id]))

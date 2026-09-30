@@ -1,39 +1,15 @@
 @extends('layouts.administration')
 
-@section('title', 'Forms Manager')
+@section('title', 'Course Registration')
 
 @section('content')
 <div class="space-y-6" x-data="formsManager">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-800">Forms Manager</h1>
-            <p class="text-slate-500 text-sm">Create and manage admission forms</p>
+            <h1 class="text-2xl font-bold text-slate-800">Course Registration</h1>
+            <p class="text-slate-500 text-sm">Create and manage course registrations</p>
         </div>
         <div class="flex items-center gap-3 text-sm">
-            <!-- Configuration Link -->
-            <a href="{{ route('administration.configuration.quota.transactions') }}" class="bg-white border border-slate-200 px-5 py-2.5 rounded-2xl flex items-center gap-3 shadow-sm text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all">
-                <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                    <i data-lucide="indian-rupee" size="18"></i>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-[10px] font-black uppercase tracking-widest leading-none mb-0.5">Form Payments</span>
-                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">History & Quota</span>
-                </div>
-            </a>
-
-            <!-- Quota Indicator -->
-            <div class="bg-white border border-slate-200 px-4 py-2 rounded-2xl flex items-center gap-3 shadow-sm h-[42px]">
-                <div class="w-8 h-8 rounded-full bg-blue-600/10 flex items-center justify-center text-blue-600">
-                    <i data-lucide="activity" size="14"></i>
-                </div>
-                <div>
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quota Usage</div>
-                    <div class="text-sm font-bold text-slate-700">
-                        {{ $org->getUsedFormsCount() }} <span class="text-slate-400 font-medium">/</span> {{ $org->getAvailableFormsCount() }}
-                    </div>
-                </div>
-            </div>
-
             @if(auth()->user()->isAdmin($org->id))
             <a href="{{ route('administration.forms.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5">
                 <i data-lucide="plus" size="18" class="mr-2"></i> Create New Form
@@ -105,7 +81,7 @@
             <div class="text-sm text-slate-500 mb-6 flex items-center justify-center bg-slate-50/50 py-2 rounded-lg border border-slate-100">
                 <i data-lucide="calendar" size="14" class="mr-2 text-slate-400"></i>
                 <span class="mr-2">Deadline:</span>
-                <span class="font-bold {{ $form->deadline && $form->deadline->isPast() ? 'text-red-500' : 'text-slate-700' }}">
+                <span class="font-bold {{ $form->isDeadlinePassed() ? 'text-red-500' : 'text-slate-700' }}">
                     {{ $form->deadline ? $form->deadline->format('d M, Y') : 'No Deadline' }}
                 </span>
             </div>

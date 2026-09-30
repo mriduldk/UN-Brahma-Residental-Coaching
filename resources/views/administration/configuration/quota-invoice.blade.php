@@ -31,8 +31,7 @@
                     </div>
                     <div class="text-sm text-slate-400 font-medium leading-relaxed">
                         Digital Management System for Institutions<br>
-                        Support: info.onlinesetu@gmail.com<br>
-                        www.onlinesetu.in
+                        Support: info.jypko@gmail.com<br>
                     </div>
                 </div>
                 

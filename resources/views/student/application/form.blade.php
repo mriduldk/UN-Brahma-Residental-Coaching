@@ -289,18 +289,9 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Community <span class="text-red-500">*</span></label>
                     @php
-                        $communityList = $communities ?? \App\Models\Community::active()->get();
                         $selectedCommunity = $existingApp?->application_student?->community ?? $existingApp?->application_student?->nationality ?? $student->community ?? $student->nationality ?? '';
                     @endphp
-                    <select name="community" id="community_select" required class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500 bg-white" onchange="const natInput = document.getElementById('nationality_input'); if(natInput) natInput.value = this.value;">
-                        <option value="">Select Community</option>
-                        @foreach($communityList as $comm)
-                            <option value="{{ $comm->name }}" {{ strcasecmp($selectedCommunity, $comm->name) === 0 ? 'selected' : '' }}>{{ $comm->name }}</option>
-                        @endforeach
-                        @if($selectedCommunity && !$communityList->contains('name', $selectedCommunity))
-                            <option value="{{ $selectedCommunity }}" selected>{{ $selectedCommunity }}</option>
-                        @endif
-                    </select>
+                    <input type="text" name="community" id="community_input" required value="{{ $selectedCommunity }}" placeholder="Enter Community" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500 uppercase" oninput="const natInput = document.getElementById('nationality_input'); if(natInput) natInput.value = this.value;">
                     <input type="hidden" name="nationality" id="nationality_input" value="{{ $selectedCommunity }}">
                 </div>
                 @endif

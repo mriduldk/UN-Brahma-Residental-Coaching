@@ -75,7 +75,7 @@
             <div class="text-sm text-slate-500 mb-6 flex items-center justify-center bg-slate-50/50 py-2 rounded-lg border border-slate-100">
                 <i data-lucide="calendar" size="14" class="mr-2 text-slate-400"></i>
                 <span class="mr-2">Deadline:</span>
-                <span class="font-bold {{ $form->deadline && $form->deadline->isPast() ? 'text-red-500' : 'text-slate-700' }}">
+                <span class="font-bold {{ $form->isDeadlinePassed() ? 'text-red-500' : 'text-slate-700' }}">
                     {{ $form->deadline ? $form->deadline->format('d M, Y') : 'No Deadline' }}
                 </span>
             </div>

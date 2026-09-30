@@ -89,140 +89,83 @@ class AdministrationController extends Controller
              return view('administration.dashboard', [
                 'totalApplications' => 0,
                 'pendingCount' => 0,
-                'totalRevenue' => 0,
-                'admissionRate' => 0,
-                'recentTransactions' => collect([]),
+                'approvedCount' => 0,
+                'rejectedCount' => 0,
+                'draftCount' => 0,
+                'todayCount' => 0,
+                'activeFormsCount' => 0,
+                'recentApplications' => collect([]),
                 'tradeStats' => collect([]),
-                'totalPendingEmi' => 0,
-                'upcomingDuesCount' => 0,
-                'unsettledCash' => 0,
-                 'institutions' => collect([]),
-                'enrolledStudentsCount' => 0,
-                'admRevenue' => 0,
-                'overallPendingBalance' => 0,
             ]);
         }
 
-        $institutions = $org->institutions()->withCount(['application_forms'])->get();
+        $institutions = $org->institutions()->get();
         $institutionIds = $institutions->pluck('id');
 
-        // Total Applications
-        $totalApplications = \App\Models\StudentApplication::whereHas('application_form', function($q) use ($institutionIds) {
-            $q->whereIn('institution_id', $institutionIds);
+        $baseQuery = \App\Models\StudentApplication::whereHas('application_form', function($q) use ($org, $institutionIds) {
+            $q->where('organization_id', $org->id)
+              ->orWhereIn('institution_id', $institutionIds);
+        });
+
+        // Application Submission Metrics
+        $totalApplications = (clone $baseQuery)->where('status', '!=', 'draft')->count();
+        $pendingCount = (clone $baseQuery)->where('status', 'submitted')->count();
+        $approvedCount = (clone $baseQuery)->where('status', 'approved')->count();
+        $rejectedCount = (clone $baseQuery)->where('status', 'rejected')->count();
+        $draftCount = (clone $baseQuery)->where('status', 'draft')->count();
+
+        // Applications Received Today (Submitted)
+        $todayCount = (clone $baseQuery)->where('status', '!=', 'draft')->where(function($q) {
+            $q->whereDate('submitted_at', today())
+              ->orWhere(function($sub) {
+                  $sub->whereNull('submitted_at')->whereDate('created_at', today());
+              });
         })->count();
 
-        // Pending Review (status = 'submitted')
-        $pendingCount = \App\Models\StudentApplication::whereHas('application_form', function($q) use ($institutionIds) {
-            $q->whereIn('institution_id', $institutionIds);
-        })->where('status', 'submitted')->count();
+        // Active Application Forms
+        $activeFormsCount = \App\Models\ApplicationForm::where('organization_id', $org->id)
+            ->where('status', 'active')
+            ->count();
 
-        // Total Revenue (Successful transactions)
-        $regRevenue = \App\Models\PaymentTransaction::where('status', 'captured')
-            ->whereHas('application.application_form', function($q) use ($institutionIds) {
-                $q->whereIn('institution_id', $institutionIds);
-            })->sum('amount');
+        // Recent Applications (Latest 8 submitted applications)
+        $recentApplications = (clone $baseQuery)
+            ->where('status', '!=', 'draft')
+            ->with(['student', 'application_form', 'application_student'])
+            ->latest('id')
+            ->limit(8)
+            ->get();
 
-        $admRevenue = \App\Models\AdmissionPaymentTransaction::where('status', 'captured')
-            ->whereHas('order.student_application.application_form', function($q) use ($institutionIds) {
-                $q->whereIn('institution_id', $institutionIds);
-            })->sum('amount');
-
-        $totalRevenue = $regRevenue + $admRevenue;
-
-        // Admission Rate: Approved / Total
-        $approvedCount = \App\Models\StudentApplication::whereHas('application_form', function($q) use ($institutionIds) {
-            $q->whereIn('institution_id', $institutionIds);
-        })->where('status', 'approved')->count();
-
-        $admissionRate = $totalApplications > 0 ? round(($approvedCount / $totalApplications) * 100) : 0;
-
-        // EMI and Cash Metrics (Organization Wide)
-        $admissionsData = \App\Models\AdmissionStudent::whereIn('institution_id', $institutionIds)->get();
-        
-        $totalPendingEmi = 0;
-        $overallPendingBalance = 0;
-        $upcomingDuesCount = 0;
-        $unsettledCash = 0;
-        $nextWeek = now()->addDays(7);
-        $enrolledStudentsCount = $admissionsData->count();
-
-        foreach ($admissionsData as $adm) {
-            if ($adm->payment_type === 'emi') {
-                $totalPendingEmi += $adm->pending_amount;
-                
-                if ($adm->next_payment_date && $adm->pending_amount > 0) {
-                    $dueDate = \Carbon\Carbon::parse($adm->next_payment_date);
-                    if ($dueDate->isPast() || $dueDate->lessThanOrEqualTo($nextWeek)) {
-                        $upcomingDuesCount++;
-                    }
-                }
-            }
-
-            $overallPendingBalance += $adm->pending_amount;
-
-            // Unsettled cash
-            $unsettledCash += \App\Models\AdmissionPayment::where('student_application_id', $adm->student_application_id)
-                ->where('payment_type', 'cash')
-                ->where('is_settled', false)
-                ->sum('paid_amount');
-        }
-
-        // Recent Transactions (latest 5 successful)
-        $regTransactions = \App\Models\PaymentTransaction::with(['application.student', 'application.application_form'])
-            ->where('status', 'captured')
-            ->whereHas('application.application_form', function($q) use ($institutionIds) {
-                $q->whereIn('institution_id', $institutionIds);
-            })
-            ->latest()
-            ->limit(5)
+        // Applications by Trade / Course Distribution (strictly based on Applied For value, only submitted status, not draft)
+        $tradeStats = (clone $baseQuery)
+            ->where('status', 'submitted')
+            ->with(['application_student:id,student_application_id,applied_for'])
+            ->select('id', 'applied_for')
             ->get()
-            ->map(function($t) {
-                $t->payment_type = 'Registration';
-                $t->student_name = $t->application->student->full_name ?? 'N/A';
-                $t->trade = $t->application->application_form->application_name ?? 'N/A';
-                return $t;
-            });
-
-        $admTransactions = \App\Models\AdmissionPaymentTransaction::with(['order.student_application.student', 'order.student_application.application_form'])
-            ->where('status', 'captured')
-            ->whereHas('order.student_application.application_form', function($q) use ($institutionIds) {
-                $q->whereIn('institution_id', $institutionIds);
+            ->map(function($app) {
+                return trim($app->applied_for ?: ($app->application_student?->applied_for ?: ''));
             })
-            ->latest()
-            ->limit(5)
-            ->get()
-            ->map(function($t) {
-                $t->payment_type = 'Admission';
-                $t->student_name = $t->order->student_application->student->full_name ?? 'N/A';
-                $t->trade = $t->order->student_application->application_form->application_name ?? 'N/A';
-                return $t;
-            });
-
-        $recentTransactions = $regTransactions->concat($admTransactions)->sortByDesc('created_at')->take(5);
-
-        // Trade Stats
-        $tradeStats = \App\Models\StudentApplication::whereHas('application_form', function($q) use ($institutionIds) {
-            $q->whereIn('institution_id', $institutionIds);
-        })
-        ->join('application_forms', 'student_applications.application_form_id', '=', 'application_forms.id')
-        ->select('application_forms.application_name as trade', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
-        ->groupBy('application_forms.application_name')
-        ->get();
+            ->filter()
+            ->groupBy(function($trade) {
+                return $trade;
+            })
+            ->map(function($group, $trade) {
+                return (object)[
+                    'trade' => $trade,
+                    'count' => $group->count(),
+                ];
+            })
+            ->values();
 
         return view('administration.dashboard', compact(
-            'totalApplications', 
-            'pendingCount', 
-            'totalRevenue', 
-            'admissionRate', 
-            'recentTransactions', 
-            'tradeStats',
-            'totalPendingEmi',
-            'overallPendingBalance',
-            'admRevenue',
-            'enrolledStudentsCount',
-            'upcomingDuesCount',
-            'unsettledCash',
-            'institutions'
+            'totalApplications',
+            'pendingCount',
+            'approvedCount',
+            'rejectedCount',
+            'draftCount',
+            'todayCount',
+            'activeFormsCount',
+            'recentApplications',
+            'tradeStats'
         ));
     }
 

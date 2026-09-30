@@ -65,19 +65,7 @@
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Religion</label><input type="text" name="religion" value="{{ $student->religion }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Community</label>
-                    @php
-                        $communityList = $communities ?? \App\Models\Community::active()->get();
-                        $selectedCommunity = $student->community ?? $student->nationality ?? '';
-                    @endphp
-                    <select name="community" class="w-full p-2 border border-slate-300 rounded bg-white">
-                        <option value="">Select Community</option>
-                        @foreach($communityList as $comm)
-                            <option value="{{ $comm->name }}" {{ strcasecmp($selectedCommunity, $comm->name) === 0 ? 'selected' : '' }}>{{ $comm->name }}</option>
-                        @endforeach
-                        @if($selectedCommunity && !$communityList->contains('name', $selectedCommunity))
-                            <option value="{{ $selectedCommunity }}" selected>{{ $selectedCommunity }}</option>
-                        @endif
-                    </select>
+                    <input type="text" name="community" value="{{ $student->community ?? $student->nationality ?? '' }}" placeholder="Enter Community" class="w-full p-2 border border-slate-300 rounded uppercase">
                 </div>
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Mother Tongue</label><input type="text" name="mother_tongue" value="{{ $student->mother_tongue }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Identification Mark</label><input type="text" name="identification_mark" value="{{ $student->identification_mark }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>

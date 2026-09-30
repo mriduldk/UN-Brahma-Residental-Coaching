@@ -35,7 +35,7 @@ class StudentController extends Controller
         $stats = [
             'draft' => $myApplications->filter(function($app) {
                 $form = $app->application_form;
-                $isExpired = $form->status !== 'active' || ($form->deadline && $form->deadline->isPast());
+                $isExpired = $form->isExpired();
                 return $app->status == 'draft' && !$isExpired;
             })->count(),
             'submitted' => $myApplications->whereIn('status', ['submitted', 'under_review'])->count(),
@@ -43,7 +43,7 @@ class StudentController extends Controller
             'rejected' => $myApplications->where('status', 'rejected')->count(),
             'payment_pending' => $myApplications->filter(function($app) use ($student) {
                 $form = $app->application_form;
-                $isExpired = $form->status !== 'active' || ($form->deadline && $form->deadline->isPast());
+                $isExpired = $form->isExpired();
                 $feeRequired = $form->is_application_fee_required && $form->getApplicationFeeFor($student, $app) > 0;
                 return !$isExpired && $feeRequired && $app->payment_status == 'pending' && $app->status != 'draft';
             })->count(),
@@ -75,7 +75,7 @@ class StudentController extends Controller
         // 3. Pending Actions (Drafts or Payment Pending)
         $pendingActions = $myApplications->filter(function($app) use ($student) {
             $form = $app->application_form;
-            $isExpired = $form->status !== 'active' || ($form->deadline && $form->deadline->isPast());
+            $isExpired = $form->isExpired();
             
             if ($isExpired) {
                 return false;
@@ -89,9 +89,9 @@ class StudentController extends Controller
             return $isDraft || $isPaymentPending;
         })->take(3); // Limit to top 3
 
-        // 4. Upcoming Deadlines (Active forms with future deadlines)
+        // 4. Upcoming Deadlines (Active forms with future deadlines, including today until 11:59 PM)
         $upcomingDeadlines = \App\Models\ApplicationForm::where('status', 'active')
-                                ->where('deadline', '>=', now())
+                                ->whereDate('deadline', '>=', today())
                                 ->orderBy('deadline', 'asc')
                                 ->take(3)
                                 ->get();
@@ -443,7 +443,7 @@ class StudentController extends Controller
 
         $form = \App\Models\ApplicationForm::where('status', 'active')->findOrFail($form_id);
 
-        if ($form->deadline && $form->deadline->isPast()) {
+        if ($form->isDeadlinePassed()) {
             return redirect()->route('student.applications.history')->with('error', 'The deadline for this application has passed.');
         }
 
@@ -884,7 +884,7 @@ class StudentController extends Controller
             }
 
             $form = $application->application_form;
-            if ($form->status !== 'active' || ($form->deadline && $form->deadline->isPast())) {
+            if ($form->isExpired()) {
                 \Illuminate\Support\Facades\DB::rollBack();
                 return redirect()->route('student.applications.history')->with('error', 'Application submission failed. The form is no longer active or the deadline has passed.');
             }
@@ -946,7 +946,7 @@ class StudentController extends Controller
              return response()->json(['success' => false, 'message' => 'Form is not active.'], 403);
         }
 
-        if ($form->deadline && $form->deadline->isPast()) {
+        if ($form->isDeadlinePassed()) {
              return response()->json(['success' => false, 'message' => 'Application deadline has passed.'], 403);
         }
 
