@@ -141,16 +141,14 @@
 
                 <!-- Sidebar Footer -->
                 <div class="p-4 border-t border-slate-800 shrink-0">
-                    <a href="{{ route('student.profile') }}"
-                        class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-all group">
+                    <div class="flex items-center gap-3 p-2 rounded-xl select-none">
                         <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'Student') }}&background=3b82f6&color=fff&bold=true"
-                            class="w-8 h-8 rounded-lg shadow-sm border border-slate-700 group-hover:border-blue-500 transition-colors">
+                            class="w-8 h-8 rounded-lg shadow-sm border border-slate-700">
                         <div class="overflow-hidden">
                             <p class="text-xs font-bold text-white truncate">{{ auth()->user()->name ?? 'Student' }}</p>
-                            <p class="text-[10px] text-slate-500 uppercase tracking-wider font-medium truncate">View Profile
-                            </p>
+                            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-medium truncate">Registered Student</p>
                         </div>
-                    </a>
+                    </div>
                 </div>
             </aside>
         @endif
@@ -182,18 +180,17 @@
 
                     <div class="flex items-center gap-4">
                         <!-- Profile (Mobile & Desktop) -->
-                        <a href="{{ route('student.profile') }}" class="flex items-center gap-3 group">
+                        <div class="flex items-center gap-3 select-none">
                             <div class="text-right hidden sm:block">
-                                <p
-                                    class="text-sm font-bold text-slate-700 leading-none group-hover:text-blue-600 transition-colors">
+                                <p class="text-sm font-bold text-slate-700 leading-none">
                                     {{ auth()->user()->name ?? 'Student' }}
                                 </p>
                                 <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mt-1 leading-none">
                                     Registered Student</p>
                             </div>
                             <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'Student') }}&background=3b82f6&color=fff&bold=true"
-                                class="w-9 h-9 rounded-xl border-2 border-slate-100 shadow-sm object-cover bg-white group-hover:border-blue-200 transition-all">
-                        </a>
+                                class="w-9 h-9 rounded-xl border-2 border-slate-100 shadow-sm object-cover bg-white">
+                        </div>
 
                         <div class="w-px h-6 bg-slate-200"></div>
 
