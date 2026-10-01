@@ -104,8 +104,7 @@
                                 <i data-lucide="phone" size="28"></i>
                             </div>
                             <h4 class="text-[10px] font-bold uppercase tracking-widest mb-2 font-mono" style="color: var(--ink-soft); opacity: 0.7;">Call Us</h4>
-                            <p class="text-xl font-bold" style="color: var(--maroon-dark);">+91 9101672624</p>
-                            <p class="text-xs mt-4 font-medium italic" style="color: var(--ink-soft);">Monday - Saturday, 9am - 7pm</p>
+                            <p class="text-xl font-bold" style="color: var(--maroon-dark);">+91 7099144957</p>
                         </div>
 
                         <!-- Email -->
@@ -115,7 +114,6 @@
                             </div>
                             <h4 class="text-[10px] font-bold uppercase tracking-widest mb-2 font-mono" style="color: var(--ink-soft); opacity: 0.7;">Email Us</h4>
                             <p class="text-xl font-bold underline decoration-sky-300 underline-offset-8 decoration-2" style="color: var(--maroon-dark);">info.jypko@gmail.com</p>
-                            <p class="text-xs mt-4 font-medium italic" style="color: var(--ink-soft);">Average response: 2 hours</p>
                         </div>
 
                         <!-- Location -->
@@ -123,9 +121,8 @@
                             <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-sm" style="background: var(--paper-dark); color: var(--maroon);">
                                 <i data-lucide="map-pin" size="28"></i>
                             </div>
-                            <h4 class="text-[10px] font-bold uppercase tracking-widest mb-2 font-mono" style="color: var(--ink-soft); opacity: 0.7;">Office</h4>
-                            <p class="text-xl font-bold" style="color: var(--maroon-dark);">Guwahati, Assam, India</p>
-                            <p class="text-xs mt-4 font-medium italic" style="color: var(--ink-soft);">Serving Institutes nationwide</p>
+                            <h4 class="text-[10px] font-bold uppercase tracking-widest mb-2 font-mono" style="color: var(--ink-soft); opacity: 0.7;">Office (Director of Education)</h4>
+                            <p class="text-xl font-bold" style="color: var(--maroon-dark);"> Near Kokrajhar Post Office, Station Road, Kokrajhar, Assam-783370</p>
                         </div>
                     </div>
                 </div>

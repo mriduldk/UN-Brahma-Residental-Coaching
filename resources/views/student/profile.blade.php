@@ -166,7 +166,7 @@
                     <tr>
                         <th class="px-4 py-3 font-bold">Exam</th>
                         <th class="px-4 py-3 font-bold">Year</th>
-                        <th class="px-4 py-3 font-bold">Board / University</th>
+                        <th class="px-4 py-3 font-bold">School/College/Institute Name</th>
                         <th class="px-4 py-3 font-bold">Roll No</th>
                         <th class="px-4 py-3 font-bold">Reg No</th>
                         <th class="px-4 py-3 font-bold">Medium</th>
@@ -328,7 +328,7 @@
     <div class="bg-white rounded-xl p-4 border border-slate-200 flex items-start space-x-3">
         <i data-lucide="check-circle-2" class="text-green-600 mt-0.5 shrink-0" size="18"></i>
         <p class="text-sm text-slate-600">
-            <span class="font-bold text-slate-800">Declaration Signed:</span> I hereby declare that the above information provided is correct and I agree to abide by all Rules & Regulations of the Institution.
+            <span class="font-bold text-slate-800">Declaration Signed:</span> I hereby declare that the above information provided is correct and I agree to abide by all Rules & Regulations of the Government/Institution.
         </p>
     </div>
 </div>

@@ -4,7 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    $applicationForms = \App\Models\ApplicationForm::with('institution')->where('status', 'active')->orderBy('created_at', 'desc')->get();
+    $applicationForms = \App\Models\ApplicationForm::with('institution')->where('status', 'active')->orderBy('created_at', 'asc')->get();
     $notices = \App\Models\PublicNotice::where('is_active', true)->orderBy('created_at', 'desc')->get();
     return view('welcome', compact('applicationForms', 'notices'));
 })->name('welcome');

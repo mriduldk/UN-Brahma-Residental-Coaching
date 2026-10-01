@@ -72,5 +72,7 @@ class DatabaseSeeder extends Seeder
                 'remember_token' => Str::random(10),
             ]
         );
+
+        $this->call(BtclaConstituencySeeder::class);
     }
 }

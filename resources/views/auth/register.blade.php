@@ -411,13 +411,7 @@
           <div>
             <span class="tag">{{ $role === 'administration' ? 'Organization Portal' : 'Student Access' }}</span>
             <h2>Register your account to apply.</h2>
-            <p>{{ $role === 'administration' ? 'Register your institution with Director of Education, BTC.' : 'Create your student account to apply to multiple posts in one session.' }}</p>
-            <ul>
-              <li><span class="mk">✓</span> Apply for multiple posts in one session</li>
-              <li><span class="mk">✓</span> Auto-saved application progress</li>
-              <li><span class="mk">✓</span> Real-time status &amp; admit card alerts</li>
-              <li><span class="mk">✓</span> Secure document upload</li>
-            </ul>
+            <p>{{ $role === 'administration' ? 'Register your institution with Director of Education, BTC.' : 'Create your student account to apply.' }}</p>
           </div>
         </div>
 

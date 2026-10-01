@@ -40,6 +40,116 @@ body {
   line-height: 1.6;
 }
 
+/* ─── HERO CAROUSEL ─────────────────────────────────────────── */
+.hero-carousel-section {
+  position: relative;
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  width: 100%;
+}
+.hero-carousel-container {
+  position: relative;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px 20px 20px;
+}
+.carousel-viewport {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -5px rgba(12, 74, 110, 0.15), 0 4px 6px -2px rgba(12, 74, 110, 0.05);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  background: var(--white);
+}
+.carousel-track {
+  display: flex;
+  width: 100%;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.carousel-slide {
+  min-width: 100%;
+  position: relative;
+  display: block;
+}
+.carousel-slide a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+.carousel-slide img {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 2048 / 768;
+  object-fit: cover;
+}
+.carousel-controls {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 16px;
+  pointer-events: none;
+  z-index: 10;
+}
+.carousel-btn {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--line);
+  color: var(--maroon-dark);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+.carousel-btn:hover {
+  background: var(--white);
+  color: var(--maroon);
+  transform: scale(1.08);
+}
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(2, 132, 199, 0.25);
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  padding: 0;
+}
+.carousel-dot.active {
+  background: var(--maroon);
+  width: 28px;
+  border-radius: 6px;
+}
+@media (max-width: 768px) {
+  .hero-carousel-container {
+    padding: 10px 12px 14px;
+  }
+  .carousel-viewport {
+    border-radius: 8px;
+  }
+}
+
 /* ─── MARQUEE ───────────────────────────────────────────────── */
 .marquee-strip {
   background: var(--paper);
@@ -85,6 +195,16 @@ body {
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em;
   padding: 2px 7px; border-radius: 2px;
 }
+.m-item a {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+.m-item a:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}
 
 /* ─── HERO ──────────────────────────────────────────────────── */
 .hero {
@@ -112,7 +232,10 @@ body {
 }
 .hero .inner {
   max-width: 1120px; margin: 0 auto; padding: 0 24px;
-  display: grid; grid-template-columns: 1.25fr 0.95fr; gap: 56px; align-items: center;
+  display: block;
+}
+.hero-left {
+  max-width: 860px;
 }
 .hero-eyebrow {
   font-family: 'JetBrains Mono', monospace;
@@ -140,8 +263,8 @@ body {
   color: var(--maroon);
 }
 .hero-desc {
-  font-size: 15px; color: var(--ink-soft);
-  max-width: 520px; margin-bottom: 26px; line-height: 1.7;
+  font-size: 15.5px; color: var(--ink-soft);
+  max-width: 820px; margin-bottom: 26px; line-height: 1.7;
 }
 .hero-tags {
   display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px;
@@ -272,109 +395,139 @@ body {
   font-family: 'JetBrains Mono', monospace; color: var(--ink-soft);
 }
 
-/* ===== STREAMS GRID ===== */
-.streams-grid {
+/* ===== COACHING INSTITUTES GRID ===== */
+.institutes-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 40px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
 }
-.stream-card {
+.institute-card {
   background: var(--white);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 24px 20px;
-  box-shadow: 0 4px 6px -1px rgba(12, 74, 110, 0.04);
-  transition: all 0.2s ease;
+  border-radius: 12px;
+  padding: 28px 24px;
+  box-shadow: 0 4px 6px -1px rgba(12, 74, 110, 0.04), 0 2px 4px -2px rgba(12, 74, 110, 0.03);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
 }
-.stream-card:hover {
+.institute-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 20px -5px rgba(12, 74, 110, 0.1);
-  border-color: var(--gold-light);
+  box-shadow: 0 14px 28px -6px rgba(12, 74, 110, 0.12), 0 6px 12px -4px rgba(12, 74, 110, 0.06);
+  border-color: rgba(2, 132, 199, 0.4);
 }
-.stream-card::before {
+.institute-card::before {
   content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: var(--maroon);
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, #0284c7, #0369a1);
 }
-.stream-badge {
-  display: inline-block;
+.inst-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.inst-category-tag {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--forest);
-  background: var(--paper-dark);
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.cat-apsc {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0369a1;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+.cat-upsc {
+  background: rgba(12, 74, 110, 0.1);
+  color: #0c4a6e;
+  border: 1px solid rgba(12, 74, 110, 0.25);
+}
+.cat-engmed {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.inst-loc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  background: var(--paper);
   padding: 3px 8px;
   border-radius: 4px;
-  margin-bottom: 12px;
-  align-self: flex-start;
+  border: 1px solid var(--line);
 }
-.stream-title {
+.inst-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.inst-number {
   font-family: 'Source Serif 4', serif;
-  font-size: 18px;
+  font-size: 30px;
+  font-weight: 700;
+  color: rgba(2, 132, 199, 0.25);
+  line-height: 1;
+}
+.inst-emblem {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.8), rgba(240, 249, 255, 0.9));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+.inst-name {
+  font-family: 'Source Serif 4', serif;
+  font-size: 21px;
   font-weight: 700;
   color: var(--maroon-dark);
-  margin-bottom: 8px;
-  line-height: 1.3;
+  margin-bottom: 4px;
+  line-height: 1.25;
 }
-.stream-desc {
-  font-size: 12.5px;
+.inst-location {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--maroon);
+  margin-bottom: 14px;
+}
+.inst-desc {
+  font-size: 13.5px;
   color: var(--ink-soft);
-  line-height: 1.55;
-  margin-bottom: 16px;
+  line-height: 1.6;
+  margin-bottom: 0;
   flex: 1;
 }
-.stream-features {
-  list-style: none;
-  border-top: 1px dashed var(--line);
-  padding-top: 12px;
-  font-size: 11.5px;
-  color: var(--ink);
-}
-.stream-features li {
-  margin-bottom: 6px;
+.inst-features {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
 }
-.stream-features li::before {
-  content: '✓';
-  color: var(--maroon);
-  font-weight: 700;
-}
-
-/* ===== AMENITIES / HIGHLIGHTS ===== */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 10px;
-}
-.feat-box {
-  background: var(--paper-dark);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 20px;
-}
-.feat-box h4 {
-  font-family: 'Source Serif 4', serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--maroon-dark);
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.feat-box p {
-  font-size: 12px;
-  color: var(--ink-soft);
-  line-height: 1.5;
+.inst-feature-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 4px 9px;
+  border-radius: 4px;
+  border: 1px solid rgba(2, 132, 199, 0.15);
 }
 
 /* ===== POST CARDS / TABLE ===== */
@@ -541,60 +694,9 @@ body {
 .side-box ol li{ margin-bottom: 10px; line-height: 1.5; }
 .side-box ol li strong{ color: var(--ink); }
 
-/* ─── CTA STRIP ─────────────────────────────────────────────── */
-.cta-strip {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  padding: 60px 0;
-  position: relative; overflow: hidden;
-}
-.cta-strip::before {
-  content: '';
-  position: absolute; inset: 0;
-  background:
-    repeating-linear-gradient(
-      45deg,
-      transparent, transparent 20px,
-      rgba(255,255,255,0.02) 20px, rgba(255,255,255,0.02) 22px
-    );
-  pointer-events: none;
-}
-.cta-strip::after {
-  content: '';
-  position: absolute; bottom: 0; left: 0; right: 0; height: 8px;
-  background: repeating-linear-gradient(90deg,
-    var(--ar-red) 0 12px, var(--ar-yellow) 12px 24px,
-    var(--ar-green) 24px 36px, var(--ar-black) 36px 48px);
-}
-.cta-strip .inner {
-  max-width: 1120px; margin: 0 auto; padding: 0 24px;
-  text-align: center;
-}
-.cta-strip h2 {
-  font-family: 'Source Serif 4', serif;
-  font-size: clamp(24px, 4vw, 36px); font-weight: 700;
-  color: var(--white); margin-bottom: 14px; line-height: 1.25;
-}
-.cta-strip p {
-  color: rgba(255, 255, 255, 0.9); font-size: 15px;
-  max-width: 600px; margin: 0 auto 30px;
-}
-.cta-strip .btn-primary {
-  font-size: 14.5px;
-  padding: 15px 34px;
-  background: var(--white);
-  color: #0284c7;
-  box-shadow: 0 4px 14px rgba(12, 74, 110, 0.2);
-}
-.cta-strip .btn-primary:hover {
-  background: var(--paper);
-  color: #0369a1;
-  transform: translateY(-2px);
-}
-
 /* ─── RESPONSIVE ────────────────────────────────────────────── */
 @media (max-width: 992px) {
-  .streams-grid { grid-template-columns: 1fr 1fr; }
-  .features-grid { grid-template-columns: 1fr 1fr; }
+  .institutes-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
   .hero .inner { grid-template-columns: 1fr; padding: 40px 24px; text-align: center; }
@@ -605,8 +707,7 @@ body {
   .hero::before { display: none; }
 }
 @media (max-width: 640px) {
-  .streams-grid { grid-template-columns: 1fr; }
-  .features-grid { grid-template-columns: 1fr; }
+  .institutes-grid { grid-template-columns: 1fr; }
   .two-col { grid-template-columns: 1fr; }
   .post-row {
     grid-template-columns: 1fr;
@@ -624,11 +725,74 @@ body {
 
 <x-portal-header />
 
+<!-- ── HERO CAROUSEL ─────────────────────────────────────────── -->
+<section class="hero-carousel-section" id="carousel" aria-label="Official Banner Carousel">
+  <div class="hero-carousel-container">
+    <div class="carousel-viewport">
+      <div class="carousel-track" id="heroCarouselTrack">
+        <div class="carousel-slide active">
+          <a href="#programmes" title="Apply for Upendra Nath Brahma Residential Free Coaching 2026-27">
+            <img src="{{ asset('images/slider/Upendra Nath Brahma Coaching Poster.png') }}" 
+                 alt="Upendra Nath Brahma Residential Free Coaching Programmes 2026-27 — Bodoland Territorial Council Directorate of Education"
+                 width="2048" height="768" loading="eager" fetchpriority="high">
+          </a>
+        </div>
+      </div>
+      
+      <div class="carousel-controls" id="carouselControls" style="display: none;">
+        <button type="button" class="carousel-btn prev" id="carouselPrev" aria-label="Previous slide">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button type="button" class="carousel-btn next" id="carouselNext" aria-label="Next slide">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="carousel-indicators" id="carouselIndicators">
+      <button type="button" class="carousel-dot active" data-slide="0" aria-label="Slide 1"></button>
+    </div>
+  </div>
+</section>
+
 <!-- MARQUEE NOTICE STRIP -->
 <div class="marquee-strip" role="marquee" aria-label="Latest notices">
   <div class="marquee-label">Notice Board</div>
   <div class="marquee-viewport">
-    <div class="marquee-track" id="mTrack"></div>
+    @if(isset($notices) && $notices->isNotEmpty())
+      <div class="marquee-track" id="mTrack">
+        @php
+          $noticeCount = $notices->count();
+          $repeatCount = $noticeCount > 0 ? max(2, (int) ceil(8 / $noticeCount)) : 0;
+        @endphp
+        @for($i = 0; $i < $repeatCount; $i++)
+          @foreach($notices as $notice)
+            @php
+              $isNewNotice = $notice->created_at && $notice->created_at->diffInDays(now()) <= 15;
+              $targetUrl = $notice->document_path ? asset('storage/' . $notice->document_path) : '#documents';
+            @endphp
+            <div class="m-item">
+              @if($isNewNotice)
+                <span class="badge-new">NEW</span>
+              @else
+                <span class="bullet"></span>
+              @endif
+              <a href="{{ $targetUrl }}" {{ $notice->document_path ? 'target="_blank" rel="noopener"' : '' }}>
+                {{ $notice->title }}
+              </a>
+              <span class="pipe">|</span>
+            </div>
+          @endforeach
+        @endfor
+      </div>
+    @else
+      <div class="marquee-track" style="animation: none;">
+        <div class="m-item" style="color: var(--ink-soft); font-style: italic;">
+          <span class="bullet"></span>
+          <span>No notices published yet. Keep visiting for entrance exam dates and admit card alerts.</span>
+        </div>
+      </div>
+    @endif
   </div>
 </div>
 
@@ -654,115 +818,73 @@ body {
         <a href="#documents" class="btn-outline">View Notices &amp; Guidelines</a>
       </div>
     </div>
-    <div class="hero-right">
-      <div class="hero-card">
-        <div class="card-title">Programme Overview at a Glance</div>
-        <div class="stat-grid">
-          <div class="stat-item">
-            <div class="stat-num">04</div>
-            <div class="stat-lbl">Core Disciplines</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-num">100%</div>
-            <div class="stat-lbl">Free Residential</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-num">50+</div>
-            <div class="stat-lbl">Seats Per Batch</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-num">Top</div>
-            <div class="stat-lbl">National Faculty</div>
-          </div>
-        </div>
-        <div class="deadline-box">
-          <div>
-            <div class="dl-label">ADMISSIONS / ENTRANCE 2026</div>
-            <div class="dl-date">Applications Active</div>
-          </div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(12,74,110,0.8);font-weight:700;">ONLINE PORTAL</div>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
-<!-- ── STREAMS & DISCIPLINES ─────────────────────────────────── -->
-<section class="section" id="courses">
+<!-- ── COACHING INSTITUTES ─────────────────────────────────── -->
+<section class="section" id="institutes">
   <div class="section-inner">
     <div class="section-head">
-      <span class="sec-tag">STREAMS</span>
-      <h3>Coaching Disciplines &amp; Focus Areas</h3>
-      <span class="meta">Free Residential Batches</span>
+      <span class="sec-tag">PARTNERS</span>
+      <h3>Coaching Institutes</h3>
     </div>
 
-    <div class="streams-grid">
-      <!-- Engineering -->
-      <div class="stream-card">
-        <span class="stream-badge">Engineering</span>
-        <div class="stream-title">JEE Main &amp; Advanced</div>
-        <p class="stream-desc">Comprehensive residential program targeting IITs, NITs, and top engineering institutions with rigorous PCM concept clarity.</p>
-        <ul class="stream-features">
-          <li>Physics, Chemistry &amp; Mathematics</li>
-          <li>Daily problem sets &amp; CBT mock tests</li>
-          <li>National level test series analysis</li>
-          <li>Eligibility: 10+2 (PCM) Passed/Appearing</li>
-        </ul>
+    <div class="institutes-grid">
+      <!-- 1. APSC : SPM IAS Academy at Guwahati -->
+      <div class="institute-card">
+        <div class="inst-top">
+          <span class="inst-category-tag cat-apsc">APSC (Civil Services)</span>
+          <span class="inst-loc-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            Guwahati
+          </span>
+        </div>
+        <div class="inst-icon-wrap">
+          <span class="inst-number">01</span>
+        </div>
+        <h4 class="inst-name">SPM IAS Academy</h4>
+        <div class="inst-location">Guwahati, Assam</div>
+        <p class="inst-desc">
+          Premier state Civil Services institute providing dedicated residential coaching for the Assam Public Service Commission Combined Competitive Exam (APSC CCE) with Assam-focused general studies, mock tests, and interview guidance.
+        </p>
       </div>
 
-      <!-- Medical -->
-      <div class="stream-card">
-        <span class="stream-badge">Medical</span>
-        <div class="stream-title">NEET-UG</div>
-        <p class="stream-desc">Intensive medical entrance coaching for MBBS/BDS aspirants with exhaustive NCERT line-by-line preparation and tests.</p>
-        <ul class="stream-features">
-          <li>Botany, Zoology, Physics &amp; Chemistry</li>
-          <li>Weekly high-yield NEET mock exams</li>
-          <li>Dedicated faculty doubt-clearing counters</li>
-          <li>Eligibility: 10+2 (PCB) Passed/Appearing</li>
-        </ul>
+      <!-- 2. UPSC : Vajirao & Reddy Institute at Delhi -->
+      <div class="institute-card">
+        <div class="inst-top">
+          <span class="inst-category-tag cat-upsc">UPSC (Civil Services)</span>
+          <span class="inst-loc-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            Delhi
+          </span>
+        </div>
+        <div class="inst-icon-wrap">
+          <span class="inst-number">02</span>
+        </div>
+        <h4 class="inst-name">Vajirao &amp; Reddy Institute</h4>
+        <div class="inst-location">Delhi</div>
+        <p class="inst-desc">
+          Nationally acclaimed Civil Services training institution in New Delhi preparing BTC candidates for the UPSC Civil Services Examination (CSE) for IAS, IPS, IFS &amp; central services with premier faculty and comprehensive test series.
+        </p>
       </div>
 
-      <!-- APSC -->
-      <div class="stream-card">
-        <span class="stream-badge">State Civil Services</span>
-        <div class="stream-title">APSC (CCE)</div>
-        <p class="stream-desc">Specialized coaching for Assam Combined Competitive Exam (ACS, APS &amp; allied state cadres) with Assam-specific curriculum.</p>
-        <ul class="stream-features">
-          <li>General Studies (Prelims + Mains)</li>
-          <li>Assam history, geography, economy &amp; culture</li>
-          <li>Answer writing workshops &amp; mock interviews</li>
-          <li>Eligibility: Graduate in any stream</li>
-        </ul>
-      </div>
-
-      <!-- UPSC -->
-      <div class="stream-card">
-        <span class="stream-badge">All India Services</span>
-        <div class="stream-title">UPSC (CSE)</div>
-        <p class="stream-desc">Foundation and advanced coaching for Civil Services Examination (IAS, IPS, IFS, IRS) with structured mentoring.</p>
-        <ul class="stream-features">
-          <li>GS Paper I–IV, Essay &amp; CSAT</li>
-          <li>Daily editorial discussions &amp; current affairs</li>
-          <li>Guidance by experienced officers &amp; mentors</li>
-          <li>Eligibility: Graduate in any stream</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Key Residential Facilities -->
-    <div class="features-grid">
-      <div class="feat-box">
-        <h4>🏠 100% Free Hostel &amp; Boarding</h4>
-        <p>Comfortable residential accommodation with clean dormitories and nutritious, hygienic meals provided daily completely free of cost.</p>
-      </div>
-      <div class="feat-box">
-        <h4>📚 Library &amp; Study Resources</h4>
-        <p>24x7 peaceful reading halls, exhaustive reference books, NCERT sets, newspapers, and high-speed Wi-Fi connectivity for aspirants.</p>
-      </div>
-      <div class="feat-box">
-        <h4>🎯 Screening &amp; Merit Selection</h4>
-        <p>Transparent selection through Common Entrance Screening Test and personal interview across BTC districts to identify meritorious talent.</p>
+      <!-- 3. Engineering & Medical : SPM & LALAN's Coaching at Kokrajhar -->
+      <div class="institute-card">
+        <div class="inst-top">
+          <span class="inst-category-tag cat-engmed">Engineering &amp; Medical</span>
+          <span class="inst-loc-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            Kokrajhar
+          </span>
+        </div>
+        <div class="inst-icon-wrap">
+          <span class="inst-number">03</span>
+        </div>
+        <h4 class="inst-name">SPM &amp; LALAN's Coaching</h4>
+        <div class="inst-location">Kokrajhar, BTC</div>
+        <p class="inst-desc">
+          Specialized residential mentoring center in Kokrajhar for JEE Main &amp; Advanced (Engineering) and NEET-UG (Medical). Intensive classroom sessions, daily practice problem sheets (DPPs), and weekly computer-based test assessments.
+        </p>
       </div>
     </div>
   </div>
@@ -802,7 +924,12 @@ body {
         <div class="post-row">
           <div class="post-title">
             {{ $form->application_name }}
-            <span class="dept-sub">{{ $form->institution ? $form->institution->institution_name : 'Department of Education, BTC' }}</span>
+            <span class="dept-sub">
+              {{ $form->institution ? $form->institution->institution_name : 'Department of Education, BTC' }}
+              @if($form->created_at)
+                &bull; Posted {{ $form->created_at->format('d M Y, h:i A') }}
+              @endif
+            </span>
           </div>
           <div class="post-vac"><strong>{{ $form->no_of_vacancies ?? '50' }}</strong> seats</div>
           <div class="post-deadline"><strong>{{ $form->deadline ? $form->deadline->format('d M Y') : 'As per Notice' }}</strong>Last date</div>
@@ -885,46 +1012,9 @@ body {
   </div>
 </section>
 
-<!-- ── CTA STRIP ─────────────────────────────────────────────── -->
-<section class="cta-strip">
-  <div class="inner">
-    <h2>Empower Your Ambition with UN Brahma Free Coaching</h2>
-    <p>Join hundreds of successful scholars from Bodoland Territorial Council achieving their dreams in Engineering, Medicine, and Civil Services through comprehensive residential mentorship.</p>
-    <a href="#programmes" class="btn-primary">Apply for 2026 Batch →</a>
-  </div>
-</section>
-
 <x-portal-footer />
 
 <script>
-// ── Marquee Ticker Content
-const notices = [
-  { text: "Upendra Nath Brahma Residential Free Coaching 2026 — Applications Invited for Engineering, Medical, APSC & UPSC Batches", isNew: true },
-  { text: "100% Free Residential Coaching with Free Lodging, Fooding, Test Series & Mentorship by BTC Government", isNew: true },
-  { text: "Engineering (JEE Main & Advanced) & Medical (NEET-UG) batches for 10+2 Science students", isNew: false },
-  { text: "APSC (CCE) & UPSC (CSE) Civil Services residential batches for graduates across BTC & Assam", isNew: false },
-  { text: "Selection through Common Entrance Screening Examination & Personal Interview across district centres", isNew: false },
-  { text: "Keep scanned passport photograph, signature, marksheet, and category/residency certificates ready before applying", isNew: false },
-  { text: "Candidate Helpdesk: Department of Education, BTC, Kokrajhar | 10 AM–5 PM Mon–Fri", isNew: false },
-];
-
-const track = document.getElementById('mTrack');
-function buildMarquee() {
-  if (!track) return;
-  track.innerHTML = '';
-  for (let r = 0; r < 2; r++) {
-    notices.forEach(n => {
-      const el = document.createElement('div');
-      el.className = 'm-item';
-      el.innerHTML =
-        (n.isNew ? '<span class="badge-new">NEW</span>' : '<span class="bullet"></span>') +
-        `<span>${n.text}</span><span class="pipe">|</span>`;
-      track.appendChild(el);
-    });
-  }
-}
-buildMarquee();
-
 // ── Active nav on scroll
 const sections = document.querySelectorAll('section[id]');
 const navLinks = document.querySelectorAll('nav.primary a');
@@ -938,6 +1028,60 @@ window.addEventListener('scroll', () => {
     }
   });
 }, { passive: true });
+
+// ── Hero Carousel controller
+(function() {
+  const track = document.getElementById('heroCarouselTrack');
+  if (!track) return;
+  const slides = track.querySelectorAll('.carousel-slide');
+  const indicators = document.querySelectorAll('#carouselIndicators .carousel-dot');
+  const controls = document.getElementById('carouselControls');
+  const prevBtn = document.getElementById('carouselPrev');
+  const nextBtn = document.getElementById('carouselNext');
+  
+  if (slides.length <= 1) {
+    if (controls) controls.style.display = 'none';
+    return;
+  }
+  
+  if (controls) controls.style.display = 'flex';
+  let currentIndex = 0;
+  let autoplayTimer = null;
+
+  function goToSlide(index) {
+    if (index < 0) index = slides.length - 1;
+    if (index >= slides.length) index = 0;
+    currentIndex = index;
+    track.style.transform = `translateX(-${currentIndex * 100}%)`;
+    indicators.forEach((dot, i) => {
+      dot.classList.toggle('active', i === currentIndex);
+    });
+  }
+
+  function startAutoplay() {
+    stopAutoplay();
+    autoplayTimer = setInterval(() => goToSlide(currentIndex + 1), 6000);
+  }
+
+  function stopAutoplay() {
+    if (autoplayTimer) clearInterval(autoplayTimer);
+  }
+
+  if (prevBtn) prevBtn.addEventListener('click', () => { goToSlide(currentIndex - 1); startAutoplay(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { goToSlide(currentIndex + 1); startAutoplay(); });
+
+  indicators.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const idx = parseInt(dot.getAttribute('data-slide'), 10);
+      goToSlide(idx);
+      startAutoplay();
+    });
+  });
+
+  track.addEventListener('mouseenter', stopAutoplay);
+  track.addEventListener('mouseleave', startAutoplay);
+  startAutoplay();
+})();
 </script>
 </body>
 </html>

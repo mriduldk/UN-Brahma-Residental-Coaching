@@ -186,13 +186,13 @@
                     <p class="text-slate-400 font-medium">Contact us for any queries related to the admission process.</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-6">
-                    <a href="tel:+919101672624" class="flex items-center gap-4 group/item">
+                    <a href="tel:+917099144957" class="flex items-center gap-4 group/item">
                         <x-ui.icon-box variant="white" size="md" class="group-hover/item:bg-white/20">
                             <i data-lucide="phone" size="20" class="text-primary"></i>
                         </x-ui.icon-box>
                         <div>
                             <p class="text-[10px] font-bold text-muted uppercase tracking-widest">Call Us</p>
-                            <p class="text-lg font-bold">9101672624</p>
+                            <p class="text-lg font-bold">7099144957</p>
                         </div>
                     </a>
                     <a href="mailto:info.jypko@gmail.com" class="flex items-center gap-4 group/item">

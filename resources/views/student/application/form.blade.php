@@ -72,6 +72,7 @@
     <form id="admissionForm" novalidate class="p-6 md:p-8" action="{{ route('student.application.preview') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="form_id" value="{{ $form->id }}">
+        <input type="hidden" name="direct_final_submit" id="direct_final_submit_input" value="0">
         @if(isset($existingApp) && $existingApp)
             <input type="hidden" name="application_id" value="{{ $existingApp->id }}">
         @endif
@@ -82,10 +83,12 @@
             @php
                 $appliedOptions = $form->getEffectiveAppliedForOptions();
                 $currentAppliedFor = old('applied_for', $existingApp?->applied_for ?? $existingApp?->application_student?->applied_for ?? '');
+                $currentExaminationCenter = old('examination_center', $existingApp?->examination_center ?? $existingApp?->application_student?->examination_center ?? '');
+                $examCenters = $examinationCenters ?? ['Kokrajhar', 'Chirang', 'Baksa', 'Tamulpur', 'Udalguri'];
                 $isSubmitted = in_array($existingApp?->status ?? '', ['submitted', 'pending', 'approved']);
             @endphp
 
-            <!-- "Applied For" Selection Card -->
+            <!-- "Applied For" & Examination Center Selection Card -->
             <div id="applied-for-card" class="bg-gradient-to-br from-indigo-50/80 via-blue-50/50 to-slate-50 border-2 {{ !empty($currentAppliedFor) ? 'border-emerald-300 bg-emerald-50/15' : 'border-indigo-200' }} rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xs relative transition-all duration-300">
                 <!-- Background decorative glow -->
                 <div class="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl pointer-events-none">
@@ -101,7 +104,7 @@
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[11px] font-bold text-red-500 bg-red-50 border border-red-200/60 px-2 py-0.5 rounded-full">* Mandatory</span>
                             </div>
-                            <h3 class="text-base sm:text-lg font-black text-slate-800 tracking-tight mt-0.5">Applied For <span class="text-indigo-600 font-semibold text-xs sm:text-sm block sm:inline-block sm:ml-1">(Course / Stream Selection)</span></h3>
+                            <h3 class="text-base sm:text-lg font-black text-slate-800 tracking-tight mt-0.5">Applied For & Examination Center <span class="text-indigo-600 font-semibold text-xs sm:text-sm block sm:inline-block sm:ml-1">(Course & Center Selection)</span></h3>
                         </div>
                     </div>
                     <div id="applied-for-status-badge" class="self-start sm:self-auto">
@@ -181,6 +184,55 @@
                             @else
                                 <i data-lucide="info" size="13" class="text-indigo-500"></i>
                                 <span>Search or select an option above to unlock the personal details section below.</span>
+                            @endif
+                        </p>
+                    @endif
+                </div>
+
+                <!-- Examination Center Dropdown Selection (Directly After Applied For & Mandatory) -->
+                <div class="mt-5 pt-4 border-t border-indigo-100" id="examination-center-container">
+                    <div class="flex flex-wrap items-center justify-between gap-1.5 mb-2">
+                        <label for="examination_center_select" class="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                            Select Examination Center <span class="text-red-500">*</span>
+                        </label>
+                        <span class="text-[10px] sm:text-[11px] text-emerald-700 font-bold flex items-center gap-1 bg-emerald-50 px-2 sm:px-2.5 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
+                            <i data-lucide="map-pin" size="11"></i> Mandatory Choice
+                        </span>
+                    </div>
+                    <div class="relative w-full">
+                        <select 
+                            name="examination_center" 
+                            id="examination_center_select" 
+                            placeholder="Choose your preferred Examination Center..."
+                            class="examination-center-tom-select w-full"
+                            autocomplete="off"
+                            required
+                        >
+                            <option value=""></option>
+                            @foreach($examCenters as $center)
+                                <option value="{{ $center }}" {{ $currentExaminationCenter == $center ? 'selected' : '' }}>
+                                    {{ $center }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 pointer-events-none z-10">
+                            <i data-lucide="map-pin" size="18"></i>
+                        </div>
+                    </div>
+
+                    @if($isSubmitted)
+                        <input type="hidden" name="examination_center" value="{{ $currentExaminationCenter }}">
+                        <p class="text-[11px] text-slate-500 mt-2 font-medium flex items-center gap-1.5">
+                            <i data-lucide="lock" size="13" class="text-slate-400"></i> Locked: Application has been submitted and cannot be modified.
+                        </p>
+                    @else
+                        <p class="text-[11px] text-slate-500 mt-2 font-medium flex items-center gap-1.5" id="examination_center_helper">
+                            @if(!empty($currentExaminationCenter))
+                                <i data-lucide="check-circle" size="13" class="text-emerald-500"></i>
+                                <span class="text-emerald-700 font-bold">Selected Center: {{ $currentExaminationCenter }}</span>
+                            @else
+                                <i data-lucide="info" size="13" class="text-emerald-600"></i>
+                                <span>Choose your preferred examination center from Kokrajhar, Chirang, Baksa, Tamulpur, or Udalguri.</span>
                             @endif
                         </p>
                     @endif
@@ -544,7 +596,18 @@
                         @if($form->isFieldVisible('address', 'permanent_street'))
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTCLA Constituency <span class="text-red-500">*</span></label>
-                            <input type="text" required name="permanent_street" id="perm_street" value="{{ $existingApp?->application_address?->permanent_street ?? $student->address?->permanent_street ?? '' }}" class="input-block w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                            @php
+                                $savedConstituency = $existingApp?->application_address?->permanent_street ?? $student->address?->permanent_street ?? '';
+                                $allConstituencies = $btclaConstituencies ?? \App\Models\BtclaConstituency::active()->get();
+                            @endphp
+                            <select required name="permanent_street" id="perm_street" class="constituency-tom-select w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                                <option value="">Select BTCLA Constituency</option>
+                                @foreach($allConstituencies as $constituency)
+                                    <option value="{{ $constituency->name }}" {{ (string)$savedConstituency === (string)$constituency->name ? 'selected' : '' }}>
+                                        {{ $constituency->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                         @endif
                         
@@ -668,7 +731,7 @@
                 $fieldLabels = [
                     'examination' => 'Qualification',
                     'passing_year' => 'Year',
-                    'board_university' => 'Board / University',
+                    'board_university' => 'School/College/Institute Name',
                     'percentage_grade' => '% Marks',
                     'division' => 'Division',
                     'roll_number' => 'Roll No',
@@ -854,7 +917,7 @@
                     'photo' => 'Passport Size Photograph',
                     'caste_certificate' => 'Caste Certificate',
                     'signature' => 'Signature',
-                    'prc_certificate' => 'PRC Certificate',
+                    'prc_certificate' => 'Permanent Resident Certificate (PRC)',
                     'age_proof' => 'Age Proof',
                     'mark_sheet_10' => '10th Marksheet',
                     'hslc_marksheet' => 'HSLC Marksheet',
@@ -877,7 +940,7 @@
                     'income_certificate' => 'Income Certificate',
                     'address_proof' => 'Address Proof',
                     'aadhaar_card' => 'Aadhaar Card',
-                    'btc_residential_certificate' => 'Permanent Resident Certificate',
+                    'btc_residential_certificate' => 'Permanent Resident Certificate (PRC)',
                 ];
 
                 $profileMap = [
@@ -910,9 +973,7 @@
                     'btc_residential_certificate' => 'btc_residential_certificate',
                 ];
 
-                $optionalDocs = [
-                    'btc_residential_certificate',
-                ];
+                $optionalDocs = ['caste_certificate'];
             @endphp
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -992,28 +1053,28 @@
 
             <div class="bg-orange-50 p-4 rounded-lg border border-orange-100 mt-6">
                 <label class="flex items-start space-x-3 cursor-pointer">
-                    <input type="checkbox" required class="mt-1 rounded text-orange-600 focus:ring-orange-500 w-5 h-5">
+                    <input type="checkbox" id="declaration_checkbox" required class="mt-1 rounded text-orange-600 focus:ring-orange-500 w-5 h-5">
                     <span class="text-sm text-slate-700 font-medium leading-relaxed">
-                        I hereby declare that the above information provided is correct and I agree to abide by all Rules & Regulations of the Institution and consent that I would be liable to punishment for violation of rules & regulations.
+                        I hereby declare that the above information provided is correct and I agree to abide by all Rules & Regulations of the Government/Institution and consent that I would be liable to punishment for violation of rules & regulations.
                     </span>
                 </label>
             </div>
 
             <!-- Navigation Buttons -->
-            <div class="flex justify-between pt-6 border-t border-slate-100">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-slate-100">
                 @php
                     $currentIdx = array_search(5, $stepMap); // 5 is Uploads
                     $prevStepId = isset($stepMap[$currentIdx - 1]) ? $stepMap[$currentIdx - 1] : 4;
                 @endphp
-                <button type="button" onclick="prevStep({{ $prevStepId }})" class="px-6 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg flex items-center">
+                <button type="button" onclick="prevStep({{ $prevStepId }})" class="w-full sm:w-auto px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl flex items-center justify-center transition-colors">
                     <i data-lucide="arrow-left" class="mr-2" size="18"></i> Previous
                 </button>
-                <div class="flex space-x-3">
-                    <!-- <button type="button" onclick="saveDraft()" class="px-6 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg border border-slate-300 flex items-center">
-                       <i data-lucide="save" class="mr-2" size="18"></i> Save Draft
-                    </button> -->
-                    <button type="submit" id="submitBtn" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-700 flex items-center">
-                        Proceed to Preview <i data-lucide="arrow-right" class="ml-2" size="18"></i>
+                <div class="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-3">
+                    <button type="button" onclick="confirmDirectFinalSubmit(this)" id="finalSubmitDirectBtn" class="w-full sm:w-auto px-7 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer">
+                        <i data-lucide="check-circle-2" size="18"></i> Final Submit
+                    </button>
+                    <button type="submit" id="submitBtn" onclick="preparePreviewSubmit()" class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+                        Proceed to Preview <i data-lucide="arrow-right" size="18"></i>
                     </button>
                 </div>
             </div>
@@ -1214,6 +1275,107 @@
 .applied-for-ts.has-items .clear-button:hover {
     color: #ef4444 !important;
 }
+
+/* Examination Center Dropdown Custom Styling */
+.exam-center-ts.ts-wrapper {
+    position: relative;
+    width: 100%;
+}
+.exam-center-ts .ts-control {
+    padding: 0.75rem 2.4rem 0.75rem 2.6rem !important;
+    border-radius: 0.75rem !important;
+    border: 2px solid #a7f3d0 !important;
+    font-size: 0.875rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.2s ease !important;
+    min-height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+@media (min-width: 640px) {
+    .exam-center-ts .ts-control {
+        min-height: 52px !important;
+        font-size: 0.925rem !important;
+        padding-left: 2.85rem !important;
+    }
+}
+.exam-center-ts.selected .ts-control {
+    border-color: #10b981 !important;
+    background-color: #ffffff !important;
+}
+.exam-center-ts.focus .ts-control {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18) !important;
+}
+.exam-center-ts.disabled .ts-control,
+.exam-center-ts.locked .ts-control {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    cursor: not-allowed !important;
+    opacity: 0.9 !important;
+}
+.exam-center-ts .ts-control input {
+    font-size: 0.875rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+@media (min-width: 640px) {
+    .exam-center-ts .ts-control input {
+        font-size: 0.925rem !important;
+    }
+}
+.exam-center-ts .ts-dropdown {
+    border-radius: 0.75rem !important;
+    border: 1px solid #a7f3d0 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    padding: 0.375rem !important;
+    margin-top: 4px !important;
+    z-index: 100 !important;
+}
+.exam-center-ts .ts-dropdown .option {
+    padding: 0.55rem 0.75rem !important;
+    border-radius: 0.5rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    transition: all 0.15s ease !important;
+}
+.exam-center-ts .ts-dropdown .option:hover,
+.exam-center-ts .ts-dropdown .active {
+    background-color: #ecfdf5 !important;
+    color: #047857 !important;
+}
+.exam-center-ts .ts-dropdown .selected {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+.exam-center-ts.single .ts-control::after {
+    border-color: #059669 transparent transparent !important;
+    border-width: 6px 5px 0 !important;
+    right: 12px !important;
+    transition: transform 0.2s ease !important;
+}
+.exam-center-ts.single.dropdown-active .ts-control::after {
+    transform: rotate(180deg) !important;
+    margin-top: -6px !important;
+}
+.exam-center-ts.has-items .clear-button {
+    font-size: 1.2rem !important;
+    color: #94a3b8 !important;
+    right: 28px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    line-height: 1 !important;
+    padding: 2px !important;
+    transition: color 0.15s ease !important;
+}
+.exam-center-ts.has-items .clear-button:hover {
+    color: #ef4444 !important;
+}
 </style>
 @endsection
 
@@ -1265,6 +1427,73 @@
         }
     }
 
+    let examCenterTomSelect = null;
+    function initExamCenterTomSelect() {
+        const selectEl = document.getElementById('examination_center_select');
+        if (!selectEl || selectEl.tomselect) return;
+
+        const isFormSubmitted = @json($isSubmitted);
+        const plugins = [];
+        if (!isFormSubmitted) {
+            plugins.push('clear_button');
+        }
+
+        examCenterTomSelect = new TomSelect(selectEl, {
+            create: false,
+            maxItems: 1,
+            plugins: plugins,
+            placeholder: 'Choose your Examination Center...',
+            allowEmptyOption: false,
+            selectOnTab: true,
+            searchField: ['text', 'value'],
+            wrapperClass: 'ts-wrapper exam-center-ts',
+            render: {
+                no_results: function(data, escape) {
+                    return '<div class="no-results text-slate-500 py-3 px-2 text-xs flex items-center justify-center gap-1.5 bg-slate-50 rounded-lg m-1 border border-dashed border-slate-200"><svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> No center found matching "<strong class="text-emerald-600">' + escape(data.input) + '</strong>"</div>';
+                },
+                option: function(data, escape) {
+                    const label = escape(data.text || data.value || '');
+                    return '<div class="flex items-center justify-between py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-lg gap-2"><div class="flex items-center gap-2 min-w-0"><span class="w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-bold border border-emerald-100 shadow-2xs"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></span><span class="font-bold text-slate-800 text-xs sm:text-sm truncate">' + label + '</span></div><span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-200/70 px-1.5 sm:px-2 py-0.5 rounded-full flex-shrink-0">District Center</span></div>';
+                },
+                item: function(data, escape) {
+                    const label = escape(data.text || data.value || '');
+                    return '<div class="item font-bold text-slate-900 flex items-center gap-2 text-xs sm:text-sm">' + label + '</div>';
+                }
+            }
+        });
+
+        examCenterTomSelect.on('change', function(value) {
+            handleExamCenterChange(value);
+        });
+
+        if (isFormSubmitted) {
+            examCenterTomSelect.lock();
+        }
+    }
+
+    function handleExamCenterChange(val) {
+        const helper = document.getElementById('examination_center_helper');
+        const select = document.getElementById('examination_center_select');
+        if (select && select.tomselect) {
+            if (val && String(val).trim() !== '') {
+                select.tomselect.wrapper.classList.add('selected');
+            } else {
+                select.tomselect.wrapper.classList.remove('selected');
+            }
+        }
+        if (helper) {
+            if (val && String(val).trim() !== '') {
+                const safeVal = String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                helper.innerHTML = `<i data-lucide="check-circle" size="13" class="text-emerald-500"></i><span class="text-emerald-700 font-bold">Selected Center: ${safeVal}</span>`;
+            } else {
+                helper.innerHTML = `<i data-lucide="info" size="13" class="text-emerald-600"></i><span>Choose your preferred examination center from Kokrajhar, Chirang, Baksa, Tamulpur, or Udalguri.</span>`;
+            }
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+    }
+
     function initTomSelectExam(element) {
         if (element.tomselect) return;
         const currentVal = element.value;
@@ -1281,6 +1510,7 @@
 
     document.addEventListener("DOMContentLoaded", function() {
         initAppliedForTomSelect();
+        initExamCenterTomSelect();
         document.querySelectorAll('.exam-tom-select').forEach(el => initTomSelectExam(el));
         
         // Initialize District dropdowns
@@ -1292,6 +1522,14 @@
                     direction: "asc"
                 },
                 placeholder: 'Select District'
+            });
+        });
+
+        // Initialize BTCLA Constituency dropdowns
+        document.querySelectorAll('.constituency-tom-select').forEach(el => {
+            new TomSelect(el, {
+                create: false,
+                placeholder: 'Select BTCLA Constituency'
             });
         });
 
@@ -1488,6 +1726,28 @@
             return;
         }
 
+        // Check if on Step 1: examination_center is strictly required before moving forward
+        const examCenterSelect = document.getElementById('examination_center_select');
+        if (examCenterSelect && currentStep == 1 && (!examCenterSelect.value || !examCenterSelect.value.trim())) {
+            AppSwal.fire({
+                icon: 'warning',
+                title: 'Examination Center Required',
+                text: 'Please select your preferred Examination Center before proceeding.',
+                confirmButtonColor: '#059669'
+            });
+            const centerCard = document.getElementById('examination-center-container') || examCenterSelect;
+            if (centerCard) {
+                centerCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            if (examCenterSelect.tomselect) {
+                examCenterSelect.tomselect.focus();
+                examCenterSelect.tomselect.open();
+            } else {
+                examCenterSelect.focus();
+            }
+            return;
+        }
+
         const inputs = currentStepEl.querySelectorAll('input[required], select[required], textarea[required]');
         let isValid = true;
         let firstInvalid = null;
@@ -1606,6 +1866,11 @@
         const appliedForEl = document.getElementById('applied_for_select');
         if (appliedForEl && appliedForEl.value && !formData.get('applied_for')) {
             formData.append('applied_for', appliedForEl.value);
+        }
+
+        const examCenterEl = document.getElementById('examination_center_select');
+        if (examCenterEl && examCenterEl.value && !formData.get('examination_center')) {
+            formData.append('examination_center', examCenterEl.value);
         }
 
         try {
@@ -1988,6 +2253,121 @@
         lucide.createIcons();
     }
 
+    function preparePreviewSubmit() {
+        const directInput = document.getElementById('direct_final_submit_input');
+        if (directInput) {
+            directInput.value = '0';
+        }
+    }
+
+    function confirmDirectFinalSubmit(btn) {
+        // 1. Guard: Check Applied For
+        const appliedForSelect = document.getElementById('applied_for_select');
+        if (appliedForSelect && (!appliedForSelect.value || !appliedForSelect.value.trim())) {
+            currentStep = 1;
+            updateSteps();
+            AppSwal.fire({
+                icon: 'warning',
+                title: 'Course Selection Required',
+                text: 'Please select what you are "Applied For" in Step 1 before final submission.',
+                confirmButtonColor: '#4f46e5'
+            });
+            const card = document.getElementById('applied-for-card');
+            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        // 2. Guard: Check Examination Center
+        const examCenterSelect = document.getElementById('examination_center_select');
+        if (examCenterSelect && (!examCenterSelect.value || !examCenterSelect.value.trim())) {
+            currentStep = 1;
+            updateSteps();
+            AppSwal.fire({
+                icon: 'warning',
+                title: 'Examination Center Required',
+                text: 'Please select your preferred Examination Center in Step 1 before final submission.',
+                confirmButtonColor: '#059669'
+            });
+            const centerCard = document.getElementById('examination-center-container') || examCenterSelect;
+            if (centerCard) centerCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        // 3. Guard: Declaration Checkbox
+        const declarationCheckbox = document.getElementById('declaration_checkbox');
+        if (declarationCheckbox && !declarationCheckbox.checked) {
+            AppSwal.fire({
+                icon: 'warning',
+                title: 'Declaration Required',
+                text: 'Please accept the declaration checkbox before final submission.',
+                confirmButtonColor: '#ea580c'
+            });
+            declarationCheckbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            declarationCheckbox.focus();
+            return;
+        }
+
+        // 4. Guard: Mandatory Documents
+        const step5El = document.getElementById('step-5');
+        if (step5El) {
+            const requiredFileInputs = step5El.querySelectorAll('input[type="file"][required]');
+            let missingDoc = false;
+            requiredFileInputs.forEach(input => {
+                if (!input.value) {
+                    missingDoc = true;
+                }
+            });
+            if (missingDoc) {
+                AppSwal.fire({
+                    icon: 'error',
+                    title: 'Missing Mandatory Documents',
+                    text: 'Please choose and upload all mandatory documents (marked with *) before submitting.'
+                });
+                return;
+            }
+        }
+
+        // 5. SweetAlert Popup Confirmation
+        AppSwal.fire({
+            title: 'Final Submission Confirmation',
+            text: 'Are you sure you want to final submit your application? Once submitted, no further changes or re-edits can be made.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Final Submit',
+            cancelButtonText: 'Review First',
+            confirmButtonColor: '#059669',
+            cancelButtonColor: '#64748b',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let directInput = document.getElementById('direct_final_submit_input');
+                if (!directInput) {
+                    directInput = document.createElement('input');
+                    directInput.type = 'hidden';
+                    directInput.name = 'direct_final_submit';
+                    directInput.id = 'direct_final_submit_input';
+                    document.getElementById('admissionForm').appendChild(directInput);
+                }
+                directInput.value = '1';
+
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="loader-2" class="mr-2 animate-spin" size="18"></i> Submitting...';
+                    btn.style.pointerEvents = 'none';
+                    btn.disabled = true;
+                }
+                const previewBtn = document.getElementById('submitBtn');
+                if (previewBtn) {
+                    previewBtn.style.pointerEvents = 'none';
+                    previewBtn.disabled = true;
+                    previewBtn.style.opacity = '0.5';
+                }
+                if (window.lucide) lucide.createIcons();
+
+                document.getElementById('admissionForm').submit();
+            }
+        });
+    }
+
     // Submit Button Loading State
     document.getElementById('admissionForm').addEventListener('submit', function(e) {
         // Guard: Verify Applied For is selected
@@ -2015,8 +2395,32 @@
             return;
         }
 
+        // Guard: Verify Examination Center is selected
+        const examCenterSelect = document.getElementById('examination_center_select');
+        if (examCenterSelect && (!examCenterSelect.value || !examCenterSelect.value.trim())) {
+            e.preventDefault();
+            currentStep = 1;
+            updateSteps();
+            AppSwal.fire({
+                icon: 'warning',
+                title: 'Examination Center Required',
+                text: 'Please select your preferred Examination Center in Step 1 before proceeding.',
+                confirmButtonColor: '#059669'
+            });
+            const centerCard = document.getElementById('examination-center-container') || examCenterSelect;
+            if (centerCard) {
+                centerCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            if (examCenterSelect.tomselect) {
+                examCenterSelect.tomselect.focus();
+                examCenterSelect.tomselect.open();
+            } else {
+                examCenterSelect.focus();
+            }
+            return;
+        }
+
         // Final Step Validation (Last Step)
-        // Find the last step number from our steps array
         if(steps.length === 0) return;
         
         const lastStepNum = steps[steps.length - 1].number;
@@ -2031,7 +2435,6 @@
              if (input.type === 'checkbox') {
                  if (!input.checked) isValid = false;
              } else if (input.type === 'file') {
-                 // Dynamic check: if it's required, user MUST select a file
                  if (!input.value) isValid = false;
              } else {
                  if (!input.value.trim()) isValid = false;
@@ -2048,11 +2451,14 @@
             return;
         }
 
-        const btn = document.getElementById('submitBtn');
-        btn.innerHTML = '<i data-lucide="loader-2" class="mr-2 animate-spin" size="18"></i> Processing...';
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.7';
-        lucide.createIcons();
+        const isDirect = document.getElementById('direct_final_submit_input')?.value === '1';
+        const activeBtn = isDirect ? document.getElementById('finalSubmitDirectBtn') : document.getElementById('submitBtn');
+        if (activeBtn) {
+            activeBtn.innerHTML = '<i data-lucide="loader-2" class="mr-2 animate-spin" size="18"></i> ' + (isDirect ? 'Submitting...' : 'Processing...');
+            activeBtn.style.pointerEvents = 'none';
+            activeBtn.style.opacity = '0.7';
+            if (window.lucide) lucide.createIcons();
+        }
     });
 </script>
 @endpush

@@ -217,7 +217,8 @@ class StudentController extends Controller
         }
 
         $communities = \App\Models\Community::active()->get();
-        return view('student.edit-profile', compact('student', 'communities'));
+        $btclaConstituencies = \App\Models\BtclaConstituency::active()->get();
+        return view('student.edit-profile', compact('student', 'communities', 'btclaConstituencies'));
     }
 
     public function updateProfile(Request $request) {
@@ -433,7 +434,7 @@ class StudentController extends Controller
         } else {
             // Create Draft
            $existingApp = \App\Models\StudentApplication::create([
-                'application_code' => 'APP-' . date('Ymd') . '-' . time() . '-' . rand(100,999),
+                'application_code' => \App\Models\StudentApplication::generateApplicationCode(null),
                 'application_form_id' => $form_id,
                 'student_id' => $student->id,
                 'status' => 'draft',
@@ -448,7 +449,9 @@ class StudentController extends Controller
         }
 
         $communities = \App\Models\Community::active()->get();
-        return view('student.application.form', compact('form', 'existingApp', 'student', 'communities'));
+        $btclaConstituencies = \App\Models\BtclaConstituency::active()->get();
+        $examinationCenters = ['Kokrajhar', 'Chirang', 'Baksa', 'Tamulpur', 'Udalguri'];
+        return view('student.application.form', compact('form', 'existingApp', 'student', 'communities', 'btclaConstituencies', 'examinationCenters'));
     }
 
     public function showApplication($id)
@@ -467,6 +470,7 @@ class StudentController extends Controller
         $data = [
             'trade' => $application->application_form->application_name ?? 'N/A',
             'applied_for' => $application->applied_for ?? $application->application_student?->applied_for ?? $application->application_form->application_name ?? 'N/A',
+            'examination_center' => $application->examination_center ?? $application->application_student?->examination_center ?? 'N/A',
             'full_name' => $application->application_student->full_name ?? '',
             'phone_number' => $application->application_student->phone_number ?? '',
             'email' => $application->application_student->email ?? '',
@@ -634,6 +638,9 @@ class StudentController extends Controller
             if (empty($data['applied_for'])) {
                 $data['applied_for'] = $app->applied_for ?? $app->application_student?->applied_for ?? $app->application_form?->application_name;
             }
+            if (empty($data['examination_center'])) {
+                $data['examination_center'] = $app->examination_center ?? $app->application_student?->examination_center ?? '';
+            }
             if (empty($data['full_name'])) {
                 $data['full_name'] = $app->application_student?->full_name ?? auth()->user()->name ?? '';
             }
@@ -697,6 +704,28 @@ class StudentController extends Controller
             } else {
                 $data['applied_for'] = $app->applied_for ?? $app->application_student?->applied_for ?? ($data['applied_for'] ?? '');
             }
+
+            if ($request->filled('examination_center')) {
+                $data['examination_center'] = $request->examination_center;
+                if (\Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'examination_center')) {
+                    $app->update(['examination_center' => $request->examination_center]);
+                }
+                if ($app->application_student && \Illuminate\Support\Facades\Schema::hasColumn('application_students', 'examination_center')) {
+                    $app->application_student->update(['examination_center' => $request->examination_center]);
+                }
+            } else {
+                $data['examination_center'] = $app->examination_center ?? $app->application_student?->examination_center ?? ($data['examination_center'] ?? '');
+            }
+
+            $appliedForVal = $data['applied_for'] ?? ($app->applied_for ?? '');
+            if ($appliedForVal) {
+                $streamCode = \App\Models\StudentApplication::getStreamCode($appliedForVal);
+                $expectedPrefix = "BTC-2026{$streamCode}";
+                if (!$app->application_code || !str_starts_with($app->application_code, $expectedPrefix)) {
+                    $newAppCode = \App\Models\StudentApplication::generateApplicationCode($appliedForVal, $app->id);
+                    $app->update(['application_code' => $newAppCode]);
+                }
+            }
             
             // Handle Document Uploads - Validate and Save to DB directly
             $form = \App\Models\ApplicationForm::find($app->application_form_id);
@@ -740,9 +769,7 @@ class StudentController extends Controller
                 'btc_residential_certificate' => 'btc_residential_certificate',
             ];
 
-            $optionalDocs = [
-                'btc_residential_certificate',
-            ];
+            $optionalDocs = ['caste_certificate'];
 
             $appDoc = \App\Models\ApplicationDocument::firstOrCreate(['student_application_id' => $app->id]);
             $updateData = [];
@@ -798,7 +825,8 @@ class StudentController extends Controller
                     $profileField = $docMapping[$docType] ?? null;
                     if (!$profileField || empty($student->document->$profileField)) {
                         \Illuminate\Support\Facades\Log::warning("AppPreview: Missing mandatory doc $docType");
-                        return back()->withInput()->with('error', "Mandatory document missing: " . ucfirst(str_replace('_', ' ', $docType)));
+                        $niceDocLabel = in_array($docType, ['btc_residential_certificate', 'prc_certificate']) ? 'Permanent Resident Certificate (PRC)' : ucfirst(str_replace('_', ' ', $docType));
+                        return back()->withInput()->with('error', "Mandatory document missing: " . $niceDocLabel);
                     }
                 }
             }
@@ -820,8 +848,19 @@ class StudentController extends Controller
             $dataToStore['application_id'] = $app->id;
             $dataToStore['form_id'] = $app->application_form_id;
             $dataToStore['applied_for'] = $data['applied_for'] ?? ($app->applied_for ?? '');
+            $dataToStore['examination_center'] = $data['examination_center'] ?? ($app->examination_center ?? '');
         }
         session(['application_data' => $dataToStore]);
+
+        if ($request->boolean('direct_final_submit') && $app) {
+            $request->merge([
+                'application_id' => $app->id,
+                'form_id' => $app->application_form_id,
+                'applied_for' => $dataToStore['applied_for'],
+                'examination_center' => $dataToStore['examination_center'],
+            ]);
+            return $this->storeApplication($request);
+        }
                 
         return view('student.application.preview', compact('data', 'app'));
     }
@@ -889,18 +928,37 @@ class StudentController extends Controller
                 return redirect()->route('student.applications.history')->with('error', 'Application submission failed. The form is no longer active or the deadline has passed.');
             }
 
-            // Just update the status and ensure applied_for is locked in
+            // Just update the status and ensure applied_for and examination_center are locked in
             $appliedForVal = $request->input('applied_for') ?? ($data['applied_for'] ?? $application->applied_for);
+            $examinationCenterVal = $request->input('examination_center') ?? ($data['examination_center'] ?? $application->examination_center);
             $updatePayload = [
                 'status' => 'submitted',
                 'submitted_at' => now(),
             ];
+            if ($appliedForVal) {
+                $streamCode = \App\Models\StudentApplication::getStreamCode($appliedForVal);
+                $expectedPrefix = "BTC-2026{$streamCode}";
+                if (!$application->application_code || !str_starts_with($application->application_code, $expectedPrefix)) {
+                    $updatePayload['application_code'] = \App\Models\StudentApplication::generateApplicationCode($appliedForVal, $application->id);
+                }
+            }
             if ($appliedForVal && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'applied_for')) {
                 $updatePayload['applied_for'] = $appliedForVal;
             }
+            if ($examinationCenterVal && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'examination_center')) {
+                $updatePayload['examination_center'] = $examinationCenterVal;
+            }
             $application->update($updatePayload);
-            if ($appliedForVal && $application->application_student && \Illuminate\Support\Facades\Schema::hasColumn('application_students', 'applied_for')) {
-                $application->application_student->update(['applied_for' => $appliedForVal]);
+
+            $appStudentUpdates = [];
+            if ($appliedForVal && \Illuminate\Support\Facades\Schema::hasColumn('application_students', 'applied_for')) {
+                $appStudentUpdates['applied_for'] = $appliedForVal;
+            }
+            if ($examinationCenterVal && \Illuminate\Support\Facades\Schema::hasColumn('application_students', 'examination_center')) {
+                $appStudentUpdates['examination_center'] = $examinationCenterVal;
+            }
+            if (!empty($appStudentUpdates) && $application->application_student) {
+                $application->application_student->update($appStudentUpdates);
             }
 
             \Illuminate\Support\Facades\DB::commit();
@@ -957,7 +1015,7 @@ class StudentController extends Controller
                 'status' => 'draft' 
             ],
             [
-                'application_code' => 'APP-' . date('Ymd') . '-' . time() . '-' . rand(100,999), 
+                'application_code' => \App\Models\StudentApplication::generateApplicationCode($request->input('applied_for')), 
                 'payment_status' => 'pending'
             ]
         );
@@ -981,6 +1039,7 @@ class StudentController extends Controller
             ];
 
             $rules['applied_for'] = 'required|string|max:255';
+            $rules['examination_center'] = 'required|string|in:Kokrajhar,Chirang,Baksa,Tamulpur,Udalguri';
 
             foreach($personalFields as $field) {
                 if($form->isFieldVisible('personal', $field)) {
@@ -1061,11 +1120,13 @@ class StudentController extends Controller
         }
         
         $messages = [
+            'examination_center.required' => 'Please select your preferred Examination Center.',
+            'examination_center.in' => 'Examination Center must be one of: Kokrajhar, Chirang, Baksa, Tamulpur, Udalguri.',
             'permanent_district.in' => 'Permanent Address District must be one of: Kokrajhar, Chirang, Baksa, Tamulpur, Udalguri.',
             'qual.required' => 'Please add at least one academic qualification.',
             'qual.*.examination.required' => 'Examination name is required.',
             'qual.*.passing_year.required' => 'Passing year is required.',
-            'qual.*.board_university.required' => 'Board/University is required.',
+            'qual.*.board_university.required' => 'School/College/Institute Name is required.',
             'qual.*.percentage_grade.required' => 'Percentage/Grade is required.',
             'age.min' => 'Minimum age requirement is 14 years.',
             'age.max' => 'Maximum age limit is 100 years.',
@@ -1083,6 +1144,7 @@ class StudentController extends Controller
             'present_country' => 'Present Police Station',
             'permanent_district' => 'Permanent Address District',
             'applied_for' => 'Course / Stream Applied For',
+            'examination_center' => 'Examination Center',
         ];
 
         if (!empty($rules)) {
@@ -1127,6 +1189,9 @@ class StudentController extends Controller
                 if ($request->filled('applied_for') && \Illuminate\Support\Facades\Schema::hasColumn('application_students', 'applied_for')) {
                     $appStudentData['applied_for'] = $request->applied_for;
                 }
+                if ($request->filled('examination_center') && \Illuminate\Support\Facades\Schema::hasColumn('application_students', 'examination_center')) {
+                    $appStudentData['examination_center'] = $request->examination_center;
+                }
 
                 // Update Application Snapshot ONLY
                 \App\Models\ApplicationStudent::updateOrCreate(
@@ -1134,14 +1199,32 @@ class StudentController extends Controller
                     $appStudentData
                 );
 
-                if ($request->filled('applied_for')) {
-                    if (\Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'applied_for')) {
-                        $application->update(['applied_for' => $request->applied_for]);
-                    }
-                    $sessionData = session('application_data', []);
-                    $sessionData['applied_for'] = $request->applied_for;
-                    session(['application_data' => $sessionData]);
+                $appUpdate = [];
+                if ($request->filled('applied_for') && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'applied_for')) {
+                    $appUpdate['applied_for'] = $request->applied_for;
                 }
+                if ($request->filled('examination_center') && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'examination_center')) {
+                    $appUpdate['examination_center'] = $request->examination_center;
+                }
+                if ($request->filled('applied_for')) {
+                    $streamCode = \App\Models\StudentApplication::getStreamCode($request->applied_for);
+                    $expectedPrefix = "BTC-2026{$streamCode}";
+                    if (!$application->application_code || !str_starts_with($application->application_code, $expectedPrefix)) {
+                        $appUpdate['application_code'] = \App\Models\StudentApplication::generateApplicationCode($request->applied_for, $application->id);
+                    }
+                }
+                if (!empty($appUpdate)) {
+                    $application->update($appUpdate);
+                }
+
+                $sessionData = session('application_data', []);
+                if ($request->filled('applied_for')) {
+                    $sessionData['applied_for'] = $request->applied_for;
+                }
+                if ($request->filled('examination_center')) {
+                    $sessionData['examination_center'] = $request->examination_center;
+                }
+                session(['application_data' => $sessionData]);
 
                 // Update Application Parents Snapshot ONLY
                 \App\Models\ApplicationParent::updateOrCreate(
@@ -1310,12 +1393,10 @@ class StudentController extends Controller
                     }
 
                     // Strict validation: After potential copy, check if we have it
-                    $optionalDocs = [
-                        'btc_residential_certificate',
-                    ];
+                    $optionalDocs = ['caste_certificate'];
                     
                     if (empty($appDoc->$dbColumn) && empty($updateData[$dbColumn]) && !in_array($docType, $optionalDocs)) {
-                        $label = ucwords(str_replace('_', ' ', $docType));
+                        $label = in_array($docType, ['btc_residential_certificate', 'prc_certificate']) ? 'Permanent Resident Certificate (PRC)' : ucwords(str_replace('_', ' ', $docType));
                         return response()->json([
                             'success' => false, 
                             'message' => "The $label is required. Please upload it or update your profile."

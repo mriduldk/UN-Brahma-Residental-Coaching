@@ -904,10 +904,22 @@
 
     <!-- Application Details Section -->
     <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-10">
-        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center justify-between">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i data-lucide="user-details" size="20" class="text-indigo-600"></i> Application Details
             </h2>
+            <div class="flex items-center gap-2">
+                @if($application->applied_for ?? $application->application_student?->applied_for)
+                    <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-200">
+                        Applied For: {{ $application->applied_for ?? $application->application_student?->applied_for }}
+                    </span>
+                @endif
+                @if($application->examination_center ?? $application->application_student?->examination_center)
+                    <span class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold border border-amber-200">
+                        Exam Center: {{ $application->examination_center ?? $application->application_student?->examination_center }}
+                    </span>
+                @endif
+            </div>
         </div>
         
         <div class="p-6">
@@ -1040,7 +1052,7 @@
                             <thead class="bg-slate-50">
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Exam Passed</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Board / Council / University</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">School/College/Institute Name</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Year</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Percentage</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Division</th>
@@ -1117,7 +1129,7 @@
                             'caste_certificate' => 'Caste Certificate',
                             'income_certificate' => 'Income Certificate',
                             'address_proof' => 'Address Proof',
-                            'btc_residential_certificate' => 'Permanent Resident Certificate',
+                            'btc_residential_certificate' => 'Permanent Resident Certificate (PRC)',
                         ];
                         $hasDocs = false;
                     @endphp

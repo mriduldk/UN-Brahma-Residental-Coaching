@@ -25,6 +25,16 @@
                             <span class="text-sm font-medium text-slate-500">
                                 Applied for <a href="{{ route('admin.forms.show', $application->application_form_id) }}" class="text-indigo-600 hover:underline">{{ $application->application_form->application_name ?? 'Form' }}</a>
                             </span>
+                            @if($application->applied_for ?? $application->application_student?->applied_for)
+                                <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs font-semibold border border-indigo-200">
+                                    {{ $application->applied_for ?? $application->application_student?->applied_for }}
+                                </span>
+                            @endif
+                            @if($application->examination_center ?? $application->application_student?->examination_center)
+                                <span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-xs font-semibold border border-amber-200">
+                                    Center: {{ $application->examination_center ?? $application->application_student?->examination_center }}
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -189,7 +199,7 @@
                         <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
                             <tr>
                                 <th class="px-6 py-4">Qualification</th>
-                                <th class="px-6 py-4">Institution / Board</th>
+                                <th class="px-6 py-4">School/College/Institute Name</th>
                                 <th class="px-6 py-4 text-center">Year</th>
                                 <th class="px-6 py-4 text-center">Marks</th>
                                 <th class="px-6 py-4 text-right">Percentage</th>
@@ -251,6 +261,7 @@
                                 'caste_certificate' => 'Caste Certificate',
                                 'aadhaar_card' => 'Aadhaar Card',
                                 'bpl_certificate' => 'BPL Certificate',
+                                'btc_residential_certificate' => 'Permanent Resident Certificate (PRC)',
                             ];
                         @endphp
                         

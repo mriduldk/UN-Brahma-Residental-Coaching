@@ -112,7 +112,21 @@
                             @endforeach
                         </select>
                     </div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTCLA Constituency</label><input type="text" name="permanent_street" value="{{ $student->address->permanent_street ?? '' }}" class="w-full p-2 border border-slate-300 rounded uppercase"></div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">BTCLA Constituency</label>
+                        @php
+                            $savedConstituency = $student->address->permanent_street ?? '';
+                            $allConstituencies = $btclaConstituencies ?? \App\Models\BtclaConstituency::active()->get();
+                        @endphp
+                        <select name="permanent_street" class="w-full p-2 border border-slate-300 rounded outline-none focus:border-blue-500">
+                            <option value="">Select BTCLA Constituency</option>
+                            @foreach($allConstituencies as $constituency)
+                                <option value="{{ $constituency->name }}" {{ (string)$savedConstituency === (string)$constituency->name ? 'selected' : '' }}>
+                                    {{ $constituency->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">State</label><input type="text" name="permanent_state" value="Assam" readonly class="w-full p-2 border border-slate-300 rounded uppercase bg-slate-100 text-slate-600 font-semibold cursor-not-allowed"></div>
                     <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">PIN</label><input type="text" name="permanent_pin_code" value="{{ $student->address->permanent_pin_code ?? '' }}" class="w-full p-2 border border-slate-300 rounded"></div>
                  </div>
@@ -210,7 +224,7 @@
                         <tr>
                             <th class="px-4 py-3 min-w-[150px]">Exam</th>
                             <th class="px-4 py-3 min-w-[80px]">Year</th>
-                            <th class="px-4 py-3 min-w-[150px]">Board / University</th>
+                            <th class="px-4 py-3 min-w-[150px]">School/College/Institute Name</th>
                             <th class="px-4 py-3 min-w-[120px]">Roll No</th>
                             <th class="px-4 py-3 min-w-[120px]">Reg No</th>
                             <th class="px-4 py-3 min-w-[100px]">Medium</th>
@@ -226,7 +240,7 @@
                         <tr>
                             <td class="p-2"><input type="text" name="qual[{{ $index }}][exam]" value="{{ $qual->examination }}" class="w-full p-2 border rounded uppercase exam-tom-select" placeholder="Exam"></td>
                             <td class="p-2"><input type="number" name="qual[{{ $index }}][year]" value="{{ $qual->passing_year }}" class="w-full p-2 border rounded" placeholder="Year"></td>
-                            <td class="p-2"><input type="text" name="qual[{{ $index }}][board]" value="{{ $qual->board_university }}" class="w-full p-2 border rounded uppercase" placeholder="Board"></td>
+                            <td class="p-2"><input type="text" name="qual[{{ $index }}][board]" value="{{ $qual->board_university }}" class="w-full p-2 border rounded uppercase" placeholder="School/College/Institute Name"></td>
                             <td class="p-2"><input type="text" name="qual[{{ $index }}][roll_no]" value="{{ $qual->roll_number }}" class="w-full p-2 border rounded uppercase" placeholder="Roll No"></td>
                             <td class="p-2"><input type="text" name="qual[{{ $index }}][reg_no]" value="{{ $qual->registration_number }}" class="w-full p-2 border rounded uppercase" placeholder="Reg No"></td>
                             <td class="p-2"><input type="text" name="qual[{{ $index }}][medium]" value="{{ $qual->medium_of_study }}" class="w-full p-2 border rounded uppercase" placeholder="Medium"></td>
@@ -299,7 +313,7 @@
         row.innerHTML = `
             <td class="p-2"><input type="text" name="qual[${rowCount}][exam]" class="w-full p-2 border rounded uppercase exam-tom-select" placeholder="Exam"></td>
             <td class="p-2"><input type="number" name="qual[${rowCount}][year]" class="w-full p-2 border rounded" placeholder="Year"></td>
-            <td class="p-2"><input type="text" name="qual[${rowCount}][board]" class="w-full p-2 border rounded uppercase" placeholder="Board"></td>
+            <td class="p-2"><input type="text" name="qual[${rowCount}][board]" class="w-full p-2 border rounded uppercase" placeholder="School/College/Institute Name"></td>
             <td class="p-2"><input type="text" name="qual[${rowCount}][roll_no]" class="w-full p-2 border rounded uppercase" placeholder="Roll No"></td>
             <td class="p-2"><input type="text" name="qual[${rowCount}][reg_no]" class="w-full p-2 border rounded uppercase" placeholder="Reg No"></td>
             <td class="p-2"><input type="text" name="qual[${rowCount}][medium]" class="w-full p-2 border rounded uppercase" placeholder="Medium"></td>

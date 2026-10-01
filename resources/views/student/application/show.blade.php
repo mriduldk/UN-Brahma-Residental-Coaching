@@ -89,11 +89,18 @@
                             </div>
                             @php
                                 $displayAppliedFor = $application->applied_for ?? $application->application_student?->applied_for ?? null;
+                                $displayExamCenter = $application->examination_center ?? $application->application_student?->examination_center ?? null;
                             @endphp
                             @if($displayAppliedFor)
                             <div class="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 text-indigo-900 rounded-xl text-xs font-black shadow-2xs">
                                 <i data-lucide="compass" size="15" class="text-indigo-600"></i>
                                 <span>Applied For: <span class="text-indigo-700 underline decoration-indigo-300 font-extrabold">{{ $displayAppliedFor }}</span></span>
+                            </div>
+                            @endif
+                            @if($displayExamCenter)
+                            <div class="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs font-black shadow-2xs">
+                                <i data-lucide="map-pin" size="15" class="text-emerald-600"></i>
+                                <span>Exam Center: <span class="text-emerald-700 underline decoration-emerald-300 font-extrabold">{{ $displayExamCenter }}</span></span>
                             </div>
                             @endif
                         </div>
@@ -176,9 +183,9 @@
                 <h3 class="font-bold text-slate-800">Personal Information</h3>
             </div>
             <div class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-6 gap-x-8">
-                <!-- Applied For Display -->
                 @php
                     $displayAppliedFor = $application->applied_for ?? $application->application_student?->applied_for ?? null;
+                    $displayExamCenter = $application->examination_center ?? $application->application_student?->examination_center ?? null;
                 @endphp
                 @if($displayAppliedFor)
                 <div class="col-span-2 sm:col-span-3 lg:col-span-4 p-3.5 bg-gradient-to-r from-indigo-50/80 to-blue-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
@@ -193,6 +200,23 @@
                     </div>
                     <span class="text-[11px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
                         <i data-lucide="lock" size="12" class="text-slate-400"></i> Fixed Upon Submission
+                    </span>
+                </div>
+                @endif
+
+                @if($displayExamCenter)
+                <div class="col-span-2 sm:col-span-3 lg:col-span-4 p-3.5 bg-gradient-to-r from-emerald-50/80 to-teal-50/50 rounded-xl border border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs flex-shrink-0">
+                            <i data-lucide="map-pin" size="18"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest block">Selected Examination Center</span>
+                            <span class="text-base font-extrabold text-slate-900">{{ $displayExamCenter }}</span>
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
+                        <i data-lucide="check-circle" size="12" class="text-emerald-600"></i> Center Confirmed
                     </span>
                 </div>
                 @endif
@@ -479,7 +503,7 @@
             <div class="p-0 overflow-x-auto">
                 @php
                     $fieldsConfig = $application->application_form->field_config['academic']['fields'] ?? ['examination', 'board_university', 'passing_year', 'percentage_grade', 'division'];
-                    $labels = ['examination'=>'Exam','passing_year'=>'Year','board_university'=>'Board','percentage_grade'=>'%','division'=>'Div','roll_number'=>'Roll','registration_number'=>'Reg','total_marks'=>'Total','marks_obtained'=>'Obt','medium_of_study'=>'Medium'];
+                    $labels = ['examination'=>'Exam','passing_year'=>'Year','board_university'=>'School/College/Institute Name','percentage_grade'=>'%','division'=>'Div','roll_number'=>'Roll','registration_number'=>'Reg','total_marks'=>'Total','marks_obtained'=>'Obt','medium_of_study'=>'Medium'];
                 @endphp
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50/50">
@@ -526,8 +550,8 @@
             </div>
             <div class="p-6">
                 @php
-                    $docMap = ['photo' => 'photo','signature' => 'signature','caste_certificate' => 'caste_certificate','prc_certificate' => 'address_proof','address_proof' => 'address_proof','age_proof' => 'hslc_admit_card','hslc_admit_card' => 'hslc_admit_card','mark_sheet_10' => 'hslc_marksheet','hslc_marksheet' => 'hslc_marksheet','certificate_10' => 'hslc_pass_certificate','hslc_pass_certificate' => 'hslc_pass_certificate','mark_sheet_12' => 'hs_marksheet','hs_marksheet' => 'hs_marksheet','certificate_12' => 'hs_pass_certificate','hs_pass_certificate' => 'hs_pass_certificate','graduation_marksheet' => 'graduation_marksheet','graduation_certificate' => 'graduation_pass_certificate','graduation_pass_certificate' => 'graduation_pass_certificate','post_graduation_marksheet' => 'post_graduation_marksheet','post_graduation_certificate' => 'post_graduation_pass_certificate','post_graduation_pass_certificate' => 'post_graduation_pass_certificate','hs_admit_card' => 'hs_admit_card','graduation_admit_card' => 'graduation_admit_card','post_graduation_admit_card' => 'post_graduation_admit_card','income_certificate' => 'income_certificate','aadhaar_card' => 'aadhaar_card'];
-                    $docLbls = ['photo' => 'Photograph','signature' => 'Signature','caste_certificate' => 'Caste Certificate','prc_certificate' => 'PRC / Address','address_proof' => 'Address Proof','age_proof' => 'Age Proof','hslc_admit_card' => 'HSLC Admit','mark_sheet_10' => '10th Marksheet','hslc_marksheet' => '10th Marksheet','certificate_10' => '10th Cert','hslc_pass_certificate' => '10th Cert','mark_sheet_12' => '12th Marksheet','hs_marksheet' => '12th Marksheet','certificate_12' => '12th Cert','hs_pass_certificate' => '12th Cert','graduation_marksheet' => 'Graduation Mark','graduation_certificate' => 'Graduation Cert','graduation_pass_certificate' => 'Graduation Cert','post_graduation_marksheet' => 'PG Mark','post_graduation_certificate' => 'PG Cert','post_graduation_pass_certificate' => 'PG Cert','hs_admit_card' => 'HS Admit','graduation_admit_card' => 'Grad Admit','post_graduation_admit_card' => 'PG Admit','income_certificate' => 'Income Cert','aadhaar_card' => 'Aadhaar'];
+                    $docMap = ['photo' => 'photo','signature' => 'signature','caste_certificate' => 'caste_certificate','prc_certificate' => 'address_proof','address_proof' => 'address_proof','age_proof' => 'hslc_admit_card','hslc_admit_card' => 'hslc_admit_card','mark_sheet_10' => 'hslc_marksheet','hslc_marksheet' => 'hslc_marksheet','certificate_10' => 'hslc_pass_certificate','hslc_pass_certificate' => 'hslc_pass_certificate','mark_sheet_12' => 'hs_marksheet','hs_marksheet' => 'hs_marksheet','certificate_12' => 'hs_pass_certificate','hs_pass_certificate' => 'hs_pass_certificate','graduation_marksheet' => 'graduation_marksheet','graduation_certificate' => 'graduation_pass_certificate','graduation_pass_certificate' => 'graduation_pass_certificate','post_graduation_marksheet' => 'post_graduation_marksheet','post_graduation_certificate' => 'post_graduation_pass_certificate','post_graduation_pass_certificate' => 'post_graduation_pass_certificate','hs_admit_card' => 'hs_admit_card','graduation_admit_card' => 'graduation_admit_card','post_graduation_admit_card' => 'post_graduation_admit_card','income_certificate' => 'income_certificate','aadhaar_card' => 'aadhaar_card','btc_residential_certificate' => 'btc_residential_certificate'];
+                    $docLbls = ['photo' => 'Photograph','signature' => 'Signature','caste_certificate' => 'Caste Certificate','prc_certificate' => 'PRC / Address','address_proof' => 'Address Proof','age_proof' => 'Age Proof','hslc_admit_card' => 'HSLC Admit','mark_sheet_10' => '10th Marksheet','hslc_marksheet' => '10th Marksheet','certificate_10' => '10th Cert','hslc_pass_certificate' => '10th Cert','mark_sheet_12' => '12th Marksheet','hs_marksheet' => '12th Marksheet','certificate_12' => '12th Cert','hs_pass_certificate' => '12th Cert','graduation_marksheet' => 'Graduation Mark','graduation_certificate' => 'Graduation Cert','graduation_pass_certificate' => 'Graduation Cert','post_graduation_marksheet' => 'PG Mark','post_graduation_certificate' => 'PG Cert','post_graduation_pass_certificate' => 'PG Cert','hs_admit_card' => 'HS Admit','graduation_admit_card' => 'Grad Admit','post_graduation_admit_card' => 'PG Admit','income_certificate' => 'Income Cert','aadhaar_card' => 'Aadhaar','btc_residential_certificate' => 'Permanent Resident Certificate (PRC)'];
                     $displayKeys = array_keys($docLbls);
                 @endphp
                 @if($docs)

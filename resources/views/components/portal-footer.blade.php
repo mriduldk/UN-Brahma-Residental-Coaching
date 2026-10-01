@@ -79,7 +79,7 @@
     </div>
     <div class="col">
       <h5>Candidate Support</h5>
-      <p>education@bodoland.gov.in<br>Helpline: 03661-270XXX (10 AM – 5 PM, Mon–Fri)<br><span style="font-size: 11px; color: var(--forest);">100% Free Residential Coaching by BTC</span></p>
+      <p>info.jypko@gmail.com<br>Helpline: +91 7099144957<br></p>
     </div>
   </div>
   <div class="copyline">

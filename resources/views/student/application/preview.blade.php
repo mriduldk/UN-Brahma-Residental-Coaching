@@ -70,11 +70,18 @@
                             </div>
                             @php
                                 $displayAppliedFor = $app->applied_for ?? $data['applied_for'] ?? $app->application_student?->applied_for ?? null;
+                                $displayExamCenter = $app->examination_center ?? $data['examination_center'] ?? $app->application_student?->examination_center ?? null;
                             @endphp
                             @if($displayAppliedFor)
                             <div class="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 text-indigo-900 rounded-xl text-xs font-black shadow-2xs">
                                 <i data-lucide="compass" size="15" class="text-indigo-600"></i>
                                 <span>Applied For: <span class="text-indigo-700 underline decoration-indigo-300 font-extrabold">{{ $displayAppliedFor }}</span></span>
+                            </div>
+                            @endif
+                            @if($displayExamCenter)
+                            <div class="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs font-black shadow-2xs">
+                                <i data-lucide="map-pin" size="15" class="text-emerald-600"></i>
+                                <span>Exam Center: <span class="text-emerald-700 underline decoration-emerald-300 font-extrabold">{{ $displayExamCenter }}</span></span>
                             </div>
                             @endif
                         </div>
@@ -128,6 +135,24 @@
                         <i data-lucide="alert-triangle" size="12" class="text-amber-600"></i> Once submitted, cannot be changed
                     </span>
                 </div>
+
+                @if($displayExamCenter)
+                <!-- Examination Center Primary Display -->
+                <div class="col-span-2 sm:col-span-3 lg:col-span-4 p-3.5 bg-gradient-to-r from-emerald-50/80 to-teal-50/50 rounded-xl border border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs flex-shrink-0">
+                            <i data-lucide="map-pin" size="18"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest block">Selected Examination Center</span>
+                            <span class="text-base font-extrabold text-slate-900">{{ $displayExamCenter }}</span>
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
+                        <i data-lucide="check-circle" size="12" class="text-emerald-600"></i> Center Confirmed
+                    </span>
+                </div>
+                @endif
 
                 @php
                     $personalFields = [
@@ -438,7 +463,7 @@
                     $academicLabels = [
                         'examination' => 'Examination',
                         'passing_year' => 'Year',
-                        'board_university' => 'Board / University',
+                        'board_university' => 'School/College/Institute Name',
                         'percentage_grade' => '%/Grade',
                         'division' => 'Division',
                         'roll_number' => 'Roll No',
@@ -556,7 +581,7 @@
                         'post_graduation_admit_card' => 'PG Admit Card',
                         'income_certificate' => 'Income Certificate',
                         'aadhaar_card' => 'Aadhaar Card',
-                        'btc_residential_certificate' => 'Permanent Resident Certificate'
+                        'btc_residential_certificate' => 'Permanent Resident Certificate (PRC)'
                     ];
 
                     // Define unique keys for display to avoid duplicates if multiple aliases map to same DB key
@@ -627,9 +652,13 @@
                     <input type="hidden" name="form_id" value="{{ $app->application_form_id }}">
                     @php
                         $hiddenAppliedFor = $app->applied_for ?? $data['applied_for'] ?? $app->application_student?->applied_for ?? '';
+                        $hiddenExamCenter = $app->examination_center ?? $data['examination_center'] ?? $app->application_student?->examination_center ?? '';
                     @endphp
                     @if($hiddenAppliedFor)
                         <input type="hidden" name="applied_for" value="{{ $hiddenAppliedFor }}">
+                    @endif
+                    @if($hiddenExamCenter)
+                        <input type="hidden" name="examination_center" value="{{ $hiddenExamCenter }}">
                     @endif
                     <button type="button" onclick="confirmSubmit()" class="submit-confirm-btn w-full px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
                         Submit <i data-lucide="arrow-right" size="18"></i>

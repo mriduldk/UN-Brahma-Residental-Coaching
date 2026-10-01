@@ -102,21 +102,23 @@
         <!-- Meta Information (Below header to avoid overlap) -->
         <table class="meta-table">
             <tr>
-                <td width="25%">
+                <td width="22%">
                     <span class="label">Application No.</span>
                     <span class="value" style="font-size: 11px; color: #2563eb;">{{ $application->application_code }}</span>
                 </td>
-                <td width="30%">
+                <td width="28%">
                     <span class="label">Applied For</span>
                     <span class="value" style="font-size: 11px; color: #1e1b4b; font-weight: bold;">{{ strtoupper($application->applied_for ?? $application->application_student?->applied_for ?? '-') }}</span>
                 </td>
-                <td width="20%" align="center">
-                    <span class="label">Application Date</span>
-                    <span class="value">{{ $application->created_at->format('d/m/Y') }}</span>
+                <td width="25%">
+                    <span class="label">Exam Center</span>
+                    <span class="value" style="font-size: 11px; color: #047857; font-weight: bold;">{{ strtoupper($application->examination_center ?? $application->application_student?->examination_center ?? '-') }}</span>
                 </td>
                 <td width="25%" align="right">
+                    <span class="label">Application Date</span>
+                    <span class="value">{{ ($application->submitted_at ?? $application->created_at)->format('d/m/Y, h:i A') }}</span>
                     @if($application->application_form->is_application_fee_required)
-                     <span class="status-badge {{ $application->payment_status == 'paid' ? 'status-paid' : 'status-pending' }}">
+                     <br><span class="status-badge {{ $application->payment_status == 'paid' ? 'status-paid' : 'status-pending' }}" style="display: inline-block; margin-top: 4px;">
                         Payment: {{ strtoupper($application->payment_status) }}
                     </span>
                     @endif
@@ -159,19 +161,13 @@
                 <td><span class="label">Age (Auto Calculate)</span><span class="value">{{ $age }}</span></td>
             </tr>
             <tr>
-                <td><span class="label">Community</span><span class="value">{{ strtoupper($s->community ?? $s->nationality ?? '-') }}</span></td>
-                <td><span class="label">Employment Exchange Registration Number</span><span class="value">{{ strtoupper($s->employment_exchange_no ?? '-') }}</span></td>
                 <td><span class="label">Category</span><span class="value">{{ strtoupper($s->category ?? '-') }}</span></td>
-            </tr>
-            <tr>
-                <td><span class="label">Permanent Resident of Assam</span><span class="value">{{ !is_null($s->is_permanent_resident_of_assam) ? ($s->is_permanent_resident_of_assam ? 'YES' : 'NO') : '-' }}</span></td>
-                <td><span class="label">BTC Resident</span><span class="value">{{ !is_null($s->is_btc_resident) ? ($s->is_btc_resident ? 'YES' : 'NO') : '-' }}</span></td>
-                <td><span class="label">PwD (Yes/No)</span><span class="value">{{ $s->is_pwd ? 'YES' : 'NO' }}</span></td>
-            </tr>
-            <tr>
+                <td><span class="label">Community</span><span class="value">{{ strtoupper($s->community ?? $s->nationality ?? '-') }}</span></td>
                 <td><span class="label">Mobile Number</span><span class="value">{{ $s->phone_number }}</span></td>
+            </tr>
+            <tr>
                 <td><span class="label">What’s App Number</span><span class="value">{{ $s->alternate_mobile_number ?? '-' }}</span></td>
-                <td><span class="label">Email Address</span><span class="value">{{ $s->email ?? $application->student->email ?? '-' }}</span></td>
+                <td colspan="2"><span class="label">Email Address</span><span class="value">{{ $s->email ?? $application->student->email ?? '-' }}</span></td>
             </tr>
         </table>
 
@@ -191,11 +187,18 @@
                 <td width="50%">
                     <span class="label">Current Address / Communication Address</span>
                     <span class="value">
-                        @if($a->same_as_permanent) Same as Permanent Address @else
-                        {{ $a->present_village_town }}@if($a->present_street), {{ $a->present_street }}@endif<br>
-                        @if($a->present_city)P.O.: {{ $a->present_city }}, @endif @if($a->present_country)P.S.: {{ $a->present_country }}, @endif Dist: {{ $a->present_district }}<br>
-                        {{ $a->present_state }} - {{ $a->present_pin_code }}
-                        @endif
+                        @php
+                            $presVillage = !empty($a->present_village_town) ? $a->present_village_town : $a->permanent_village_town;
+                            $presStreet = !empty($a->present_street) ? $a->present_street : $a->permanent_street;
+                            $presCity = !empty($a->present_city) ? $a->present_city : $a->permanent_city;
+                            $presCountry = !empty($a->present_country) ? $a->present_country : $a->permanent_country;
+                            $presDistrict = !empty($a->present_district) ? $a->present_district : $a->permanent_district;
+                            $presState = !empty($a->present_state) ? $a->present_state : $a->permanent_state;
+                            $presPin = !empty($a->present_pin_code) ? $a->present_pin_code : $a->permanent_pin_code;
+                        @endphp
+                        {{ $presVillage }}<br>
+                        @if($presCity)P.O.: {{ $presCity }}, @endif @if($presCountry)P.S.: {{ $presCountry }}, @endif Dist: {{ $presDistrict }}@if($presStreet), BTCLA Constituency: {{ $presStreet }}@endif<br>
+                        {{ $presState }} - {{ $presPin }}
                     </span>
                 </td>
             </tr>
@@ -207,7 +210,7 @@
             <thead>
                 <tr>
                     <th width="30%">Exam Passed</th>
-                    <th width="30%">Board / University</th>
+                    <th width="30%">School/College/Institute Name</th>
                     <th width="15%" align="center">Year</th>
                     <th width="15%" align="center">% / Grade</th>
                     <th width="10%" align="center">Division</th>
@@ -322,7 +325,7 @@
     </div>
     
     <div class="footer">
-        Generated on {{ date('d M Y, h:i A') }} • Application ID: {{ $application->id }} • {{ config('app.name') }}
+        Generated on {{ date('d M Y, h:i A') }} • Downloaded by: {{ auth()->user()->name ?? $application->application_student?->full_name ?? '-' }} • Application Number: {{ $application->application_code }}
     </div>
 </body>
 </html>

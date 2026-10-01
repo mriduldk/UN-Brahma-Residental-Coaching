@@ -27,10 +27,16 @@
                         
                         @php
                             $appliedForVal = $application->applied_for ?? $application->application_student?->applied_for ?? null;
+                            $examCenterVal = $application->examination_center ?? $application->application_student?->examination_center ?? null;
                         @endphp
                         @if($appliedForVal)
                             <span class="bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide border border-indigo-200 flex items-center shadow-2xs">
                                 <i data-lucide="compass" size="13" class="mr-1 text-indigo-600"></i> Applied For: {{ $appliedForVal }}
+                            </span>
+                        @endif
+                        @if($examCenterVal)
+                            <span class="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide border border-amber-200 flex items-center shadow-2xs">
+                                <i data-lucide="map-pin" size="13" class="mr-1 text-amber-600"></i> Exam Center: {{ $examCenterVal }}
                             </span>
                         @endif
 
@@ -297,7 +303,7 @@
                         <thead class="bg-slate-50 text-xs text-slate-500 uppercase font-bold tracking-tight">
                             <tr>
                                 <th class="px-6 py-4 border-b border-slate-200">Examination Name</th>
-                                <th class="px-6 py-4 border-b border-slate-200">Board / University</th>
+                                <th class="px-6 py-4 border-b border-slate-200">School/College/Institute Name</th>
                                 <th class="px-6 py-4 border-b border-slate-200 text-center">Passing Year</th>
                                 <th class="px-6 py-4 border-b border-slate-200 text-center">% Marks</th>
                                 <th class="px-6 py-4 border-b border-slate-200 text-center">Division</th>
@@ -351,7 +357,7 @@
                             'income_certificate' => 'Income Certificate',
                             'address_proof' => 'Address Proof',
                             'aadhaar_card' => 'Aadhaar Card',
-                            'btc_residential_certificate' => 'Permanent Resident Certificate',
+                            'btc_residential_certificate' => 'Permanent Resident Certificate (PRC)',
                         ];
                         $hasDocs = false;
                         if($docs) {

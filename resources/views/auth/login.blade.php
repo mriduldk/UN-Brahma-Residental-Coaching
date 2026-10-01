@@ -429,12 +429,6 @@
             <span class="tag">Candidate Portal</span>
             <h2>Welcome back. Sign in to continue your application.</h2>
             <p>Access your saved drafts, track submitted applications, and download your acknowledgement receipts.</p>
-            <ul>
-              <li><span class="mk">✓</span> Apply for multiple posts in one session</li>
-              <li><span class="mk">✓</span> Auto-saved application progress</li>
-              <li><span class="mk">✓</span> Real-time status &amp; admit card alerts</li>
-              <li><span class="mk">✓</span> Secure document upload</li>
-            </ul>
           </div>
         </div>
 

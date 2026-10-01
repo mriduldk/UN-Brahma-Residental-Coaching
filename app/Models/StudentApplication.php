@@ -21,11 +21,17 @@ class StudentApplication extends Model
         'approval_status',
         'approval_remarks',
         'applied_for',
+        'examination_center',
     ];
 
     public function getAppliedForDisplayAttribute()
     {
         return $this->applied_for ?? $this->application_student?->applied_for ?? 'N/A';
+    }
+
+    public function getExaminationCenterDisplayAttribute()
+    {
+        return $this->examination_center ?? $this->application_student?->examination_center ?? 'N/A';
     }
 
     protected $casts = [
@@ -105,5 +111,58 @@ class StudentApplication extends Model
     public function admission_student()
     {
         return $this->hasOne(AdmissionStudent::class);
+    }
+
+    public static function getStreamCode(?string $appliedFor): string
+    {
+        if (!$appliedFor) {
+            return '0';
+        }
+
+        $val = trim($appliedFor);
+        if ($val === 'UPSC' || str_contains($val, 'UPSC')) {
+            return '1';
+        }
+        if ($val === 'APSC' || str_contains($val, 'APSC')) {
+            return '2';
+        }
+        if ($val === 'Engineering (JEE)' || str_contains($val, 'Engineering') || str_contains($val, 'JEE')) {
+            return '3';
+        }
+        if ($val === 'Medical (NEET)' || str_contains($val, 'Medical') || str_contains($val, 'NEET')) {
+            return '4';
+        }
+
+        return '0';
+    }
+
+    public static function generateApplicationCode(?string $appliedFor, $excludeId = null): string
+    {
+        $streamCode = self::getStreamCode($appliedFor);
+        $year = '2026';
+        $prefix = "BTC-{$year}{$streamCode}";
+
+        $existingCodes = self::withTrashed()
+            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->where('application_code', 'LIKE', "{$prefix}%")
+            ->pluck('application_code');
+
+        $maxNum = 0;
+        foreach ($existingCodes as $code) {
+            $numPart = substr($code, strlen($prefix));
+            if (is_numeric($numPart) && (int)$numPart > $maxNum) {
+                $maxNum = (int)$numPart;
+            }
+        }
+
+        $nextNum = $maxNum + 1;
+        $candidateCode = $prefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+        while (self::withTrashed()->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))->where('application_code', $candidateCode)->exists()) {
+            $nextNum++;
+            $candidateCode = $prefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+        }
+
+        return $candidateCode;
     }
 }

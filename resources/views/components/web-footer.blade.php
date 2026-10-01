@@ -45,7 +45,7 @@
                     <ul class="space-y-4 text-sm text-slate-500">
                         <li class="flex items-start">
                             <i data-lucide="phone" size="18" class="mr-3 text-blue-600"></i>
-                            <span>+91 91016 72624</span>
+                            <span>+91 7099144957</span>
                         </li>
                         <li class="flex items-start">
                             <i data-lucide="mail" size="18" class="mr-3 text-blue-600"></i>

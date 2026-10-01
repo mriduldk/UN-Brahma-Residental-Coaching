@@ -37,6 +37,7 @@ class ApplicationStudent extends Model
         'has_national_sports_achievement',
         'has_fine_arts_cultural_achievement',
         'applied_for',
+        'examination_center',
     ];
 
     /**

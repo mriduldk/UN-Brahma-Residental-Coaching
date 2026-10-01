@@ -268,7 +268,7 @@
                 </p>
                 <div class="flex flex-col gap-2 text-sm font-semibold text-indigo-800">
                     <div class="flex items-center gap-2">
-                         <i data-lucide="phone" size="14" class="opacity-70"></i> +91 9101672624
+                         <i data-lucide="phone" size="14" class="opacity-70"></i> +91 7099144957
                     </div>
                     <div class="flex items-center gap-2">
                          <i data-lucide="mail" size="14" class="opacity-70"></i> info.jypko@gmail.com

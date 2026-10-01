@@ -299,7 +299,7 @@
                     'academic' => ['title' => 'Academic Information', 'icon' => 'graduation-cap', 'color' => 'amber', 'mandatory' => []],
                     'parents' => ['title' => 'Parent/Guardian Details', 'icon' => 'users', 'color' => 'indigo', 'mandatory' => ['father_annual_income']],
                     'bank' => ['title' => 'Bank Details', 'icon' => 'university', 'color' => 'rose', 'mandatory' => []],
-                    'documents' => ['title' => 'Documents Upload', 'icon' => 'file', 'color' => 'slate', 'mandatory' => []],
+                    'documents' => ['title' => 'Documents Upload', 'icon' => 'file', 'color' => 'slate', 'mandatory' => ['btc_residential_certificate']],
                 ];
 
                 $defaults = [
@@ -309,7 +309,7 @@
                         'present_village_town', 'present_district', 'present_state', 'present_country', 'present_pin_code'
                     ],
                     'academic' => ['examination', 'board_university', 'passing_year', 'percentage_grade', 'division'],
-                    'documents' => ['photo', 'signature'],
+                    'documents' => ['photo', 'signature', 'btc_residential_certificate'],
                 ];
             @endphp
 
@@ -402,7 +402,8 @@
                                     if ($col === 'permanent_country') $label = 'Permanent Police Station';
                                     if ($col === 'present_city') $label = 'Present Post Office';
                                     if ($col === 'present_country') $label = 'Present Police Station';
-                                    if ($col === 'btc_residential_certificate') $label = 'Permanent Resident Certificate';
+                                    if ($col === 'board_university') $label = 'School/College/Institute Name';
+                                    if ($col === 'btc_residential_certificate') $label = 'Permanent Resident Certificate (PRC)';
                                     if ($col === 'hslc_marksheet') $label = 'HSLC Marksheet';
                                     if ($col === 'hslc_pass_certificate') $label = 'HSLC Pass Certificate';
                                     if ($col === 'hs_marksheet') $label = 'HS Marksheet';
