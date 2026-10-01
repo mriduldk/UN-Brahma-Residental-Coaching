@@ -144,6 +144,7 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'mobile.verified
         Route::post('/profile/update', [\App\Http\Controllers\StudentController::class, 'updateProfile'])->name('profile.update')->middleware('throttle:profile-update');
         Route::get('/application-form', [\App\Http\Controllers\StudentController::class, 'applicationForm'])->name('application.form');
         Route::get('/application/{id}', [\App\Http\Controllers\StudentController::class, 'showApplication'])->name('application.show');
+        Route::delete('/application/{id}', [\App\Http\Controllers\StudentController::class, 'destroyApplication'])->name('application.destroy');
         Route::get('/application/{id}/download', [\App\Http\Controllers\StudentController::class, 'downloadApplicationPdf'])->name('application.download');
         Route::get('/application/{id}/acknowledgment', [\App\Http\Controllers\StudentController::class, 'downloadAcknowledgment'])->name('application.acknowledgment');
         Route::get('/application-preview', [\App\Http\Controllers\StudentController::class, 'applicationPreview'])->name('application.preview.get');

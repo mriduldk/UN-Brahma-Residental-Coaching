@@ -13,13 +13,13 @@
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <div class="relative group">
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size="18"></i>
-                <input type="text" placeholder="Search Application..." 
+                <input type="text" id="application-search" placeholder="Search Application..." 
                        class="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm">
             </div>
             
             <div class="relative">
                 <i data-lucide="filter" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size="18"></i>
-                <select class="w-full sm:w-48 pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none shadow-sm cursor-pointer">
+                <select id="status-filter" class="w-full sm:w-48 pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none shadow-sm cursor-pointer">
                     <option value="">All Status</option>
                     <option value="draft">Draft</option>
                     <option value="submitted">Submitted</option>
@@ -73,7 +73,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($applications as $app)
-                    <tr class="group hover:bg-slate-50/80 transition-colors duration-200">
+                    <tr class="application-row group hover:bg-slate-50/80 transition-colors duration-200" data-status="{{ strtolower($app->status) }}">
                         <!-- App Details -->
                         <td class="px-6 py-4">
                             <div class="flex items-start gap-3">
@@ -175,6 +175,16 @@
                                             Continue <i data-lucide="arrow-right" size="14"></i>
                                         </a>
                                     @endif
+
+                                    <form action="{{ route('student.application.destroy', $app->id) }}" method="POST" class="inline" onsubmit="return confirmDelete(event, this);">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 rounded-lg transition-all border border-rose-200 shadow-sm hover:shadow text-xs font-bold" 
+                                                title="Delete Draft Application">
+                                            <i data-lucide="trash-2" size="14"></i> Delete
+                                        </button>
+                                    </form>
                                 @else
                                     <a href="{{ route('student.application.show', $app->id) }}" 
                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 rounded-lg transition-all border border-emerald-200 shadow-sm hover:shadow text-xs font-bold" 
@@ -242,4 +252,70 @@
         animation: fade-in 0.3s ease-out forwards;
     }
 </style>
+
+@push('scripts')
+<script>
+    function confirmDelete(event, form) {
+        event.preventDefault();
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Delete Draft Application?',
+                text: 'Are you sure you want to delete this draft application? This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, delete it',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'rounded-xl text-sm font-bold px-4 py-2.5',
+                    cancelButton: 'rounded-xl text-sm font-bold px-4 py-2.5'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        } else {
+            if (confirm('Are you sure you want to delete this draft application?')) {
+                form.submit();
+            }
+        }
+        return false;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('application-search');
+        const statusFilter = document.getElementById('status-filter');
+        const rows = document.querySelectorAll('.application-row');
+
+        function filterTable() {
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const status = statusFilter ? statusFilter.value.toLowerCase().trim() : '';
+
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
+
+                const matchesSearch = !query || rowText.includes(query);
+                const matchesStatus = !status || rowStatus === status;
+
+                if (matchesSearch && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterTable);
+        }
+        if (statusFilter) {
+            statusFilter.addEventListener('change', filterTable);
+        }
+    });
+</script>
+@endpush
 @endsection

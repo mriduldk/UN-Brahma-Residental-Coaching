@@ -515,6 +515,26 @@ class StudentController extends Controller
         return view('student.application.show', compact('application', 'data'));
     }
 
+    public function destroyApplication($id)
+    {
+        $user = auth()->user();
+        $student = \App\Models\Student::where('user_id', $user->id)->firstOrFail();
+
+        $application = \App\Models\StudentApplication::where('id', $id)
+            ->where('student_id', $student->id)
+            ->firstOrFail();
+
+        if ($application->status !== 'draft') {
+            return redirect()->route('student.applications.history')
+                ->with('error', 'Only draft applications can be deleted.');
+        }
+
+        $application->delete();
+
+        return redirect()->route('student.applications.history')
+            ->with('success', 'Draft application deleted successfully.');
+    }
+
     public function downloadApplicationPdf($id)
     {
         $user = auth()->user();

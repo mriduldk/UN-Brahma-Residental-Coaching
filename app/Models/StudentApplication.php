@@ -156,11 +156,11 @@ class StudentApplication extends Model
         }
 
         $nextNum = $maxNum + 1;
-        $candidateCode = $prefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+        $candidateCode = $prefix . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
 
         while (self::withTrashed()->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))->where('application_code', $candidateCode)->exists()) {
             $nextNum++;
-            $candidateCode = $prefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+            $candidateCode = $prefix . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
         }
 
         return $candidateCode;
