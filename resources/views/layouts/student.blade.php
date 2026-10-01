@@ -132,9 +132,6 @@
                     </div>
                     --}}
 
-                    <x-student-nav-link href="{{ route('student.applications.index') }}"
-                        :active="request()->routeIs('student.applications.index')" icon="layers">All
-                        Applications</x-student-nav-link>
                     <x-student-nav-link href="{{ route('student.applications.history') }}"
                         :active="request()->routeIs('student.applications.history') || request()->routeIs('student.application.show') || request()->routeIs('student.application.payment') || request()->routeIs('student.application.form') || request()->routeIs('student.application.preview*')" icon="folder-open">My
                         Applications</x-student-nav-link>

@@ -40,10 +40,10 @@ body {
   line-height: 1.6;
 }
 
-/* ─── HERO CAROUSEL ─────────────────────────────────────────── */
+/* ─── HERO CAROUSEL (FULL WIDTH) ─────────────────────────── */
 .hero-carousel-section {
   position: relative;
-  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  background: var(--paper-dark);
   border-bottom: 1px solid var(--line);
   overflow: hidden;
   width: 100%;
@@ -51,16 +51,17 @@ body {
 .hero-carousel-container {
   position: relative;
   width: 100%;
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 16px 20px 20px;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 .carousel-viewport {
   position: relative;
-  border-radius: 12px;
+  width: 100%;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 10px 30px -5px rgba(12, 74, 110, 0.15), 0 4px 6px -2px rgba(12, 74, 110, 0.05);
-  border: 1px solid rgba(2, 132, 199, 0.2);
+  box-shadow: none;
+  border: none;
   background: var(--white);
 }
 .carousel-track {
@@ -70,6 +71,7 @@ body {
 }
 .carousel-slide {
   min-width: 100%;
+  width: 100%;
   position: relative;
   display: block;
 }
@@ -94,7 +96,7 @@ body {
   transform: translateY(-50%);
   display: flex;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 20px;
   pointer-events: none;
   z-index: 10;
 }
@@ -103,14 +105,14 @@ body {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--line);
   color: var(--maroon-dark);
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
   transition: all 0.2s ease;
   backdrop-filter: blur(4px);
 }
@@ -120,33 +122,49 @@ body {
   transform: scale(1.08);
 }
 .carousel-indicators {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  z-index: 10;
 }
 .carousel-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: rgba(2, 132, 199, 0.25);
-  border: none;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(2, 132, 199, 0.5);
   cursor: pointer;
   transition: all 0.25s ease;
   padding: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 .carousel-dot.active {
   background: var(--maroon);
-  width: 28px;
+  border-color: var(--white);
+  width: 30px;
   border-radius: 6px;
 }
 @media (max-width: 768px) {
   .hero-carousel-container {
-    padding: 10px 12px 14px;
+    padding: 0;
   }
   .carousel-viewport {
-    border-radius: 8px;
+    border-radius: 0;
+  }
+  .carousel-indicators {
+    bottom: 8px;
+  }
+  .carousel-dot {
+    width: 8px;
+    height: 8px;
+  }
+  .carousel-dot.active {
+    width: 22px;
   }
 }
 
@@ -726,7 +744,7 @@ body {
 <x-portal-header />
 
 <!-- ── HERO CAROUSEL ─────────────────────────────────────────── -->
-<section class="hero-carousel-section" id="carousel" aria-label="Official Banner Carousel">
+<section class="hero-carousel-section" id="home" aria-label="Official Banner Carousel">
   <div class="hero-carousel-container">
     <div class="carousel-viewport">
       <div class="carousel-track" id="heroCarouselTrack">
@@ -795,31 +813,6 @@ body {
     @endif
   </div>
 </div>
-
-<!-- ── HERO ─────────────────────────────────────────────────── -->
-<section class="hero" id="home">
-  <div class="inner">
-    <div class="hero-left">
-      <div class="hero-eyebrow">BTC Education Initiative 2026</div>
-      <h2>Upendra Nath Brahma<br><em>Residential Free Coaching</em><br>Programmes 2026</h2>
-      <p class="hero-desc">
-        A transformative, 100% free residential coaching program under the Department of Education, Bodoland Territorial Council (BTC). Preparing promising students of BTC &amp; Assam for national-level <strong>Engineering (JEE)</strong>, <strong>Medical (NEET)</strong>, <strong>APSC (CCE)</strong>, and <strong>UPSC (Civil Services)</strong> examinations with free lodging, boarding, library, and premier faculty mentorship.
-      </p>
-      <div class="hero-tags">
-        <span class="hero-tag highlight">Engineering (JEE)</span>
-        <span class="hero-tag highlight">Medical (NEET)</span>
-        <span class="hero-tag highlight">APSC (CCE)</span>
-        <span class="hero-tag highlight">UPSC (Civil Services)</span>
-        <span class="hero-tag">100% Free Residential</span>
-        <span class="hero-tag">Free Lodging &amp; Fooding</span>
-      </div>
-      <div class="hero-cta">
-        <a href="#programmes" class="btn-primary">Apply Online →</a>
-        <a href="#documents" class="btn-outline">View Notices &amp; Guidelines</a>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ── COACHING INSTITUTES ─────────────────────────────────── -->
 <section class="section" id="institutes">

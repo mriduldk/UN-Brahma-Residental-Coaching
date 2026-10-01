@@ -60,7 +60,7 @@
             </div>
             
             <div class="border-t border-slate-100 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
-                <p>&copy; 2026 Director of Education, BTC. All rights reserved.</p>
+                <p>&copy; 2026 Upendra Nath Brahma Residential Free Coaching, Department of Education, Bodoland Territorial Council. All rights reserved. | Design and Developed by <a href="https://jypko.com/" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:underline">JYPKO</a></p>
                 <div class="flex space-x-6 mt-4 md:mt-0">
                     <span>Designed with ❤️ in India</span>
                 </div>

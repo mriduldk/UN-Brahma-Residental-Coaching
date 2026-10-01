@@ -83,11 +83,6 @@
     </div>
   </div>
   <div class="copyline">
-    © 2026 Upendra Nath Brahma Residential Free Coaching, Department of Education, Bodoland Territorial Council. All rights reserved. 
-    &nbsp;|&nbsp; 
-    <a href="{{ route('terms') }}">Terms &amp; Conditions</a> 
-    &nbsp;|&nbsp; 
-    <a href="{{ route('privacy') }}">Privacy Policy</a>
-    - Design and Developed by <a href="https://jypko.com" target="_blank">JYPKO</a>
+    © 2026 Upendra Nath Brahma Residential Free Coaching, Department of Education, Bodoland Territorial Council. All rights reserved. | Designed and Developed by <a href="https://jypko.com/" target="_blank" rel="noopener">JYPKO</a>
   </div>
 </footer>
