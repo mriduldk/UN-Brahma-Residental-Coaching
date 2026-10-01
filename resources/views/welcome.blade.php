@@ -413,140 +413,7 @@ body {
   font-family: 'JetBrains Mono', monospace; color: var(--ink-soft);
 }
 
-/* ===== COACHING INSTITUTES GRID ===== */
-.institutes-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-.institute-card {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 28px 24px;
-  box-shadow: 0 4px 6px -1px rgba(12, 74, 110, 0.04), 0 2px 4px -2px rgba(12, 74, 110, 0.03);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
-.institute-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 28px -6px rgba(12, 74, 110, 0.12), 0 6px 12px -4px rgba(12, 74, 110, 0.06);
-  border-color: rgba(2, 132, 199, 0.4);
-}
-.institute-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 4px;
-  background: linear-gradient(90deg, #0284c7, #0369a1);
-}
-.inst-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.inst-category-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 4px 10px;
-  border-radius: 4px;
-  display: inline-block;
-}
-.cat-apsc {
-  background: rgba(14, 165, 233, 0.12);
-  color: #0369a1;
-  border: 1px solid rgba(14, 165, 233, 0.3);
-}
-.cat-upsc {
-  background: rgba(12, 74, 110, 0.1);
-  color: #0c4a6e;
-  border: 1px solid rgba(12, 74, 110, 0.25);
-}
-.cat-engmed {
-  background: rgba(16, 185, 129, 0.1);
-  color: #047857;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-}
-.inst-loc-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--ink-soft);
-  font-weight: 600;
-  background: var(--paper);
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--line);
-}
-.inst-icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-.inst-number {
-  font-family: 'Source Serif 4', serif;
-  font-size: 30px;
-  font-weight: 700;
-  color: rgba(2, 132, 199, 0.25);
-  line-height: 1;
-}
-.inst-emblem {
-  width: 40px; height: 40px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(224, 242, 254, 0.8), rgba(240, 249, 255, 0.9));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  border: 1px solid rgba(2, 132, 199, 0.2);
-}
-.inst-name {
-  font-family: 'Source Serif 4', serif;
-  font-size: 21px;
-  font-weight: 700;
-  color: var(--maroon-dark);
-  margin-bottom: 4px;
-  line-height: 1.25;
-}
-.inst-location {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--maroon);
-  margin-bottom: 14px;
-}
-.inst-desc {
-  font-size: 13.5px;
-  color: var(--ink-soft);
-  line-height: 1.6;
-  margin-bottom: 0;
-  flex: 1;
-}
-.inst-features {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-}
-.inst-feature-pill {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  background: var(--paper);
-  color: var(--ink);
-  padding: 4px 9px;
-  border-radius: 4px;
-  border: 1px solid rgba(2, 132, 199, 0.15);
-}
+
 
 /* ===== POST CARDS / TABLE ===== */
 .post-list{
@@ -713,9 +580,7 @@ body {
 .side-box ol li strong{ color: var(--ink); }
 
 /* ─── RESPONSIVE ────────────────────────────────────────────── */
-@media (max-width: 992px) {
-  .institutes-grid { grid-template-columns: 1fr; }
-}
+
 @media (max-width: 900px) {
   .hero .inner { grid-template-columns: 1fr; padding: 40px 24px; text-align: center; }
   .hero-eyebrow { justify-content: center; }
@@ -725,7 +590,6 @@ body {
   .hero::before { display: none; }
 }
 @media (max-width: 640px) {
-  .institutes-grid { grid-template-columns: 1fr; }
   .two-col { grid-template-columns: 1fr; }
   .post-row {
     grid-template-columns: 1fr;
@@ -813,75 +677,6 @@ body {
     @endif
   </div>
 </div>
-
-<!-- ── COACHING INSTITUTES ─────────────────────────────────── -->
-<section class="section" id="institutes">
-  <div class="section-inner">
-    <div class="section-head">
-      <span class="sec-tag">PARTNERS</span>
-      <h3>Coaching Institutes</h3>
-    </div>
-
-    <div class="institutes-grid">
-      <!-- 1. APSC : SPM IAS Academy at Guwahati -->
-      <div class="institute-card">
-        <div class="inst-top">
-          <span class="inst-category-tag cat-apsc">APSC (Civil Services)</span>
-          <span class="inst-loc-badge">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            Guwahati
-          </span>
-        </div>
-        <div class="inst-icon-wrap">
-          <span class="inst-number">01</span>
-        </div>
-        <h4 class="inst-name">SPM IAS Academy</h4>
-        <div class="inst-location">Guwahati, Assam</div>
-        <p class="inst-desc">
-          Premier state Civil Services institute providing dedicated residential coaching for the Assam Public Service Commission Combined Competitive Exam (APSC CCE) with Assam-focused general studies, mock tests, and interview guidance.
-        </p>
-      </div>
-
-      <!-- 2. UPSC : Vajirao & Reddy Institute at Delhi -->
-      <div class="institute-card">
-        <div class="inst-top">
-          <span class="inst-category-tag cat-upsc">UPSC (Civil Services)</span>
-          <span class="inst-loc-badge">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            Delhi
-          </span>
-        </div>
-        <div class="inst-icon-wrap">
-          <span class="inst-number">02</span>
-        </div>
-        <h4 class="inst-name">Vajirao &amp; Reddy Institute</h4>
-        <div class="inst-location">Delhi</div>
-        <p class="inst-desc">
-          Nationally acclaimed Civil Services training institution in New Delhi preparing BTC candidates for the UPSC Civil Services Examination (CSE) for IAS, IPS, IFS &amp; central services with premier faculty and comprehensive test series.
-        </p>
-      </div>
-
-      <!-- 3. Engineering & Medical : SPM & LALAN's Coaching at Kokrajhar -->
-      <div class="institute-card">
-        <div class="inst-top">
-          <span class="inst-category-tag cat-engmed">Engineering &amp; Medical</span>
-          <span class="inst-loc-badge">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            Kokrajhar
-          </span>
-        </div>
-        <div class="inst-icon-wrap">
-          <span class="inst-number">03</span>
-        </div>
-        <h4 class="inst-name">SPM &amp; LALAN's Coaching</h4>
-        <div class="inst-location">Kokrajhar, BTC</div>
-        <p class="inst-desc">
-          Specialized residential mentoring center in Kokrajhar for JEE Main &amp; Advanced (Engineering) and NEET-UG (Medical). Intensive classroom sessions, daily practice problem sheets (DPPs), and weekly computer-based test assessments.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ── PROGRAMME LISTINGS (FORM APPLICATION) ─────────────────── -->
 <section class="section alt" id="programmes">

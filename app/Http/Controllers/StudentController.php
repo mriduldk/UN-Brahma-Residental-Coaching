@@ -434,7 +434,7 @@ class StudentController extends Controller
         } else {
             // Create Draft
            $existingApp = \App\Models\StudentApplication::create([
-                'application_code' => \App\Models\StudentApplication::generateApplicationCode(null),
+                'application_code' => null, // Generated only on final submit
                 'application_form_id' => $form_id,
                 'student_id' => $student->id,
                 'status' => 'draft',
@@ -738,14 +738,6 @@ class StudentController extends Controller
             }
 
             $appliedForVal = $data['applied_for'] ?? ($app->applied_for ?? '');
-            if ($appliedForVal) {
-                $streamCode = \App\Models\StudentApplication::getStreamCode($appliedForVal);
-                $expectedPrefix = "BTC-2026{$streamCode}";
-                if (!$app->application_code || !str_starts_with($app->application_code, $expectedPrefix)) {
-                    $newAppCode = \App\Models\StudentApplication::generateApplicationCode($appliedForVal, $app->id);
-                    $app->update(['application_code' => $newAppCode]);
-                }
-            }
             
             // Handle Document Uploads - Validate and Save to DB directly
             $form = \App\Models\ApplicationForm::find($app->application_form_id);
@@ -955,13 +947,8 @@ class StudentController extends Controller
                 'status' => 'submitted',
                 'submitted_at' => now(),
             ];
-            if ($appliedForVal) {
-                $streamCode = \App\Models\StudentApplication::getStreamCode($appliedForVal);
-                $expectedPrefix = "BTC-2026{$streamCode}";
-                if (!$application->application_code || !str_starts_with($application->application_code, $expectedPrefix)) {
-                    $updatePayload['application_code'] = \App\Models\StudentApplication::generateApplicationCode($appliedForVal, $application->id);
-                }
-            }
+            // Generate official application code only upon final submission
+            $updatePayload['application_code'] = \App\Models\StudentApplication::generateApplicationCode($appliedForVal, $application->id);
             if ($appliedForVal && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'applied_for')) {
                 $updatePayload['applied_for'] = $appliedForVal;
             }
@@ -1035,7 +1022,7 @@ class StudentController extends Controller
                 'status' => 'draft' 
             ],
             [
-                'application_code' => \App\Models\StudentApplication::generateApplicationCode($request->input('applied_for')), 
+                'application_code' => null, // Generated only on final submit
                 'payment_status' => 'pending'
             ]
         );
@@ -1226,12 +1213,11 @@ class StudentController extends Controller
                 if ($request->filled('examination_center') && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'examination_center')) {
                     $appUpdate['examination_center'] = $request->examination_center;
                 }
-                if ($request->filled('applied_for')) {
-                    $streamCode = \App\Models\StudentApplication::getStreamCode($request->applied_for);
-                    $expectedPrefix = "BTC-2026{$streamCode}";
-                    if (!$application->application_code || !str_starts_with($application->application_code, $expectedPrefix)) {
-                        $appUpdate['application_code'] = \App\Models\StudentApplication::generateApplicationCode($request->applied_for, $application->id);
-                    }
+                if ($request->filled('applied_for') && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'applied_for')) {
+                    $appUpdate['applied_for'] = $request->applied_for;
+                }
+                if ($request->filled('examination_center') && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'examination_center')) {
+                    $appUpdate['examination_center'] = $request->examination_center;
                 }
                 if (!empty($appUpdate)) {
                     $application->update($appUpdate);

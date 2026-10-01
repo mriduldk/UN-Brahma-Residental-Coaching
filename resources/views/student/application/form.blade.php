@@ -1018,7 +1018,7 @@
                         @if($uploadedDoc)
                             <span class="text-xs text-slate-500 block mt-1 mb-3">{{ basename($uploadedDoc) }}</span>
                             <div class="flex items-center justify-center space-x-2">
-                                <a href="{{ Storage::url($uploadedDoc) }}" target="_blank" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 text-xs rounded hover:bg-slate-50 flex items-center">
+                                <a href="{{ Storage::url($uploadedDoc) }}" target="_blank" id="view-btn-{{ $docField }}" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 text-xs rounded hover:bg-slate-50 flex items-center">
                                     <i data-lucide="eye" size="14" class="mr-1"></i> View
                                 </a>
                                 <label for="doc-{{ $docField }}" class="px-3 py-1 bg-white border border-slate-200 text-blue-600 text-xs rounded hover:bg-blue-50 flex items-center cursor-pointer">
@@ -1028,7 +1028,7 @@
                         @elseif($profileDoc)
                              <span class="text-xs text-slate-500 block mt-1 mb-3">Available in My Documents</span>
                              <div class="flex items-center justify-center space-x-2">
-                                <a href="{{ Storage::url($profileDoc) }}" target="_blank" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 text-xs rounded hover:bg-slate-50 flex items-center">
+                                <a href="{{ Storage::url($profileDoc) }}" target="_blank" id="view-btn-{{ $docField }}" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 text-xs rounded hover:bg-slate-50 flex items-center">
                                     <i data-lucide="eye" size="14" class="mr-1"></i> View
                                 </a>
                                 <label for="doc-{{ $docField }}" class="px-3 py-1 bg-white border border-slate-200 text-blue-600 text-xs rounded hover:bg-blue-50 flex items-center cursor-pointer">
@@ -2065,6 +2065,7 @@
         // ID format: doc-{field}
         const fieldName = input.id.replace('doc-', '');
         const previewEl = document.getElementById(`preview-${fieldName}`);
+        const viewBtn = document.getElementById(`view-btn-${fieldName}`);
         
         if (input.files && input.files.length > 0) {
             const file = input.files[0];
@@ -2087,23 +2088,51 @@
                         confirmButtonText: 'Okay'
                     });
                     input.value = ''; // Clear input
-                    previewEl.textContent = '';
-                    previewEl.classList.add('hidden');
+                    if (previewEl) {
+                        previewEl.textContent = '';
+                        previewEl.classList.add('hidden');
+                    }
+                    if (viewBtn) {
+                        viewBtn.classList.remove('hidden');
+                        viewBtn.style.display = '';
+                    }
                     return;
                 }
             }
 
-            previewEl.textContent = 'Selected: ' + file.name;
-            previewEl.classList.remove('hidden');
+            // Hide the view button when another file is selected
+            if (viewBtn) {
+                viewBtn.classList.add('hidden');
+                viewBtn.style.display = 'none';
+            }
+
+            if (previewEl) {
+                previewEl.textContent = 'Selected: ' + file.name;
+                previewEl.classList.remove('hidden');
+            }
         } else {
-            previewEl.textContent = '';
-            previewEl.classList.add('hidden');
+            if (viewBtn) {
+                viewBtn.classList.remove('hidden');
+                viewBtn.style.display = '';
+            }
+            if (previewEl) {
+                previewEl.textContent = '';
+                previewEl.classList.add('hidden');
+            }
         }
     }
 
     function closeCompressionModal() {
         document.getElementById('compressionModal').classList.add('hidden');
-        if(activeFileInput) activeFileInput.value = '';
+        if(activeFileInput) {
+            const fieldName = activeFileInput.id.replace('doc-', '');
+            const viewBtn = document.getElementById(`view-btn-${fieldName}`);
+            if (viewBtn) {
+                viewBtn.classList.remove('hidden');
+                viewBtn.style.display = '';
+            }
+            activeFileInput.value = '';
+        }
         activeFileInput = null;
         currentFile = null;
     }
@@ -2239,7 +2268,7 @@
             <span class="text-sm text-slate-600 block font-medium">${docField.replace(/_/g, ' ').toUpperCase()} <span class="text-red-500">*</span></span>
             <span class="text-xs text-slate-500 block mt-1 mb-3">Available in My Documents</span>
             <div class="flex items-center justify-center space-x-2">
-                <a href="${assetUrl}" target="_blank" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 text-xs rounded hover:bg-slate-50 flex items-center">
+                <a href="${assetUrl}" target="_blank" id="view-btn-${docField}" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 text-xs rounded hover:bg-slate-50 flex items-center">
                     <i data-lucide="eye" size="14" class="mr-1"></i> View
                 </a>
                 <label for="doc-${docField}" class="px-3 py-1 bg-white border border-slate-200 text-blue-600 text-xs rounded hover:bg-blue-50 flex items-center cursor-pointer">

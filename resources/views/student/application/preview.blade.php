@@ -89,7 +89,7 @@
                         <div class="flex justify-center md:justify-start items-center gap-3">
                             <div class="flex items-center gap-2 font-mono bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
                                 <i data-lucide="hash" size="16" class="text-slate-400"></i>
-                                <span class="text-xs font-black text-slate-700 tracking-wider">{{ $app->application_code }}</span>
+                                <span class="text-xs font-black text-slate-700 tracking-wider">{{ $app->application_code ?: 'Draft (Generated upon final submit)' }}</span>
                             </div>
                             @php
                                 $calculatedFee = $app->application_form->is_application_fee_required ? $app->application_form->getApplicationFeeFor($app->student, $app) : 0;
