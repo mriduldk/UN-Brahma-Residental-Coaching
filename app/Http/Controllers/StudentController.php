@@ -781,7 +781,7 @@ class StudentController extends Controller
                 'btc_residential_certificate' => 'btc_residential_certificate',
             ];
 
-            $optionalDocs = ['caste_certificate'];
+            $optionalDocs = ['caste_certificate', 'income_certificate', 'prc_certificate', 'btc_residential_certificate', 'address_proof'];
 
             $appDoc = \App\Models\ApplicationDocument::firstOrCreate(['student_application_id' => $app->id]);
             $updateData = [];
@@ -1399,7 +1399,7 @@ class StudentController extends Controller
                     }
 
                     // Strict validation: After potential copy, check if we have it
-                    $optionalDocs = ['caste_certificate'];
+                    $optionalDocs = ['caste_certificate', 'income_certificate', 'prc_certificate', 'btc_residential_certificate', 'address_proof'];
                     
                     if (empty($appDoc->$dbColumn) && empty($updateData[$dbColumn]) && !in_array($docType, $optionalDocs)) {
                         $label = in_array($docType, ['btc_residential_certificate', 'prc_certificate']) ? 'Permanent Resident Certificate (PRC)' : ucwords(str_replace('_', ' ', $docType));

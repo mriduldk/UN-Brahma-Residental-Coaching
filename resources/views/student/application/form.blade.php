@@ -973,7 +973,7 @@
                     'btc_residential_certificate' => 'btc_residential_certificate',
                 ];
 
-                $optionalDocs = ['caste_certificate'];
+                $optionalDocs = ['caste_certificate', 'income_certificate', 'prc_certificate', 'btc_residential_certificate', 'address_proof'];
             @endphp
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2265,7 +2265,7 @@
             <div class="mx-auto w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 mb-2">
                 <i data-lucide="file-check"></i>
             </div>
-            <span class="text-sm text-slate-600 block font-medium">${docField.replace(/_/g, ' ').toUpperCase()} <span class="text-red-500">*</span></span>
+            <span class="text-sm text-slate-600 block font-medium">${docField.replace(/_/g, ' ').toUpperCase()} ${['caste_certificate', 'income_certificate', 'prc_certificate', 'btc_residential_certificate', 'address_proof'].includes(docField) ? '' : '<span class="text-red-500">*</span>'}</span>
             <span class="text-xs text-slate-500 block mt-1 mb-3">Available in My Documents</span>
             <div class="flex items-center justify-center space-x-2">
                 <a href="${assetUrl}" target="_blank" id="view-btn-${docField}" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 text-xs rounded hover:bg-slate-50 flex items-center">
