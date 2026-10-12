@@ -430,13 +430,13 @@
 
             <div class="field @error('name') invalid @enderror">
               <label for="name">Full Name</label>
-              <input type="text" id="name" name="name" value="{{ old('name') }}" placeholder="John Doe" autocomplete="name" autofocus />
+              <input type="text" id="name" name="name" value="{{ old('name') }}" placeholder="John Doe" autocomplete="name" autofocus required />
               <div class="err">@error('name') {{ $message }} @enderror</div>
             </div>
 
             <div class="field @error('email') invalid @enderror">
-              <label for="email">Email Address <span class="opt">(Optional)</span></label>
-              <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="name@example.com" autocomplete="username" />
+              <label for="email">Email Address</label>
+              <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="name@example.com" autocomplete="username" required />
               <div class="err">@error('email') {{ $message }} @enderror</div>
             </div>
 
@@ -444,20 +444,20 @@
               <label for="mobile_number">Mobile Number</label>
               <div class="input-group">
                 <span class="input-prefix">+91</span>
-                <input type="text" id="mobile_number" class="with-prefix" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="XXXXXXXXXX" maxlength="10" />
+                <input type="text" id="mobile_number" class="with-prefix" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="XXXXXXXXXX" maxlength="10" required />
               </div>
               <div class="err">@error('mobile_number') {{ $message }} @enderror</div>
             </div>
 
             <div class="field @error('password') invalid @enderror">
               <label for="password">Password</label>
-              <input type="password" id="password" name="password" placeholder="Min. 8 characters" autocomplete="new-password" />
+              <input type="password" id="password" name="password" placeholder="Min. 8 characters" autocomplete="new-password" required />
               <div class="err">@error('password') {{ $message }} @enderror</div>
             </div>
 
             <div class="field @error('password_confirmation') invalid @enderror">
               <label for="password_confirmation">Confirm Password</label>
-              <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Re-enter password" autocomplete="new-password" />
+              <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Re-enter password" autocomplete="new-password" required />
               <div class="err">@error('password_confirmation') {{ $message }} @enderror</div>
             </div>
 

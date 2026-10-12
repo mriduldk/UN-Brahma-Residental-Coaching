@@ -47,6 +47,27 @@
                     </div>
                 @endif
 
+                @if(session('error'))
+                    <div class="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg flex items-center gap-3">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600"></i>
+                        <p class="font-medium">{{ session('error') }}</p>
+                    </div>
+                @endif
+
+                @if(session('warning'))
+                    <div class="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg flex items-center gap-3">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600"></i>
+                        <p class="font-medium">{{ session('warning') }}</p>
+                    </div>
+                @endif
+
+                @if(session('info'))
+                    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg flex items-center gap-3">
+                        <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>
+                        <p class="font-medium">{{ session('info') }}</p>
+                    </div>
+                @endif
+
                 @if($errors->any())
                     <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
                         <div class="flex items-center gap-3 mb-2">
@@ -75,31 +96,31 @@
                         <!-- Full Name -->
                         <div class="md:col-span-2">
                             <label for="full_name" class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name <span class="text-red-500">*</span></label>
-                            <input id="full_name" name="full_name" type="text" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase" placeholder="Your Full Name" value="{{ auth()->user()->name }}">
+                            <input id="full_name" name="full_name" type="text" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase" placeholder="Your Full Name" value="{{ old('full_name', $student?->full_name ?? auth()->user()->name) }}">
                         </div>
 
                         <!-- Phone -->
                         <div>
                             <label for="phone_number" class="block text-xs font-bold text-slate-500 uppercase mb-1">Phone Number <span class="text-red-500">*</span></label>
-                            <input id="phone_number" name="phone_number" type="tel" required readonly class="w-full p-2 border border-slate-300 bg-slate-100 text-slate-500 cursor-not-allowed rounded outline-none transition" placeholder="10-digit Number" value="{{ auth()->user()->mobile_number }}">
+                            <input id="phone_number" name="phone_number" type="tel" required readonly class="w-full p-2 border border-slate-300 bg-slate-100 text-slate-500 cursor-not-allowed rounded outline-none transition" placeholder="10-digit Number" value="{{ old('phone_number', $student?->phone_number ?? auth()->user()->mobile_number) }}">
                         </div>
 
                         <!-- Email -->
                         <div>
-                            <label for="email" class="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
-                            <input id="email" name="email" type="email" readonly class="w-full p-2 border border-slate-300 bg-slate-100 text-slate-500 cursor-not-allowed rounded outline-none transition uppercase" placeholder="email@example.com" value="{{ auth()->user()->email }}">
+                            <label for="email" class="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address <span class="text-red-500">*</span></label>
+                            <input id="email" name="email" type="email" required {{ (!empty($student?->email) || !empty(auth()->user()->email)) ? 'readonly' : '' }} class="w-full p-2 border border-slate-300 {{ (!empty($student?->email) || !empty(auth()->user()->email)) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500' }} rounded outline-none transition" placeholder="email@example.com" value="{{ old('email', $student?->email ?? auth()->user()->email) }}">
                         </div>
 
                         <!-- DOB -->
                         <div>
                             <label for="dob" class="block text-xs font-bold text-slate-500 uppercase mb-1">Date of Birth <span class="text-red-500">*</span></label>
-                            <input id="dob" name="dob" type="date" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" onchange="calculateAge()">
+                            <input id="dob" name="dob" type="date" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" onchange="calculateAge()" value="{{ old('dob', $student?->dob ? (is_string($student->dob) ? \Carbon\Carbon::parse($student->dob)->format('Y-m-d') : $student->dob->format('Y-m-d')) : '') }}">
                         </div>
 
                         <!-- Age (Auto-calculated) -->
                         <div>
                             <label for="age" class="block text-xs font-bold text-slate-500 uppercase mb-1">Age</label>
-                            <input id="age" name="age" type="number" readonly class="w-full p-2 border border-slate-200 bg-slate-100 rounded text-slate-500 cursor-not-allowed">
+                            <input id="age" name="age" type="number" readonly class="w-full p-2 border border-slate-200 bg-slate-100 rounded text-slate-500 cursor-not-allowed" value="{{ old('age', $student?->age) }}">
                         </div>
 
                         <!-- Gender -->
@@ -107,15 +128,15 @@
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Gender <span class="text-red-500">*</span></label>
                             <div class="flex space-x-4 mt-2">
                                 <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 px-3 py-2 rounded hover:bg-slate-100 border border-transparent hover:border-slate-200 transition">
-                                    <input type="radio" name="gender" value="Male" required class="text-blue-600 focus:ring-blue-500">
+                                    <input type="radio" name="gender" value="Male" required {{ old('gender', $student?->gender) === 'Male' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500">
                                     <span class="text-sm font-medium text-slate-700">Male</span>
                                 </label>
                                 <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 px-3 py-2 rounded hover:bg-slate-100 border border-transparent hover:border-slate-200 transition">
-                                    <input type="radio" name="gender" value="Female" required class="text-blue-600 focus:ring-blue-500">
+                                    <input type="radio" name="gender" value="Female" required {{ old('gender', $student?->gender) === 'Female' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500">
                                     <span class="text-sm font-medium text-slate-700">Female</span>
                                 </label>
                                 <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 px-3 py-2 rounded hover:bg-slate-100 border border-transparent hover:border-slate-200 transition">
-                                    <input type="radio" name="gender" value="Other" required class="text-blue-600 focus:ring-blue-500">
+                                    <input type="radio" name="gender" value="Other" required {{ old('gender', $student?->gender) === 'Other' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500">
                                     <span class="text-sm font-medium text-slate-700">Other</span>
                                 </label>
                             </div>
@@ -127,11 +148,11 @@
                             <label for="category" class="block text-xs font-bold text-slate-500 uppercase mb-1">Category <span class="text-red-500">*</span></label>
                             <select id="category" name="category" required class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                                 <option value="">Select Category</option>
-                                <option value="General">General</option>
-                                <option value="SC">SC</option>
-                                <option value="ST">ST</option>
-                                <option value="OBC">OBC</option>
-                                <option value="MOBC">MOBC</option>
+                                <option value="General" {{ old('category', $student?->category) === 'General' ? 'selected' : '' }}>General</option>
+                                <option value="SC" {{ old('category', $student?->category) === 'SC' ? 'selected' : '' }}>SC</option>
+                                <option value="ST" {{ old('category', $student?->category) === 'ST' ? 'selected' : '' }}>ST</option>
+                                <option value="OBC" {{ old('category', $student?->category) === 'OBC' ? 'selected' : '' }}>OBC</option>
+                                <option value="MOBC" {{ old('category', $student?->category) === 'MOBC' ? 'selected' : '' }}>MOBC</option>
                             </select>
                         </div>
 

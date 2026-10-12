@@ -20,14 +20,16 @@ class EnsureStudentProfileExists
         if ($user && $user->role === 'student') {
             $student = \App\Models\Student::where('user_id', $user->id)->first();
             
-            if (!$student) {
-                // If student profile doesn't exist, redirect to onboarding
+            $hasEmail = !empty($student?->email) || !empty($user->email);
+
+            if (!$student || !$hasEmail) {
+                // If student profile doesn't exist or email is not available, redirect to onboarding
                 // But avoid redirect loop if already on onboarding route
                 if (!$request->routeIs('student.onboarding') && !$request->routeIs('student.onboarding.store')) {
-                    return redirect()->route('student.onboarding');
+                    return redirect()->route('student.onboarding')->with('error', 'Kindly add the email');
                 }
             } else {
-                // If student exists but they try to access onboarding, redirect to dashboard
+                // If student exists and has email, redirect away from onboarding to dashboard
                 if ($request->routeIs('student.onboarding')) {
                     return redirect()->route('student.dashboard');
                 }

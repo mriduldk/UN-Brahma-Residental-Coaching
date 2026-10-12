@@ -347,7 +347,9 @@ class StudentController extends Controller
 
     public function onboarding()
     {
-        return view('student.onboarding');
+        $user = auth()->user();
+        $student = \App\Models\Student::where('user_id', $user->id)->first();
+        return view('student.onboarding', compact('student'));
     }
 
     public function storeOnboarding(Request $request)
@@ -356,6 +358,7 @@ class StudentController extends Controller
 
         $request->validate([
             'full_name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id)],
             'dob' => 'required|date',
             'gender' => 'required|string',
             'category' => 'required|string',
@@ -370,32 +373,38 @@ class StudentController extends Controller
             'alternate_mobile_number' => 'nullable|string',
         ]);
 
-        \App\Models\Student::create([
-            'user_id' => $user->id,
-            'full_name' => $request->full_name,
-            'phone_number' => $user->mobile_number,
-            'email' => $user->email,
-            'dob' => $request->dob,
-            'gender' => $request->gender,
-            'age' => $request->age,
-            'blood_group' => $request->blood_group,
-            'category' => $request->category,
-            'is_pwd' => $request->boolean('is_pwd'),
-            'religion' => $request->religion,
-            'community' => $request->community ?? $request->nationality,
-            'nationality' => $request->community ?? $request->nationality,
-            'mother_tongue' => $request->mother_tongue,
-            'identification_mark' => $request->identification_mark,
-            'employment_exchange_no' => $request->employment_exchange_no,
-            'is_permanent_resident_of_assam' => $request->filled('is_permanent_resident_of_assam') ? $request->boolean('is_permanent_resident_of_assam') : null,
-            'is_btc_resident' => $request->filled('is_btc_resident') ? $request->boolean('is_btc_resident') : null,
-            'marital_status' => $request->marital_status,
-            'alternate_mobile_number' => $request->alternate_mobile_number,
-            'is_ex_serviceman' => $request->has('is_ex_serviceman') ? $request->boolean('is_ex_serviceman') : null,
-            'ncc_certificate' => $request->ncc_certificate,
-            'has_national_sports_achievement' => $request->has('has_national_sports_achievement') ? $request->boolean('has_national_sports_achievement') : null,
-            'has_fine_arts_cultural_achievement' => $request->has('has_fine_arts_cultural_achievement') ? $request->boolean('has_fine_arts_cultural_achievement') : null,
-        ]);
+        if (empty($user->email)) {
+            $user->update(['email' => $request->email]);
+        }
+
+        \App\Models\Student::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'full_name' => $request->full_name,
+                'phone_number' => $user->mobile_number,
+                'email' => $user->email ?? $request->email,
+                'dob' => $request->dob,
+                'gender' => $request->gender,
+                'age' => $request->age,
+                'blood_group' => $request->blood_group,
+                'category' => $request->category,
+                'is_pwd' => $request->boolean('is_pwd'),
+                'religion' => $request->religion,
+                'community' => $request->community ?? $request->nationality,
+                'nationality' => $request->community ?? $request->nationality,
+                'mother_tongue' => $request->mother_tongue,
+                'identification_mark' => $request->identification_mark,
+                'employment_exchange_no' => $request->employment_exchange_no,
+                'is_permanent_resident_of_assam' => $request->filled('is_permanent_resident_of_assam') ? $request->boolean('is_permanent_resident_of_assam') : null,
+                'is_btc_resident' => $request->filled('is_btc_resident') ? $request->boolean('is_btc_resident') : null,
+                'marital_status' => $request->marital_status,
+                'alternate_mobile_number' => $request->alternate_mobile_number,
+                'is_ex_serviceman' => $request->has('is_ex_serviceman') ? $request->boolean('is_ex_serviceman') : null,
+                'ncc_certificate' => $request->ncc_certificate,
+                'has_national_sports_achievement' => $request->has('has_national_sports_achievement') ? $request->boolean('has_national_sports_achievement') : null,
+                'has_fine_arts_cultural_achievement' => $request->has('has_fine_arts_cultural_achievement') ? $request->boolean('has_fine_arts_cultural_achievement') : null,
+            ]
+        );
 
         return redirect()->route('student.dashboard')->with('success', 'Profile setup complete!');
     }
@@ -415,6 +424,15 @@ class StudentController extends Controller
                                         'phone_number' => $user->mobile_number,
                                         'email' => $user->email,
                                     ]);
+
+        // Check student's email, if not available redirect to onboarding screen
+        if (empty($student->email) && !empty($user->email)) {
+            $student->update(['email' => $user->email]);
+        }
+
+        if (empty($student->email)) {
+            return redirect()->route('student.onboarding')->with('error', 'Kindly add the email');
+        }
 
         // Check for existing application with snapshots
         $existingApp = \App\Models\StudentApplication::with(['application_student', 'application_address', 'application_parent', 'application_bank_detail', 'application_academic_qualifications', 'application_documents'])
