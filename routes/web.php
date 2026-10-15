@@ -249,6 +249,7 @@ Route::middleware(['auth', 'mobile.verified', \App\Http\Middleware\EnsureOrganiz
 
     Route::get('/applications', [\App\Http\Controllers\AdministrationController::class, 'applications'])->name('applications');
     Route::get('/reports', [\App\Http\Controllers\AdministrationController::class, 'reports'])->name('reports');
+    Route::get('/reports/export', [\App\Http\Controllers\AdministrationController::class, 'exportReports'])->name('reports.export');
     Route::get('/applications/{id}', [\App\Http\Controllers\AdministrationController::class, 'applicationDetail'])->name('applications.detail');
     Route::post('/applications/{id}/status', [\App\Http\Controllers\AdministrationController::class, 'updateApplicationStatus'])->name('applications.status');
     Route::post('/applications/{id}/approval', [\App\Http\Controllers\AdministrationController::class, 'updateApprovalStatus'])->name('applications.approval');

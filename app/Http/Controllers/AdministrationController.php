@@ -597,63 +597,113 @@ class AdministrationController extends Controller
         return view('administration.forms.applications');
     }
 
-    public function reports(Request $request)
+    private function buildReportsQuery(Request $request, $org)
     {
-        $org = auth()->user()->currentOrganization();
-        if (!$org) {
-             return view('administration.reports.index', ['applications' => collect([]), 'forms' => collect([])]);
+        $query = \App\Models\StudentApplication::with([
+            'application_student',
+            'application_form',
+            'application_address',
+            'application_documents',
+            'application_parent',
+            'application_bank_detail',
+            'application_academic_qualifications'
+        ])
+        ->where('status', '!=', 'draft') // Strictly submitted applications only, not draft
+        ->whereHas('application_form', function ($q) use ($org) {
+            $q->where('organization_id', $org->id);
+        });
+
+        // 1. Search by Name
+        if ($request->filled('name')) {
+            $name = trim($request->name);
+            $query->whereHas('application_student', function($q) use ($name) {
+                $q->where('full_name', 'like', "%{$name}%");
+            });
         }
 
-        $query = \App\Models\StudentApplication::with(['application_student', 'application_form', 'application_address', 'application_documents'])
-            ->where('status', '!=', 'draft')
-            ->whereHas('application_form', function ($q) use ($org) {
-                $q->where('organization_id', $org->id);
+        // 2. Search by Phone Number
+        if ($request->filled('phone')) {
+            $phone = trim($request->phone);
+            $query->whereHas('application_student', function($q) use ($phone) {
+                $q->where('phone_number', 'like', "%{$phone}%")
+                  ->orWhere('alternate_mobile_number', 'like', "%{$phone}%");
             });
+        }
 
-        // Search by name/email
+        // 3. General Search (Fallback / Unified search)
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('application_student', function($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone_number', 'like', "%{$search}%");
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('application_code', 'like', "%{$search}%")
+                  ->orWhere('applied_for', 'like', "%{$search}%")
+                  ->orWhere('examination_center', 'like', "%{$search}%")
+                  ->orWhereHas('application_student', function($qs) use ($search) {
+                      $qs->where('full_name', 'like', "%{$search}%")
+                         ->orWhere('phone_number', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%")
+                         ->orWhere('applied_for', 'like', "%{$search}%")
+                         ->orWhere('examination_center', 'like', "%{$search}%");
+                  });
             });
         }
 
-        // Filter by Gender
-        if ($request->filled('gender')) {
-            $query->whereHas('application_student', function($q) use ($request) {
-                $q->where('gender', $request->gender);
+        // 4. Dropdown Address District
+        $addressDistrict = trim($request->input('address_district', $request->input('district', '')));
+        if (!empty($addressDistrict) && strtolower($addressDistrict) !== 'all') {
+            $query->whereHas('application_address', function($q) use ($addressDistrict) {
+                $q->where('present_district', 'like', "%{$addressDistrict}%")
+                  ->orWhere('permanent_district', 'like', "%{$addressDistrict}%");
             });
         }
 
-        // Filter by Category
-        if ($request->filled('category')) {
-            $query->whereHas('application_student', function($q) use ($request) {
-                $q->where('category', $request->category);
+        // 5. Dropdown Examination District / Center
+        $examDistrict = trim($request->input('examination_district', $request->input('examination_center', '')));
+        if (!empty($examDistrict) && strtolower($examDistrict) !== 'all') {
+            $query->where(function($q) use ($examDistrict) {
+                $q->where('examination_center', 'like', "%{$examDistrict}%")
+                  ->orWhereHas('application_student', function($sq) use ($examDistrict) {
+                      $sq->where('examination_center', 'like', "%{$examDistrict}%");
+                  });
             });
         }
 
-        // Filter by Form/Trade
-        if ($request->filled('form_id')) {
+        // 6. Dropdown Gender
+        if ($request->filled('gender') && strtolower($request->gender) !== 'all') {
+            $gender = trim($request->gender);
+            $query->whereHas('application_student', function($q) use ($gender) {
+                $q->where('gender', 'like', $gender);
+            });
+        }
+
+        // 7. Dropdown Category
+        if ($request->filled('category') && strtolower($request->category) !== 'all') {
+            $category = trim($request->category);
+            $query->whereHas('application_student', function($q) use ($category) {
+                $q->where('category', 'like', $category);
+            });
+        }
+
+        // 8. Dropdown Applied For
+        if ($request->filled('applied_for') && strtolower($request->applied_for) !== 'all') {
+            $appliedFor = trim($request->applied_for);
+            $query->where(function($q) use ($appliedFor) {
+                $q->where('applied_for', 'like', "%{$appliedFor}%")
+                  ->orWhereHas('application_student', function($qs) use ($appliedFor) {
+                      $qs->where('applied_for', 'like', "%{$appliedFor}%");
+                  });
+            });
+        }
+
+        // 9. Dropdown Trade / Form
+        if ($request->filled('form_id') && strtolower($request->form_id) !== 'all') {
             $query->where('application_form_id', $request->form_id);
         }
 
-        // Filter by District
-        if ($request->filled('district')) {
-            $district = $request->district;
-            $query->whereHas('application_address', function($q) use ($district) {
-                $q->where('present_district', $district)
-                  ->orWhere('permanent_district', $district);
-            });
-        }
-
-        // Filter by Document
+        // 10. Document Criteria
         if ($request->filled('document_type') && $request->filled('document_status')) {
             $docType = $request->document_type;
             $docStatus = $request->document_status;
             
-            // Whitelist valid columns to prevent SQL injection
             $validDocs = [
                 'photo', 'signature', 'hslc_marksheet', 'hs_marksheet', 'graduation_marksheet', 
                 'post_graduation_marksheet', 'hslc_pass_certificate', 'hs_pass_certificate', 
@@ -671,7 +721,6 @@ class AdministrationController extends Controller
                         $q->whereNotNull($docType)->where($docType, '!=', '');
                     });
                 } else if ($docStatus == 'not_provided') {
-                    // Document relation might not exist, or column might be null
                     $query->where(function($q1) use ($docType) {
                         $q1->doesntHave('application_documents')
                            ->orWhereHas('application_documents', function($q2) use ($docType) {
@@ -682,8 +731,8 @@ class AdministrationController extends Controller
             }
         }
 
-        // Filter by Payment Status
-        if ($request->filled('payment_status')) {
+        // 11. Filter by Payment Status (Optional, default includes all submitted applications)
+        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
             if ($request->payment_status == 'paid') {
                 $query->where(function($q) {
                     $q->where('payment_status', 'paid')
@@ -701,27 +750,263 @@ class AdministrationController extends Controller
             } else {
                 $query->where('payment_status', $request->payment_status);
             }
-        } else {
-            // Default: Valid if fully paid, OR if the form doesn't require a fee
-            $query->where(function($q) {
-                $q->where('payment_status', 'paid')
-                  ->orWhereHas('application_form', function($subQ) {
-                      $subQ->where('is_application_fee_required', false)
-                           ->orWhere('application_fee', '<=', 0);
-                  });
-            });
         }
 
-        // Filter by Approval Status
-        if ($request->filled('approval_status')) {
+        // 12. Filter by Approval Status (Optional)
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
             $query->where('approval_status', $request->approval_status);
         }
 
-        $applications = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        return $query;
+    }
+
+    public function reports(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) {
+             return view('administration.reports.index', [
+                 'applications' => collect([]),
+                 'forms' => collect([]),
+                 'addressDistricts' => collect([]),
+                 'examDistricts' => collect([]),
+                 'categories' => collect([]),
+                 'genders' => collect([]),
+                 'appliedForOptions' => collect([])
+             ]);
+        }
+
+        $query = $this->buildReportsQuery($request, $org);
+
+        $applications = $query->orderBy('submitted_at', 'desc')->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
         
         $forms = \App\Models\ApplicationForm::where('organization_id', $org->id)->get();
 
-        return view('administration.reports.index', compact('applications', 'forms'));
+        // Address Districts (Standard Assam Districts + database distinct values)
+        $standardDistricts = [
+            'Baksa', 'Barpeta', 'Bajali', 'Biswanath', 'Bongaigaon', 'Cachar', 'Charaideo', 
+            'Chirang', 'Darrang', 'Dhemaji', 'Dhubri', 'Dibrugarh', 'Dima Hasao', 'Goalpara', 
+            'Golaghat', 'Hailakandi', 'Hojai', 'Jorhat', 'Kamrup', 'Kamrup Metropolitan', 
+            'Karbi Anglong', 'Karimganj', 'Kokrajhar', 'Lakhimpur', 'Majuli', 'Morigaon', 
+            'Nagaon', 'Nalbari', 'Sivasagar', 'Sonitpur', 'South Salmara-Mankachar', 
+            'Tamulpur', 'Tinsukia', 'Udalguri', 'West Karbi Anglong'
+        ];
+        $dbDistricts = \App\Models\ApplicationAddress::whereHas('student_application.application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->select('present_district', 'permanent_district')
+            ->get()
+            ->flatMap(fn($item) => [ucwords(strtolower(trim($item->present_district ?? ''))), ucwords(strtolower(trim($item->permanent_district ?? '')))])
+            ->filter();
+        $addressDistricts = collect($standardDistricts)->merge($dbDistricts)->unique()->sort()->values();
+
+        // Examination Districts / Centers
+        $standardExamDistricts = ['Kokrajhar', 'Chirang', 'Baksa', 'Tamulpur', 'Udalguri'];
+        $dbExamApps = \App\Models\StudentApplication::whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereNotNull('examination_center')
+            ->where('examination_center', '!=', '')
+            ->pluck('examination_center')
+            ->map(fn($v) => ucwords(strtolower(trim($v))));
+        $dbExamStudents = \App\Models\ApplicationStudent::whereHas('student_application.application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereNotNull('examination_center')
+            ->where('examination_center', '!=', '')
+            ->pluck('examination_center')
+            ->map(fn($v) => ucwords(strtolower(trim($v))));
+        $examDistricts = collect($standardExamDistricts)->merge($dbExamApps)->merge($dbExamStudents)->filter()->unique()->sort()->values();
+
+        // Categories
+        $standardCategories = ['General', 'OBC', 'MOBC', 'SC', 'ST'];
+        $dbCategories = \App\Models\ApplicationStudent::whereHas('student_application.application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->pluck('category')
+            ->map(fn($v) => strtoupper(trim($v)));
+        $categories = collect($standardCategories)->merge($dbCategories)->filter()->unique()->values();
+
+        // Genders
+        $genders = ['Male', 'Female', 'Other'];
+
+        // Applied For Options
+        $appliedForList = \App\Models\StudentApplication::whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereNotNull('applied_for')
+            ->where('applied_for', '!=', '')
+            ->distinct()
+            ->pluck('applied_for');
+
+        $studentAppliedFor = \App\Models\ApplicationStudent::whereHas('student_application.application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereNotNull('applied_for')
+            ->where('applied_for', '!=', '')
+            ->distinct()
+            ->pluck('applied_for');
+
+        $formAppliedFor = collect([]);
+        foreach ($forms as $f) {
+            $opts = $f->field_config['applied_for_options'] ?? (is_array($f->applied_for_options) ? $f->applied_for_options : json_decode($f->applied_for_options ?? '[]', true));
+            if (!empty($opts) && is_array($opts)) {
+                $formAppliedFor = $formAppliedFor->merge($opts);
+            }
+        }
+        $appliedForOptions = $appliedForList->merge($studentAppliedFor)->merge($formAppliedFor)
+            ->filter()
+            ->groupBy(fn($v) => strtolower(trim($v)))
+            ->map(fn($g) => $g->sortBy(fn($item) => ctype_upper(str_replace([' ', '(', ')', '-'], '', $item)) ? 1 : 0)->first())
+            ->values()
+            ->sort()
+            ->values();
+
+        return view('administration.reports.index', compact(
+            'applications',
+            'forms',
+            'addressDistricts',
+            'examDistricts',
+            'categories',
+            'genders',
+            'appliedForOptions'
+        ));
+    }
+
+    public function exportReports(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        $query = $this->buildReportsQuery($request, $org);
+        $applications = $query->orderBy('submitted_at', 'desc')->orderBy('created_at', 'desc')->get();
+
+        $fileName = 'applications_report_' . date('Y-m-d_H-i') . '.csv';
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=\"$fileName\"",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use ($applications) {
+            $file = fopen('php://output', 'w');
+            
+            // UTF-8 BOM so Microsoft Excel correctly displays Unicode characters
+            fputs($file, "\xEF\xBB\xBF");
+
+            // Header Row
+            fputcsv($file, [
+                // Application Info
+                'Application Code',
+                'Submission Date',
+                'Form / Trade Name',
+                'Applied For',
+                'Examination District / Center',
+                'Application Status',
+                
+                // Student Personal Info
+                'Applicant Full Name',
+                'Phone Number',
+                'Alternate Mobile Number',
+                'Email Address',
+                'Date of Birth',
+                'Gender',
+                'Category / Caste',
+                'Community / Nationality',
+                
+                // Present Address
+                'Present Village / Town',
+                'Present Street / Constituency',
+                'Present City',
+                'Present District',
+                'Present State',
+                'Present PIN Code',
+                
+                // Permanent Address
+                'Permanent Village / Town',
+                'Permanent Street / Constituency',
+                'Permanent City',
+                'Permanent District',
+                'Permanent State',
+                'Permanent PIN Code',
+                
+                // Parents Info
+                'Father Name',
+                'Father Mobile',
+                'Father Occupation',
+                'Father Annual Income',
+                'Mother Name',
+                'Mother Mobile',
+                'Mother Occupation',
+                
+                // Academic Qualifications
+                'HSLC Details',
+                'HS Details',
+                'Graduation Details'
+            ], ',', '"', "\\");
+
+            // Data Rows
+            foreach ($applications as $app) {
+                $student = $app->application_student;
+                $address = $app->application_address;
+                $parent = $app->application_parent;
+                $quals = $app->application_academic_qualifications;
+
+                // Academic Qualifications
+                $hslc = $quals ? $quals->firstWhere('examination', 'HSLC') : null;
+                $hs = $quals ? $quals->firstWhere('examination', 'HS') : null;
+                $grad = $quals ? $quals->firstWhere('examination', 'GRADUATION') : null;
+
+                $hslcStr = $hslc ? (($hslc->board_university ?? 'Board') . ', Year: ' . ($hslc->passing_year ?? '-') . ', Marks: ' . ($hslc->marks_obtained ?? '-') . '/' . ($hslc->total_marks ?? '-') . ' (' . ($hslc->percentage_grade ?? '-') . '%)' . ', Div: ' . ($hslc->division ?? '-')) : 'N/A';
+                $hsStr = $hs ? (($hs->board_university ?? 'Board') . ', Year: ' . ($hs->passing_year ?? '-') . ', Marks: ' . ($hs->marks_obtained ?? '-') . '/' . ($hs->total_marks ?? '-') . ' (' . ($hs->percentage_grade ?? '-') . '%)' . ', Div: ' . ($hs->division ?? '-')) : 'N/A';
+                $gradStr = $grad ? (($grad->board_university ?? 'University') . ', Year: ' . ($grad->passing_year ?? '-') . ', Marks: ' . ($grad->marks_obtained ?? '-') . '/' . ($grad->total_marks ?? '-') . ' (' . ($grad->percentage_grade ?? '-') . '%)' . ', Div: ' . ($grad->division ?? '-')) : 'N/A';
+
+                fputcsv($file, [
+                    // Application Info
+                    $app->application_code ?? 'N/A',
+                    $app->submitted_at ? $app->submitted_at->format('d-M-Y H:i') : ($app->created_at ? $app->created_at->format('d-M-Y H:i') : 'N/A'),
+                    $app->application_form->application_name ?? 'N/A',
+                    $app->applied_for ?? $student?->applied_for ?? 'N/A',
+                    $app->examination_center ?? $student?->examination_center ?? 'N/A',
+                    ucfirst($app->status ?? 'Submitted'),
+                    
+                    // Student Personal Info
+                    $student?->full_name ?? 'N/A',
+                    $student?->phone_number ? '="' . $student->phone_number . '"' : 'N/A',
+                    $student?->alternate_mobile_number ? '="' . $student->alternate_mobile_number . '"' : 'N/A',
+                    $student?->email ?? 'N/A',
+                    $student?->dob ? ($student->dob instanceof \Carbon\Carbon ? $student->dob->format('d-m-Y') : date('d-m-Y', strtotime($student->dob))) : 'N/A',
+                    ucfirst(strtolower($student?->gender ?? 'N/A')),
+                    $student?->category ?? 'N/A',
+                    $student?->community ?? $student?->nationality ?? 'N/A',
+                    
+                    // Present Address
+                    $address?->present_village_town ?? 'N/A',
+                    $address?->present_street ?? 'N/A',
+                    $address?->present_city ?? 'N/A',
+                    $address?->present_district ?? 'N/A',
+                    $address?->present_state ?? 'N/A',
+                    $address?->present_pin_code ? '="' . $address->present_pin_code . '"' : 'N/A',
+                    
+                    // Permanent Address
+                    $address?->permanent_village_town ?? 'N/A',
+                    $address?->permanent_street ?? 'N/A',
+                    $address?->permanent_city ?? 'N/A',
+                    $address?->permanent_district ?? 'N/A',
+                    $address?->permanent_state ?? 'N/A',
+                    $address?->permanent_pin_code ? '="' . $address->permanent_pin_code . '"' : 'N/A',
+                    
+                    // Parents Info
+                    $parent?->father_name ?? 'N/A',
+                    $parent?->father_mobile ? '="' . $parent->father_mobile . '"' : 'N/A',
+                    $parent?->father_occupation ?? 'N/A',
+                    $parent?->father_annual_income ?? 'N/A',
+                    $parent?->mother_name ?? 'N/A',
+                    $parent?->mother_mobile ? '="' . $parent->mother_mobile . '"' : 'N/A',
+                    $parent?->mother_occupation ?? 'N/A',
+                    
+                    // Academic Qualifications
+                    $hslcStr,
+                    $hsStr,
+                    $gradStr
+                ], ',', '"', "\\");
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function applications(Request $request)
