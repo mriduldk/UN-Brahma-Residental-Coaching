@@ -925,15 +925,28 @@ class AdministrationController extends Controller
                 'Father Name',
                 'Father Mobile',
                 'Father Occupation',
-                'Father Annual Income',
+                'Family Annual Income',
                 'Mother Name',
                 'Mother Mobile',
                 'Mother Occupation',
                 
-                // Academic Qualifications
-                'HSLC Details',
-                'HS Details',
-                'Graduation Details'
+                // Academic Qualifications - HSLC
+                'HSLC School / Board',
+                'HSLC Passing Year',
+                'HSLC Percentage (%)',
+                'HSLC Division',
+
+                // Academic Qualifications - HS
+                'HS School / Board / Council',
+                'HS Passing Year',
+                'HS Percentage (%)',
+                'HS Division',
+
+                // Academic Qualifications - Graduation
+                'Graduation College / University',
+                'Graduation Passing Year',
+                'Graduation Percentage (%)',
+                'Graduation Division'
             ], ',', '"', "\\");
 
             // Data Rows
@@ -944,13 +957,9 @@ class AdministrationController extends Controller
                 $quals = $app->application_academic_qualifications;
 
                 // Academic Qualifications
-                $hslc = $quals ? $quals->firstWhere('examination', 'HSLC') : null;
-                $hs = $quals ? $quals->firstWhere('examination', 'HS') : null;
-                $grad = $quals ? $quals->firstWhere('examination', 'GRADUATION') : null;
-
-                $hslcStr = $hslc ? (($hslc->board_university ?? 'Board') . ', Year: ' . ($hslc->passing_year ?? '-') . ', Marks: ' . ($hslc->marks_obtained ?? '-') . '/' . ($hslc->total_marks ?? '-') . ' (' . ($hslc->percentage_grade ?? '-') . '%)' . ', Div: ' . ($hslc->division ?? '-')) : 'N/A';
-                $hsStr = $hs ? (($hs->board_university ?? 'Board') . ', Year: ' . ($hs->passing_year ?? '-') . ', Marks: ' . ($hs->marks_obtained ?? '-') . '/' . ($hs->total_marks ?? '-') . ' (' . ($hs->percentage_grade ?? '-') . '%)' . ', Div: ' . ($hs->division ?? '-')) : 'N/A';
-                $gradStr = $grad ? (($grad->board_university ?? 'University') . ', Year: ' . ($grad->passing_year ?? '-') . ', Marks: ' . ($grad->marks_obtained ?? '-') . '/' . ($grad->total_marks ?? '-') . ' (' . ($grad->percentage_grade ?? '-') . '%)' . ', Div: ' . ($grad->division ?? '-')) : 'N/A';
+                $hslc = $quals ? $quals->first(fn($q) => strcasecmp(trim($q->examination ?? ''), 'HSLC') === 0) : null;
+                $hs = $quals ? $quals->first(fn($q) => strcasecmp(trim($q->examination ?? ''), 'HS') === 0) : null;
+                $grad = $quals ? $quals->first(fn($q) => strcasecmp(trim($q->examination ?? ''), 'GRADUATION') === 0) : null;
 
                 fputcsv($file, [
                     // Application Info
@@ -996,10 +1005,23 @@ class AdministrationController extends Controller
                     $parent?->mother_mobile ? '="' . $parent->mother_mobile . '"' : 'N/A',
                     $parent?->mother_occupation ?? 'N/A',
                     
-                    // Academic Qualifications
-                    $hslcStr,
-                    $hsStr,
-                    $gradStr
+                    // Academic Qualifications - HSLC
+                    $hslc?->board_university ?? 'N/A',
+                    $hslc?->passing_year ?? 'N/A',
+                    $hslc?->percentage_grade ?? 'N/A',
+                    $hslc?->division ?? 'N/A',
+
+                    // Academic Qualifications - HS
+                    $hs?->board_university ?? 'N/A',
+                    $hs?->passing_year ?? 'N/A',
+                    $hs?->percentage_grade ?? 'N/A',
+                    $hs?->division ?? 'N/A',
+
+                    // Academic Qualifications - Graduation
+                    $grad?->board_university ?? 'N/A',
+                    $grad?->passing_year ?? 'N/A',
+                    $grad?->percentage_grade ?? 'N/A',
+                    $grad?->division ?? 'N/A',
                 ], ',', '"', "\\");
             }
 
