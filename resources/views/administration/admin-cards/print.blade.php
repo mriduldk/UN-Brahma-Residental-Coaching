@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admit Card - {{ $application->application_code }}</title>
+    <title>Admit Card - {{ $application->roll_number }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -36,14 +36,14 @@
     <!-- Top Action Bar for screen only -->
     <div class="max-w-4xl mx-auto mb-6 px-4 no-print flex items-center justify-between gap-4">
         <a href="{{ route('administration.admin-cards.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-xl text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm">
-            <i data-lucide="arrow-left" size="16"></i> Back to Admin Cards
+            <i data-lucide="arrow-left" size="16"></i> Back to Admit Cards
         </a>
         <div class="flex items-center gap-3">
             <a href="{{ route('administration.admin-cards.download', $application->id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-900 transition-colors shadow-sm">
                 <i data-lucide="download" size="16"></i> Download PDF
             </a>
             <button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-md shadow-blue-200">
-                <i data-lucide="printer" size="16"></i> Print Admin Card
+                <i data-lucide="printer" size="16"></i> Print Admit Card
             </button>
         </div>
     </div>
@@ -78,11 +78,11 @@
                 </div>
             </div>
 
-            <!-- Application ID Banner -->
+            <!-- Roll Number Banner -->
             <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                    <span class="text-xs uppercase font-bold text-slate-500">Application ID: </span>
-                    <span class="text-lg font-mono font-black text-blue-900 ml-1">{{ $application->application_code }}</span>
+                    <span class="text-xs uppercase font-bold text-slate-500">Roll No: </span>
+                    <span class="text-lg font-mono font-black text-blue-900 ml-1">{{ $application->roll_number }}</span>
                 </div>
                 <div class="text-right">
                     <span class="text-xs uppercase font-bold text-slate-500">Course / Stream: </span>
@@ -126,10 +126,6 @@
                             <td class="p-2 font-bold text-slate-800">{{ $application->application_student->email ?? 'N/A' }}</td>
                             <th class="bg-slate-50 p-2 text-left font-bold text-slate-600 uppercase">Permanent District</th>
                             <td class="p-2 font-bold text-slate-800 uppercase">{{ $application->application_address->permanent_district ?? 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <th class="bg-slate-50 p-2 text-left font-bold text-slate-600 uppercase">Target Institution</th>
-                            <td class="p-2 font-bold text-slate-800" colspan="3">{{ $application->application_form->institution->institution_name ?? ($org->organization_name ?? 'BTC Residential Coaching Center') }}</td>
                         </tr>
                     </table>
                 </div>
@@ -195,7 +191,7 @@
             </div>
 
             <div class="text-center text-[10px] text-slate-400 mt-3 italic">
-                Official Document Issued by Directorate of Education, BTC Kokrajhar &bull; Application ID: {{ $application->application_code }}
+                Official Document Issued by Directorate of Education, BTC Kokrajhar &bull; Roll No: {{ $application->roll_number }}
             </div>
         </div>
 

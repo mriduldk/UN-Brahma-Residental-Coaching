@@ -8,7 +8,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
-                <a href="{{ route('administration.admin-cards.index') }}" class="hover:text-blue-600 transition-colors">Admin Cards</a>
+                <a href="{{ route('administration.admin-cards.index') }}" class="hover:text-blue-600 transition-colors">Admit Cards</a>
                 <i data-lucide="chevron-right" size="14"></i>
                 <span>Audit Logs</span>
             </div>
@@ -109,7 +109,7 @@
                     <tr>
                         <th class="px-4 py-3.5">Downloader</th>
                         <th class="px-4 py-3.5">IP Address</th>
-                        <th class="px-4 py-3.5">Application ID</th>
+                        <th class="px-4 py-3.5">Roll No & ID</th>
                         <th class="px-4 py-3.5">Candidate Details</th>
                         <th class="px-4 py-3.5">Action Type</th>
                         <th class="px-4 py-3.5">Time of Download</th>
@@ -154,9 +154,14 @@
                             @endif
                         </td>
 
-                        <!-- Application Code -->
+                        <!-- Application Code & Roll No -->
                         <td class="px-4 py-3.5 whitespace-nowrap">
-                            <span class="font-mono font-black text-slate-900 text-xs">
+                            @if($log->application?->roll_number)
+                                <span class="font-mono font-black text-white bg-blue-900 border border-blue-800 px-2 py-0.5 rounded text-[11px] tracking-wider shadow-2xs mr-1.5">
+                                    {{ $log->application->roll_number }}
+                                </span>
+                            @endif
+                            <span class="font-mono font-bold text-slate-700 text-xs">
                                 {{ $log->application_code ?? ($log->application?->application_code ?? 'App #' . $log->student_application_id) }}
                             </span>
                         </td>

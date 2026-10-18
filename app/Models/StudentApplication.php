@@ -22,6 +22,7 @@ class StudentApplication extends Model
         'approval_remarks',
         'applied_for',
         'examination_center',
+        'roll_no',
     ];
 
     public function getAppliedForDisplayAttribute()
@@ -223,5 +224,98 @@ class StudentApplication extends Model
         }
 
         return $candidateCode;
+    }
+
+    public static function getRollNoConfig(?string $appliedFor): array
+    {
+        $val = strtoupper(trim((string)$appliedFor));
+        if (str_contains($val, 'UPSC')) {
+            return ['prefix' => '261', 'padding' => 4]; // 2610001 (7 digits)
+        }
+        if (str_contains($val, 'APSC')) {
+            return ['prefix' => '262', 'padding' => 4]; // 2620001 (7 digits)
+        }
+        if (str_contains($val, 'ENGINEERING') || str_contains($val, 'JEE')) {
+            return ['prefix' => '263', 'padding' => 2]; // 26301 (5 digits)
+        }
+        if (str_contains($val, 'MEDICAL') || str_contains($val, 'NEET')) {
+            return ['prefix' => '64', 'padding' => 3]; // 64001 (5 digits)
+        }
+
+        return ['prefix' => '260', 'padding' => 4];
+    }
+
+    public static function generateRollNo(?string $appliedFor, $excludeId = null): string
+    {
+        $config = self::getRollNoConfig($appliedFor);
+        $prefix = $config['prefix'];
+        $pad = $config['padding'];
+
+        $existing = self::withTrashed()
+            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->whereNotNull('roll_no')
+            ->where('roll_no', '!=', '')
+            ->where('roll_no', 'LIKE', "{$prefix}%")
+            ->pluck('roll_no');
+
+        $maxNum = 0;
+        foreach ($existing as $val) {
+            $numPart = substr($val, strlen($prefix));
+            if (is_numeric($numPart) && (int)$numPart > $maxNum) {
+                $maxNum = (int)$numPart;
+            }
+        }
+
+        $nextNum = $maxNum + 1;
+        $candidate = $prefix . str_pad($nextNum, $pad, '0', STR_PAD_LEFT);
+
+        while (self::withTrashed()
+            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->where('roll_no', $candidate)
+            ->exists()) {
+            $nextNum++;
+            $candidate = $prefix . str_pad($nextNum, $pad, '0', STR_PAD_LEFT);
+        }
+
+        return $candidate;
+    }
+
+    public function getRollNumberAttribute(): string
+    {
+        if (!empty($this->roll_no)) {
+            return $this->roll_no;
+        }
+
+        if ($this->status === 'submitted' || !empty($this->application_code)) {
+            $stream = $this->applied_for ?? $this->application_student?->applied_for;
+            $roll = self::generateRollNo($stream, $this->id);
+            $this->roll_no = $roll;
+            $this->saveQuietly();
+            return $roll;
+        }
+
+        return '';
+    }
+
+    public static function assignMissingRollNumbers(): int
+    {
+        $applications = self::where('status', 'submitted')
+            ->where(function ($q) {
+                $q->whereNull('roll_no')->orWhere('roll_no', '');
+            })
+            ->orderBy('submitted_at', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $assigned = 0;
+        foreach ($applications as $app) {
+            $stream = $app->applied_for ?? $app->application_student?->applied_for;
+            $roll = self::generateRollNo($stream, $app->id);
+            $app->roll_no = $roll;
+            $app->saveQuietly();
+            $assigned++;
+        }
+
+        return $assigned;
     }
 }

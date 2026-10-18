@@ -24,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Enforce application timezone
+        date_default_timezone_set(config('app.timezone', 'Asia/Kolkata'));
+
         // Restrict Log Viewer to admin users only in production
         LogViewer::auth(function (Request $request) {
             // In local/dev: allow all authenticated users

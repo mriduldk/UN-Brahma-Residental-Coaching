@@ -59,10 +59,10 @@
                         </span>
                     </div>
                     <h3 class="text-xl sm:text-2xl font-black text-white tracking-tight">
-                        Your Official Admin Card is Ready!
+                        Your Official Admit Card is Ready!
                     </h3>
                     <p class="text-blue-200/90 text-xs sm:text-sm mt-1 max-w-xl">
-                        Your entrance exam venue and roll number have been allotted. Please download and print your Admin Card prior to test day.
+                        Your entrance exam venue and roll number have been allotted. Please download and print your Admit Card prior to test day.
                     </p>
                 </div>
             </div>
@@ -79,13 +79,13 @@
                     <a href="{{ route('student.application.admin-card', $firstApp->id) }}" 
                        class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 transform hover:-translate-y-0.5">
                         <i data-lucide="download" size="15"></i>
-                        <span>Download Admin Card</span>
+                        <span>Download Admit Card</span>
                     </a>
                 @else
                     <a href="{{ route('student.admin-cards.index') }}" 
                        class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 transform hover:-translate-y-0.5">
                         <i data-lucide="id-card" size="15"></i>
-                        <span>View {{ $submittedApplications->count() }} Admin Cards</span>
+                        <span>View {{ $submittedApplications->count() }} Admit Cards</span>
                     </a>
                 @endif
                 <a href="{{ route('student.admin-cards.index') }}" 

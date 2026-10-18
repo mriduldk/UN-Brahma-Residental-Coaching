@@ -137,7 +137,7 @@
                         Applications</x-student-nav-link>
 
                     <x-student-nav-link href="{{ route('student.admin-cards.index') }}"
-                        :active="request()->routeIs('student.admin-cards.*')" icon="id-card">Admin Card</x-student-nav-link>
+                        :active="request()->routeIs('student.admin-cards.*')" icon="id-card">Admit Card</x-student-nav-link>
 
 
                 </nav>

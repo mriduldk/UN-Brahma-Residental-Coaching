@@ -651,7 +651,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Download the candidate's own Admin Card / Admit Card PDF
+     * Download the candidate's own Admit Card / Admit Card PDF
      */
     public function downloadAdminCard($id)
     {
@@ -672,27 +672,29 @@ class StudentController extends Controller
 
         $org = $application->application_form?->organization ?? $application->application_form?->institution?->organization;
 
+        // Log admit card download first to get log id & timestamp for QR code
+        $downloadLog = \App\Models\AdmitCardDownloadLog::logDownload($application, 'single_pdf');
+        $logId = $downloadLog ? $downloadLog->id : 'N/A';
+        $downloadedAt = $downloadLog && $downloadLog->downloaded_at ? $downloadLog->downloaded_at->timezone('Asia/Kolkata')->format('d-m-Y h:i A') : now('Asia/Kolkata')->format('d-m-Y h:i A');
+
         $stream = $application->applied_for_display;
         $center = $application->examination_center_full;
-        $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$application->application_code}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+        $qrData = "UPENDRA NATH BRAHMA RESIDENTIAL FREE COACHING ENTRANCE EXAM 2026\nRoll No: {$application->roll_number}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nLog ID: #{$logId}\nDownloaded At: {$downloadedAt}\nStatus: VERIFIED CANDIDATE";
         $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
 
         $emblemPath = public_path('image/logo/logo-em.png');
         $photoPath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->photo);
         $signaturePath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->signature);
 
-        $pdf = Pdf::loadView('administration.admin-cards.pdf', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath'))
+        $pdf = Pdf::loadView('administration.admin-cards.pdf', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath', 'downloadLog', 'logId', 'downloadedAt'))
             ->setPaper('a4', 'portrait');
 
-        // Log admit card download
-        \App\Models\AdmitCardDownloadLog::logDownload($application, 'single_pdf');
-
-        $fileName = 'Admin_Card_' . str_replace(['/', '\\', ' '], '_', $application->application_code) . '.pdf';
+        $fileName = 'Admit_Card_' . str_replace(['/', '\\', ' '], '_', $application->roll_number ?: $application->application_code) . '.pdf';
         return $pdf->download($fileName);
     }
 
     /**
-     * Direct print view for the candidate's own Admin Card
+     * Direct print view for the candidate's own Admit Card
      */
     public function printAdminCard($id)
     {
@@ -713,9 +715,14 @@ class StudentController extends Controller
 
         $org = $application->application_form?->organization ?? $application->application_form?->institution?->organization;
 
+        // Log admit card print/view first to get log id & timestamp for QR code
+        $downloadLog = \App\Models\AdmitCardDownloadLog::logDownload($application, 'web_print');
+        $logId = $downloadLog ? $downloadLog->id : 'N/A';
+        $downloadedAt = $downloadLog && $downloadLog->downloaded_at ? $downloadLog->downloaded_at->timezone('Asia/Kolkata')->format('d-m-Y h:i A') : now('Asia/Kolkata')->format('d-m-Y h:i A');
+
         $stream = $application->applied_for_display;
         $center = $application->examination_center_full;
-        $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$application->application_code}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+        $qrData = "UPENDRA NATH BRAHMA RESIDENTIAL FREE COACHING ENTRANCE EXAM 2026\nRoll No: {$application->roll_number}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nLog ID: #{$logId}\nDownloaded At: {$downloadedAt}\nStatus: VERIFIED CANDIDATE";
         $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
 
         $emblemPath = public_path('image/logo/logo-em.png');
@@ -724,10 +731,7 @@ class StudentController extends Controller
         $signaturePath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->signature);
         $signatureUrl = \App\Services\DocumentImageHelper::resolveImageUrl($application->application_documents?->signature);
 
-        // Log admit card print/view
-        \App\Models\AdmitCardDownloadLog::logDownload($application, 'web_print');
-
-        return view('administration.admin-cards.print', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath', 'photoUrl', 'signatureUrl'));
+        return view('administration.admin-cards.print', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath', 'photoUrl', 'signatureUrl', 'downloadLog', 'logId', 'downloadedAt'));
     }
 
     public function applicationPreview(Request $request)
@@ -1073,8 +1077,9 @@ class StudentController extends Controller
                 'status' => 'submitted',
                 'submitted_at' => now(),
             ];
-            // Generate official application code only upon final submission
+            // Generate official application code and roll number only upon final submission
             $updatePayload['application_code'] = \App\Models\StudentApplication::generateApplicationCode($appliedForVal, $application->id);
+            $updatePayload['roll_no'] = \App\Models\StudentApplication::generateRollNo($appliedForVal, $application->id);
             if ($appliedForVal && \Illuminate\Support\Facades\Schema::hasColumn('student_applications', 'applied_for')) {
                 $updatePayload['applied_for'] = $appliedForVal;
             }

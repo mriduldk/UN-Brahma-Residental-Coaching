@@ -135,7 +135,7 @@
                 <a href="{{ route('administration.admin-cards.index') }}" class="{{ request()->routeIs('administration.admin-cards*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center px-3 py-2.5 rounded-xl font-medium text-sm transition-all group overflow-hidden whitespace-nowrap"
                     :class="sidebarCollapsed ? 'justify-center mx-auto' : 'gap-3'">
                     <i data-lucide="id-card" size="18" class="{{ request()->routeIs('administration.admin-cards*') ? 'text-white' : 'text-blue-400 group-hover:text-white transition-colors' }}"></i>
-                    <span x-show="!sidebarCollapsed" x-transition:enter="transition-all ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">Admin Card</span>
+                    <span x-show="!sidebarCollapsed" x-transition:enter="transition-all ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">Admit Card</span>
                 </a>
 
                 <a href="{{ route('administration.reports') }}" class="{{ request()->routeIs('administration.reports*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center px-3 py-2.5 rounded-xl font-medium text-sm transition-all group overflow-hidden whitespace-nowrap"

@@ -2152,6 +2152,9 @@ class AdministrationController extends Controller
             ]);
         }
 
+        // Ensure all submitted applications have their official roll numbers assigned
+        \App\Models\StudentApplication::assignMissingRollNumbers();
+
         // Query strictly ONLY submitted applications
         $query = \App\Models\StudentApplication::with([
                 'application_student',
@@ -2207,6 +2210,7 @@ class AdministrationController extends Controller
             $search = trim($request->search);
             $query->where(function($q) use ($search) {
                 $q->where('application_code', 'like', "%{$search}%")
+                  ->orWhere('roll_no', 'like', "%{$search}%")
                   ->orWhere('applied_for', 'like', "%{$search}%")
                   ->orWhere('examination_center', 'like', "%{$search}%")
                   ->orWhereHas('application_student', function($qs) use ($search) {
@@ -2321,22 +2325,24 @@ class AdministrationController extends Controller
             })
             ->firstOrFail();
 
+        // Log admit card download first to get log id & timestamp for QR code
+        $downloadLog = \App\Models\AdmitCardDownloadLog::logDownload($application, 'single_pdf');
+        $logId = $downloadLog ? $downloadLog->id : 'N/A';
+        $downloadedAt = $downloadLog && $downloadLog->downloaded_at ? $downloadLog->downloaded_at->timezone('Asia/Kolkata')->format('d-m-Y h:i A') : now('Asia/Kolkata')->format('d-m-Y h:i A');
+
         $stream = $application->applied_for_display;
         $center = $application->examination_center_full;
-        $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$application->application_code}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+        $qrData = "UPENDRA NATH BRAHMA RESIDENTIAL FREE COACHING ENTRANCE EXAM 2026\nRoll No: {$application->roll_number}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nLog ID: #{$logId}\nDownloaded At: {$downloadedAt}\nStatus: VERIFIED CANDIDATE";
         $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
 
         $emblemPath = public_path('image/logo/logo-em.png');
         $photoPath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->photo);
         $signaturePath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->signature);
 
-        $pdf = Pdf::loadView('administration.admin-cards.pdf', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath'))
+        $pdf = Pdf::loadView('administration.admin-cards.pdf', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath', 'downloadLog', 'logId', 'downloadedAt'))
             ->setPaper('a4', 'portrait');
 
-        // Log admit card download
-        \App\Models\AdmitCardDownloadLog::logDownload($application, 'single_pdf');
-
-        $fileName = 'Admin_Card_' . str_replace(['/', '\\', ' '], '_', $application->application_code) . '.pdf';
+        $fileName = 'Admit_Card_' . str_replace(['/', '\\', ' '], '_', $application->roll_number ?: $application->application_code) . '.pdf';
         return $pdf->download($fileName);
     }
 
@@ -2362,9 +2368,14 @@ class AdministrationController extends Controller
             })
             ->firstOrFail();
 
+        // Log admit card print/view first to get log id & timestamp for QR code
+        $downloadLog = \App\Models\AdmitCardDownloadLog::logDownload($application, 'web_print');
+        $logId = $downloadLog ? $downloadLog->id : 'N/A';
+        $downloadedAt = $downloadLog && $downloadLog->downloaded_at ? $downloadLog->downloaded_at->timezone('Asia/Kolkata')->format('d-m-Y h:i A') : now('Asia/Kolkata')->format('d-m-Y h:i A');
+
         $stream = $application->applied_for_display;
         $center = $application->examination_center_full;
-        $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$application->application_code}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+        $qrData = "UPENDRA NATH BRAHMA RESIDENTIAL FREE COACHING ENTRANCE EXAM 2026\nRoll No: {$application->roll_number}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nLog ID: #{$logId}\nDownloaded At: {$downloadedAt}\nStatus: VERIFIED CANDIDATE";
         $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
 
         $emblemPath = public_path('image/logo/logo-em.png');
@@ -2373,10 +2384,7 @@ class AdministrationController extends Controller
         $signaturePath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->signature);
         $signatureUrl = \App\Services\DocumentImageHelper::resolveImageUrl($application->application_documents?->signature);
 
-        // Log admit card print/view
-        \App\Models\AdmitCardDownloadLog::logDownload($application, 'web_print');
-
-        return view('administration.admin-cards.print', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath', 'photoUrl', 'signatureUrl'));
+        return view('administration.admin-cards.print', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath', 'photoUrl', 'signatureUrl', 'downloadLog', 'logId', 'downloadedAt'));
     }
 
     /**
@@ -2439,10 +2447,21 @@ class AdministrationController extends Controller
         $emblemPath = public_path('image/logo/logo-em.png');
         $cardsData = [];
 
+        // Bulk log admit card downloads first to get individual log IDs and timestamps
+        $logsMap = \App\Models\AdmitCardDownloadLog::logBulkDownload($applications, 'bulk_pdf');
+        $defaultDownloadedAt = now('Asia/Kolkata')->format('d-m-Y h:i A');
+
         foreach ($applications as $app) {
             $stream = $app->applied_for_display;
             $center = $app->examination_center_full;
-            $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$app->application_code}\nName: " . ($app->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+
+            $logInfo = $logsMap[$app->id] ?? null;
+            $logId = $logInfo['id'] ?? 'N/A';
+            $downloadedAt = isset($logInfo['downloaded_at']) && $logInfo['downloaded_at'] instanceof \Carbon\Carbon
+                ? $logInfo['downloaded_at']->timezone('Asia/Kolkata')->format('d-m-Y h:i A')
+                : $defaultDownloadedAt;
+
+            $qrData = "UPENDRA NATH BRAHMA RESIDENTIAL FREE COACHING ENTRANCE EXAM 2026\nRoll No: {$app->roll_number}\nName: " . ($app->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nLog ID: #{$logId}\nDownloaded At: {$downloadedAt}\nStatus: VERIFIED CANDIDATE";
             $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
 
             $photoPath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($app->application_documents?->photo);
@@ -2453,11 +2472,10 @@ class AdministrationController extends Controller
                 'qrCodeSvg' => $qrCodeSvg,
                 'photoPath' => $photoPath,
                 'signaturePath' => $signaturePath,
+                'logId' => $logId,
+                'downloadedAt' => $downloadedAt,
             ];
         }
-
-        // Bulk log admit card downloads for all included applications
-        \App\Models\AdmitCardDownloadLog::logBulkDownload($applications, 'bulk_pdf');
 
         $pdf = Pdf::loadView('administration.admin-cards.bulk-pdf', compact('cardsData', 'org', 'emblemPath'))
             ->setPaper('a4', 'portrait');
@@ -2514,7 +2532,7 @@ class AdministrationController extends Controller
         ];
 
         $columns = [
-            'Sl No', 'Roll No / Application Code', 'Candidate Name', 'Gender', 'Category', 
+            'Sl No', 'Roll No', 'Application ID', 'Candidate Name', 'Gender', 'Category', 
             'Father Name', 'Phone Number', 'Email', 'Applied For / Stream', 
             'Allotted Examination Center', 'Permanent District', 'Submitted Date'
         ];
@@ -2532,6 +2550,7 @@ class AdministrationController extends Controller
 
                 fputcsv($file, [
                     $sl++,
+                    $app->roll_number ?: 'N/A',
                     $app->application_code,
                     $student->full_name ?? 'N/A',
                     $student->gender ?? 'N/A',
@@ -2606,5 +2625,42 @@ class AdministrationController extends Controller
         ];
 
         return view('administration.admin-cards.logs', compact('logs', 'stats'));
+    }
+
+    /**
+     * Generate or re-sync roll numbers for submitted applications
+     */
+    public function generateRollNumbers(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        $force = $request->boolean('force', false);
+
+        if ($force) {
+            $apps = \App\Models\StudentApplication::where('status', 'submitted')
+                ->whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+                ->orderBy('submitted_at', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            \App\Models\StudentApplication::where('status', 'submitted')
+                ->whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+                ->update(['roll_no' => null]);
+
+            $count = 0;
+            foreach ($apps as $app) {
+                $stream = $app->applied_for ?? $app->application_student?->applied_for;
+                $roll = \App\Models\StudentApplication::generateRollNo($stream, $app->id);
+                $app->roll_no = $roll;
+                $app->saveQuietly();
+                $count++;
+            }
+
+            return redirect()->back()->with('success', "Successfully regenerated Roll Numbers for {$count} submitted application(s).");
+        }
+
+        $assigned = \App\Models\StudentApplication::assignMissingRollNumbers();
+        return redirect()->back()->with('success', "Roll Numbers synced successfully ({$assigned} new assigned).");
     }
 }

@@ -108,10 +108,11 @@ class AdmitCardDownloadLog extends Model
     }
 
     /**
-     * Record bulk download action for multiple applications.
+     * Record bulk download action for multiple applications and return created log metadata.
      */
-    public static function logBulkDownload(iterable $applications, string $downloadType = 'bulk_pdf', ?Request $request = null): void
+    public static function logBulkDownload(iterable $applications, string $downloadType = 'bulk_pdf', ?Request $request = null): array
     {
+        $logsMap = [];
         try {
             $request = $request ?? request();
             $user = auth()->user();
@@ -138,7 +139,6 @@ class AdmitCardDownloadLog extends Model
 
             $now = now();
             $userAgent = substr((string) $request->userAgent(), 0, 500);
-            $records = [];
 
             foreach ($applications as $app) {
                 $appId = is_object($app) ? $app->id : $app;
@@ -149,7 +149,7 @@ class AdmitCardDownloadLog extends Model
                         ? $app->application_form->institution->organization_id
                         : null);
 
-                $records[] = [
+                $log = self::create([
                     'student_application_id' => $appId,
                     'application_code'       => $appCode,
                     'user_id'                => $userId,
@@ -160,18 +160,19 @@ class AdmitCardDownloadLog extends Model
                     'download_type'          => $downloadType,
                     'organization_id'        => $orgId,
                     'downloaded_at'          => $now,
-                    'created_at'             => $now,
-                    'updated_at'             => $now,
-                ];
-            }
+                ]);
 
-            if (!empty($records)) {
-                foreach (array_chunk($records, 100) as $chunk) {
-                    self::insert($chunk);
+                if ($log && $appId) {
+                    $logsMap[$appId] = [
+                        'id' => $log->id,
+                        'downloaded_at' => $now,
+                    ];
                 }
             }
         } catch (\Throwable $e) {
             Log::warning('Failed to log bulk admit card downloads: ' . $e->getMessage());
         }
+
+        return $logsMap;
     }
 }

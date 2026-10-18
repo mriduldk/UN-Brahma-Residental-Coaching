@@ -1,6 +1,6 @@
 @extends('layouts.administration')
 
-@section('title', 'Admin Card Generation')
+@section('title', 'Admit Card Generation')
 
 @section('content')
 <div class="space-y-6" x-data="adminCardManager()">
@@ -10,7 +10,7 @@
         <div>
             <h1 class="text-2xl font-black text-slate-900 flex items-center gap-2.5">
                 <i data-lucide="id-card" class="text-blue-600" size="28"></i>
-                Admin Card Generation
+                Admit Card Generation
             </h1>
         </div>
 
@@ -18,6 +18,13 @@
             <a href="{{ route('administration.admin-cards.logs') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 font-bold text-xs uppercase tracking-wider shadow-sm transition-all hover:border-slate-300">
                 <i data-lucide="history" size="16" class="text-blue-600"></i> Download Logs
             </a>
+
+            <form action="{{ route('administration.admin-cards.generate-roll-numbers') }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" onclick="return confirm('Generate / Sync roll numbers for all submitted applications?')" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 font-bold text-xs uppercase tracking-wider shadow-sm transition-all hover:border-slate-300" title="Assign Roll Numbers to all submitted applications">
+                    <i data-lucide="hash" size="16" class="text-amber-600"></i> Sync Roll Numbers
+                </button>
+            </form>
 
             <a href="{{ route('administration.admin-cards.export', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 font-bold text-xs uppercase tracking-wider shadow-sm transition-all hover:border-slate-300">
                 <i data-lucide="file-spreadsheet" size="16" class="text-emerald-600"></i> Export Roll Sheet (CSV)
@@ -36,7 +43,7 @@
         <div class="flex flex-col sm:flex-row items-center gap-3">
             <div class="relative flex-1 w-full">
                 <i data-lucide="search" class="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400" size="18"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by Application ID, Candidate Name, Mobile, Email or Center..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-slate-50 focus:bg-white transition-all font-medium text-slate-800">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by Roll No, Application ID, Candidate Name, Mobile, Email or Center..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-slate-50 focus:bg-white transition-all font-medium text-slate-800">
             </div>
             
             <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 flex items-center justify-center gap-2">
@@ -140,12 +147,12 @@
                         <th class="px-4 py-4 w-10 text-center">
                             <input type="checkbox" @change="toggleSelectAll($event)" :checked="isAllSelected()" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer">
                         </th>
-                        <th class="px-4 py-4">Application ID</th>
+                        <th class="px-4 py-4">Roll No</th>
                         <th class="px-4 py-4">Candidate Details</th>
                         <th class="px-4 py-4">Course / Stream</th>
                         <th class="px-4 py-4">Allotted Center</th>
                         <th class="px-4 py-4">Submitted On</th>
-                        <th class="px-4 py-4 text-center">Admin Card</th>
+                        <th class="px-4 py-4 text-center">Admit Card</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -163,14 +170,11 @@
                             <input type="checkbox" value="{{ $app->id }}" @change="toggleItem({{ $app->id }})" :checked="selectedIds.includes({{ $app->id }})" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer">
                         </td>
 
-                        <!-- Roll No / Application Code -->
+                        <!-- Roll No -->
                         <td class="px-4 py-4">
-                            <div class="flex items-center gap-1.5">
-                                <span class="font-mono font-black text-blue-900 bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-lg text-xs tracking-wide">
-                                    {{ $app->application_code }}
-                                </span>
-                            </div>
-                            <span class="text-[10px] text-slate-400 font-medium block mt-1">App #{{ $app->id }}</span>
+                            <span class="font-mono font-black text-white bg-blue-900 border border-blue-800 px-3 py-1 rounded-lg text-xs tracking-wider shadow-2xs">
+                                {{ $app->roll_number ?: 'Not Generated' }}
+                            </span>
                         </td>
 
                         <!-- Candidate Details -->

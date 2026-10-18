@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Admit Card - {{ $application->application_code }}</title>
+    <title>Admit Card - {{ $application->roll_number }}</title>
     <style>
         @page {
             size: A4 portrait;
@@ -357,12 +357,12 @@
                 </tr>
             </table>
 
-            <!-- Application ID Strip -->
+            <!-- Roll Number Strip -->
             <table class="roll-strip">
                 <tr>
                     <td style="width: 50%;">
-                        <span class="roll-label">Application ID: </span>
-                        <span class="roll-val">{{ $application->application_code }}</span>
+                        <span class="roll-label">Roll No: </span>
+                        <span class="roll-val">{{ $application->roll_number }}</span>
                     </td>
                     <td style="width: 50%; text-align: right;">
                         <span class="roll-label">Course / Stream Applied For: </span>
@@ -418,12 +418,6 @@
                                 <td>{{ $application->application_student->email ?? 'N/A' }}</td>
                                 <th>Permanent District</th>
                                 <td>{{ strtoupper($application->application_address->permanent_district ?? 'N/A') }}</td>
-                            </tr>
-                            <tr>
-                                <th>Target Institution</th>
-                                <td colspan="3">
-                                    {{ $application->application_form->institution->institution_name ?? ($org->organization_name ?? 'BTC Residential Coaching Center') }}
-                                </td>
                             </tr>
                         </table>
                     </td>
@@ -482,19 +476,19 @@
             <div class="instructions-box">
                 <div class="instructions-title">Important Instructions for the Candidate</div>
                 <ol class="instructions-list">
-                    <li>This Admit Card must be presented at the examination hall along with an <strong>Original Valid Photo Identity Proof</strong> (Aadhaar Card, Voter ID, PAN Card, Passport, or School/College Photo ID).</li>
+                    <li>This Admit Card must be presented at the examination hall along with an <strong> Original Valid Photo Identity Proof</strong> (Aadhaar Card, Voter ID or Passport).</li>
                     <li>No candidate will be admitted to the Examination Hall after the commencement of the examination under any circumstances.</li>
                     <li>Candidates must use only <strong>Blue or Black Ballpoint Pen</strong> to shade the circles on the OMR sheet and write details on the question paper booklet.</li>
                     <li><strong>Prohibited Items:</strong> Mobile phones, calculators, Bluetooth devices, smartwatches, digital earphones, books, notes, or any electronic equipment are strictly prohibited inside the examination premises.</li>
-                    <li>Candidates found using unfair means or involved in impersonation will be immediately disqualified and subjected to disciplinary and criminal prosecution.</li>
+                    <li>Candidates found using unfair means or involved in impersonation will be immediately disqualified.</li>
                     <li>Do not fold, tear, staple, or put any stray marks on the OMR answer sheet.</li>
-                    <li>Candidates are advised to visit the examination center one day in advance to familiarize themselves with the location.</li>
+                    <li>Candidates are advised to arrive at the examination center one hour prior to the scheduled examination time.</li>
                     <li>Retain this Admit Card safely until the entire screening and admission process is finalized.</li>
                 </ol>
             </div>
 
             <div class="footer-note">
-                Generated from the Official http://unb.bodoland.co Portal &bull; Application Code: {{ $application->application_code }} &bull; Issued by Directorate of Education, Kokrajhar, BTC
+                Generated from the Official http://unb.bodoland.co Portal &bull; Roll No: {{ $application->roll_number }} &bull; Issued by Directorate of Education, Kokrajhar, BTC
             </div>
 
         </div>

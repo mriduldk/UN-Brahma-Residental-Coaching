@@ -56,7 +56,7 @@
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-600">
                         <tr>
-                            <th class="px-6 py-4 font-bold uppercase tracking-wider text-xs">Application ID & Form</th>
+                            <th class="px-6 py-4 font-bold uppercase tracking-wider text-xs">Roll No & Form</th>
                             <th class="px-6 py-4 font-bold uppercase tracking-wider text-xs">Applied Stream</th>
                             <th class="px-6 py-4 font-bold uppercase tracking-wider text-xs">Allotted Exam Center</th>
                             <th class="px-6 py-4 font-bold uppercase tracking-wider text-xs">Exam Schedule</th>
@@ -74,10 +74,10 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div>
-                                        <span class="font-mono font-black text-blue-900 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-lg text-xs tracking-wide">
-                                            {{ $app->application_code }}
+                                        <span class="font-mono font-black text-white bg-blue-900 border border-blue-800 px-3 py-1 rounded-lg text-xs tracking-wider shadow-2xs">
+                                            {{ $app->roll_number ?: 'Not Generated' }}
                                         </span>
-                                        <div class="font-bold text-slate-800 text-xs mt-1">
+                                        <div class="font-bold text-slate-800 text-xs mt-1.5">
                                             {{ $app->application_form->application_name ?? '' }}
                                         </div>
                                     </div>

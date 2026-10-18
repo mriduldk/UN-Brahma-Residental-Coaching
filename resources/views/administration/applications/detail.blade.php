@@ -56,10 +56,10 @@
             @if($application->status === 'submitted')
             <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto mt-4 sm:mt-0">
                 <a href="{{ route('administration.admin-cards.print', $application->id) }}" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors">
-                    <i data-lucide="printer" size="14"></i> Print Admin Card
+                    <i data-lucide="printer" size="14"></i> Print Admit Card
                 </a>
                 <a href="{{ route('administration.admin-cards.download', $application->id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-blue-200">
-                    <i data-lucide="download" size="14"></i> Download Admin Card
+                    <i data-lucide="download" size="14"></i> Download Admit Card
                 </a>
             </div>
             @endif

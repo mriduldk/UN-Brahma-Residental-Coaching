@@ -264,6 +264,7 @@ Route::middleware(['auth', 'mobile.verified', \App\Http\Middleware\EnsureOrganiz
     Route::get('/admin-cards/{id}/print', [\App\Http\Controllers\AdministrationController::class, 'printAdminCard'])->name('admin-cards.print');
     Route::post('/admin-cards/bulk-download', [\App\Http\Controllers\AdministrationController::class, 'bulkDownloadAdminCards'])->name('admin-cards.bulk-download');
     Route::get('/admin-cards/export', [\App\Http\Controllers\AdministrationController::class, 'exportAdminCards'])->name('admin-cards.export');
+    Route::post('/admin-cards/generate-roll-numbers', [\App\Http\Controllers\AdministrationController::class, 'generateRollNumbers'])->name('admin-cards.generate-roll-numbers');
     Route::get('/finance', [\App\Http\Controllers\AdministrationController::class, 'finance'])->name('finance');
     Route::get('/finance/{type}/{id}', [\App\Http\Controllers\AdministrationController::class, 'financeDetail'])->name('finance.show');
     Route::post('/finance/refresh', [\App\Http\Controllers\AdministrationController::class, 'refreshFinanceStatus'])->name('finance.refresh');
