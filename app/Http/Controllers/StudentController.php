@@ -197,6 +197,10 @@ class StudentController extends Controller
      */
     public function adminCards()
     {
+        if (!\App\Models\StudentApplication::isAdmitCardReleased()) {
+            return redirect()->route('student.dashboard')->with('info', 'Admit cards will be available for download starting 19th October, 2026 12:00 AM IST.');
+        }
+
         $user = auth()->user();
         $student = \App\Models\Student::where('user_id', $user->id)->first();
 
@@ -655,6 +659,10 @@ class StudentController extends Controller
      */
     public function downloadAdminCard($id)
     {
+        if (!\App\Models\StudentApplication::isAdmitCardReleased()) {
+            return redirect()->route('student.dashboard')->with('error', 'Admit cards will be available for download starting 19th October, 2026 12:00 AM IST.');
+        }
+
         $user = auth()->user();
         $student = \App\Models\Student::where('user_id', $user->id)->firstOrFail();
 
@@ -698,6 +706,10 @@ class StudentController extends Controller
      */
     public function printAdminCard($id)
     {
+        if (!\App\Models\StudentApplication::isAdmitCardReleased()) {
+            return redirect()->route('student.dashboard')->with('error', 'Admit cards will be available for download starting 19th October, 2026 12:00 AM IST.');
+        }
+
         $user = auth()->user();
         $student = \App\Models\Student::where('user_id', $user->id)->firstOrFail();
 

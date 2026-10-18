@@ -136,8 +136,10 @@
                         :active="request()->routeIs('student.applications.history') || request()->routeIs('student.application.show') || request()->routeIs('student.application.payment') || request()->routeIs('student.application.form') || request()->routeIs('student.application.preview*')" icon="folder-open">My
                         Applications</x-student-nav-link>
 
+                    @if(\App\Models\StudentApplication::isAdmitCardReleased())
                     <x-student-nav-link href="{{ route('student.admin-cards.index') }}"
                         :active="request()->routeIs('student.admin-cards.*')" icon="id-card">Admit Card</x-student-nav-link>
+                    @endif
 
 
                 </nav>

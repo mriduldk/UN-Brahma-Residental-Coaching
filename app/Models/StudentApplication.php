@@ -318,4 +318,16 @@ class StudentApplication extends Model
 
         return $assigned;
     }
+
+    /**
+     * Check if admit cards are visible and accessible to students.
+     * Released after 19 Oct 2026 00:00:00 (Asia/Kolkata).
+     */
+    public static function isAdmitCardReleased(): bool
+    {
+        $tz = config('app.timezone', 'Asia/Kolkata');
+        $releaseString = config('app.admit_card_release_date', env('ADMIT_CARD_RELEASE_DATE', '2026-10-19 00:00:00'));
+        $releaseTime = \Carbon\Carbon::parse($releaseString, $tz);
+        return now($tz)->greaterThanOrEqualTo($releaseTime);
+    }
 }

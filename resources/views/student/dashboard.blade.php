@@ -42,62 +42,6 @@
         </div>
     </div>
 
-    <!-- Admin Card Available Section -->
-    @if(isset($submittedApplications) && $submittedApplications->isNotEmpty())
-    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-7 text-white shadow-xl relative overflow-hidden group">
-        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div class="flex items-start gap-4">
-                <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 shrink-0">
-                    <i data-lucide="id-card" size="28"></i>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            Admit Card Generated
-                        </span>
-                    </div>
-                    <h3 class="text-xl sm:text-2xl font-black text-white tracking-tight">
-                        Your Official Admit Card is Ready!
-                    </h3>
-                    <p class="text-blue-200/90 text-xs sm:text-sm mt-1 max-w-xl">
-                        Your entrance exam venue and roll number have been allotted. Please download and print your Admit Card prior to test day.
-                    </p>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-3 shrink-0">
-                @if($submittedApplications->count() === 1)
-                    @php $firstApp = $submittedApplications->first(); @endphp
-                    <a href="{{ route('student.application.admin-card.print', $firstApp->id) }}" 
-                       target="_blank"
-                       class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 backdrop-blur-xs">
-                        <i data-lucide="printer" size="15"></i>
-                        <span>Print</span>
-                    </a>
-                    <a href="{{ route('student.application.admin-card', $firstApp->id) }}" 
-                       class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 transform hover:-translate-y-0.5">
-                        <i data-lucide="download" size="15"></i>
-                        <span>Download Admit Card</span>
-                    </a>
-                @else
-                    <a href="{{ route('student.admin-cards.index') }}" 
-                       class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 transform hover:-translate-y-0.5">
-                        <i data-lucide="id-card" size="15"></i>
-                        <span>View {{ $submittedApplications->count() }} Admit Cards</span>
-                    </a>
-                @endif
-                <a href="{{ route('student.admin-cards.index') }}" 
-                   class="px-3 py-2.5 text-blue-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-1">
-                    <span>Details</span>
-                    <i data-lucide="chevron-right" size="14"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-    @endif
-
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <!-- Drafts -->

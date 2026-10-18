@@ -67,6 +67,8 @@ return [
 
     'timezone' => env('APP_TIMEZONE', 'Asia/Kolkata'),
 
+    'admit_card_release_date' => env('ADMIT_CARD_RELEASE_DATE', '2026-10-19 00:00:00'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
