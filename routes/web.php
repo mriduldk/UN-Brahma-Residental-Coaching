@@ -139,6 +139,7 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'mobile.verified
         Route::get('/applications', [\App\Http\Controllers\StudentController::class, 'allApplications'])->name('applications.index');
         Route::get('/applications/institute/{id}', [\App\Http\Controllers\StudentController::class, 'instituteApplications'])->name('applications.institute');
         Route::get('/my-applications', [\App\Http\Controllers\StudentController::class, 'myApplications'])->name('applications.history');
+        Route::get('/admin-cards', [\App\Http\Controllers\StudentController::class, 'adminCards'])->name('admin-cards.index');
         Route::get('/profile', [\App\Http\Controllers\StudentController::class, 'profile'])->name('profile');
         Route::get('/profile/edit', [\App\Http\Controllers\StudentController::class, 'editProfile'])->name('profile.edit');
         Route::post('/profile/update', [\App\Http\Controllers\StudentController::class, 'updateProfile'])->name('profile.update')->middleware('throttle:profile-update');
@@ -147,6 +148,8 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'mobile.verified
         Route::delete('/application/{id}', [\App\Http\Controllers\StudentController::class, 'destroyApplication'])->name('application.destroy');
         Route::get('/application/{id}/download', [\App\Http\Controllers\StudentController::class, 'downloadApplicationPdf'])->name('application.download');
         Route::get('/application/{id}/acknowledgment', [\App\Http\Controllers\StudentController::class, 'downloadAcknowledgment'])->name('application.acknowledgment');
+        Route::get('/application/{id}/admin-card', [\App\Http\Controllers\StudentController::class, 'downloadAdminCard'])->name('application.admin-card');
+        Route::get('/application/{id}/admin-card/print', [\App\Http\Controllers\StudentController::class, 'printAdminCard'])->name('application.admin-card.print');
         Route::get('/application-preview', [\App\Http\Controllers\StudentController::class, 'applicationPreview'])->name('application.preview.get');
         Route::post('/application-preview', [\App\Http\Controllers\StudentController::class, 'applicationPreview'])->name('application.preview')->middleware('throttle:application-submission');
         Route::post('/preview', [\App\Http\Controllers\StudentController::class, 'applicationPreview'])->middleware('throttle:application-submission');
@@ -253,6 +256,14 @@ Route::middleware(['auth', 'mobile.verified', \App\Http\Middleware\EnsureOrganiz
     Route::get('/applications/{id}', [\App\Http\Controllers\AdministrationController::class, 'applicationDetail'])->name('applications.detail');
     Route::post('/applications/{id}/status', [\App\Http\Controllers\AdministrationController::class, 'updateApplicationStatus'])->name('applications.status');
     Route::post('/applications/{id}/approval', [\App\Http\Controllers\AdministrationController::class, 'updateApprovalStatus'])->name('applications.approval');
+
+    // Admin Card Generation (Dedicated for Submitted Applications)
+    Route::get('/admin-cards', [\App\Http\Controllers\AdministrationController::class, 'adminCards'])->name('admin-cards.index');
+    Route::get('/admin-cards/logs', [\App\Http\Controllers\AdministrationController::class, 'adminCardLogs'])->name('admin-cards.logs');
+    Route::get('/admin-cards/{id}/download', [\App\Http\Controllers\AdministrationController::class, 'downloadAdminCard'])->name('admin-cards.download');
+    Route::get('/admin-cards/{id}/print', [\App\Http\Controllers\AdministrationController::class, 'printAdminCard'])->name('admin-cards.print');
+    Route::post('/admin-cards/bulk-download', [\App\Http\Controllers\AdministrationController::class, 'bulkDownloadAdminCards'])->name('admin-cards.bulk-download');
+    Route::get('/admin-cards/export', [\App\Http\Controllers\AdministrationController::class, 'exportAdminCards'])->name('admin-cards.export');
     Route::get('/finance', [\App\Http\Controllers\AdministrationController::class, 'finance'])->name('finance');
     Route::get('/finance/{type}/{id}', [\App\Http\Controllers\AdministrationController::class, 'financeDetail'])->name('finance.show');
     Route::post('/finance/refresh', [\App\Http\Controllers\AdministrationController::class, 'refreshFinanceStatus'])->name('finance.refresh');

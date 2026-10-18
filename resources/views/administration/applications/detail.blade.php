@@ -53,20 +53,16 @@
                         @endif
                     </div>
                 </div>
+            @if($application->status === 'submitted')
+            <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto mt-4 sm:mt-0">
+                <a href="{{ route('administration.admin-cards.print', $application->id) }}" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors">
+                    <i data-lucide="printer" size="14"></i> Print Admin Card
+                </a>
+                <a href="{{ route('administration.admin-cards.download', $application->id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-blue-200">
+                    <i data-lucide="download" size="14"></i> Download Admin Card
+                </a>
             </div>
-            <!-- <div class="flex space-x-3 w-full sm:w-auto">
-                @if(auth()->user()->isAdmin(auth()->user()->currentOrganization()->id))
-                <form action="{{ route('administration.applications.status', $application->id) }}" method="POST" class="flex gap-3 w-full sm:w-auto">
-                    @csrf
-                    <button type="submit" name="status" value="rejected" class="flex-1 sm:flex-none items-center justify-center px-5 py-2.5 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 font-bold transition-colors flex" onclick="return confirm('Are you sure you want to reject this application?')">
-                        <i data-lucide="x" size="18" class="mr-2"></i> Reject
-                    </button>
-                    <button type="submit" name="status" value="approved" class="flex-1 sm:flex-none items-center justify-center px-5 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold shadow-lg shadow-green-200 transition-all hover:-translate-y-0.5 flex" onclick="return confirm('Are you sure you want to approve this application?')">
-                        <i data-lucide="check" size="18" class="mr-2"></i> Approve
-                    </button>
-                </form>
-                @endif
-            </div> -->
+            @endif
         </div>
 
         <div class="px-8 py-8 space-y-12">

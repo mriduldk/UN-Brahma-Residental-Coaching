@@ -14,9 +14,9 @@
             <p class="text-slate-500 mt-2 text-sm font-medium">Record for application code: <span class="text-blue-600 font-bold font-mono">{{ $application->application_code }}</span></p>
         </div>
         
-        <div class="flex items-center gap-3">
-            <a href="{{ route('student.application.download', $application->id) }}" id="downloadPdfBtn" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
-                <i data-lucide="download" class="mr-2" size="18"></i> Download Acknowledgement
+        <div class="flex flex-wrap items-center gap-2.5">
+            <a href="{{ route('student.application.download', $application->id) }}" id="downloadPdfBtn" class="inline-flex items-center px-4 py-2 bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-slate-900 transition-all shadow-sm">
+                <i data-lucide="download" class="mr-1.5" size="16"></i> Application Form
             </a>
         </div>
     </div>
@@ -33,6 +33,7 @@
             <span class="font-semibold text-sm">{{ session('info') }}</span>
         </div>
     @endif
+
 
     <!-- Application Summary Header Card -->
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-8">

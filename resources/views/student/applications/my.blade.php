@@ -194,9 +194,9 @@
 
                                     @if(in_array($app->status, ['submitted', 'approved']))
                                         <a href="{{ route('student.application.download', $app->id) }}" 
-                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-all shadow-sm shadow-blue-200 hover:shadow-blue-300 transform hover:-translate-y-0.5 text-xs font-bold" 
-                                           title="Download Acknowledgement">
-                                            <i data-lucide="download" size="14"></i> Download Acknowledgement
+                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 text-white hover:bg-slate-800 rounded-lg transition-all shadow-sm text-xs font-bold" 
+                                           title="Download Application Form">
+                                            <i data-lucide="download" size="14"></i> Application Form
                                         </a>
                                     @endif
 

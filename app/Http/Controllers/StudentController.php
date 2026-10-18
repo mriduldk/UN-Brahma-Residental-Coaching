@@ -101,7 +101,10 @@ class StudentController extends Controller
                                 ->where('student_id', $student->id)
                                 ->get();
 
-        return view('student.dashboard', compact('student', 'stats', 'leaveStats', 'pendingActions', 'upcomingDeadlines', 'admissions'));
+        // 6. Submitted Applications (Ready for Admin Card)
+        $submittedApplications = $myApplications->whereIn('status', ['submitted', 'approved'])->values();
+
+        return view('student.dashboard', compact('student', 'stats', 'leaveStats', 'pendingActions', 'upcomingDeadlines', 'admissions', 'submittedApplications'));
     }
 
     public function allApplications(Request $request)
@@ -187,6 +190,31 @@ class StudentController extends Controller
         }
 
         return view('student.applications.my', compact('applications'));
+    }
+
+    /**
+     * Display candidate's Admin Cards (only for submitted / approved applications)
+     */
+    public function adminCards()
+    {
+        $user = auth()->user();
+        $student = \App\Models\Student::where('user_id', $user->id)->first();
+
+        $submittedApplications = collect();
+        if ($student) {
+            $submittedApplications = \App\Models\StudentApplication::with([
+                    'application_student',
+                    'application_form.institution.organization',
+                    'application_documents',
+                    'application_address'
+                ])
+                ->where('student_id', $student->id)
+                ->whereIn('status', ['submitted', 'approved'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        return view('student.admin-cards.index', compact('student', 'submittedApplications'));
     }
 
     public function profile()
@@ -620,6 +648,86 @@ class StudentController extends Controller
         $filename = 'Acknowledgment_' . str_replace('/', '_', $application->admission_student->admission_code) . '.pdf';
         
         return $pdf->download($filename);
+    }
+
+    /**
+     * Download the candidate's own Admin Card / Admit Card PDF
+     */
+    public function downloadAdminCard($id)
+    {
+        $user = auth()->user();
+        $student = \App\Models\Student::where('user_id', $user->id)->firstOrFail();
+
+        $application = \App\Models\StudentApplication::with([
+                'application_student',
+                'application_form.institution.organization',
+                'application_documents',
+                'application_address',
+                'application_parent'
+            ])
+            ->where('id', $id)
+            ->where('student_id', $student->id)
+            ->whereIn('status', ['submitted', 'approved'])
+            ->firstOrFail();
+
+        $org = $application->application_form?->organization ?? $application->application_form?->institution?->organization;
+
+        $stream = $application->applied_for_display;
+        $center = $application->examination_center_full;
+        $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$application->application_code}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+        $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
+
+        $emblemPath = public_path('image/logo/logo-em.png');
+        $photoPath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->photo);
+        $signaturePath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->signature);
+
+        $pdf = Pdf::loadView('administration.admin-cards.pdf', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath'))
+            ->setPaper('a4', 'portrait');
+
+        // Log admit card download
+        \App\Models\AdmitCardDownloadLog::logDownload($application, 'single_pdf');
+
+        $fileName = 'Admin_Card_' . str_replace(['/', '\\', ' '], '_', $application->application_code) . '.pdf';
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Direct print view for the candidate's own Admin Card
+     */
+    public function printAdminCard($id)
+    {
+        $user = auth()->user();
+        $student = \App\Models\Student::where('user_id', $user->id)->firstOrFail();
+
+        $application = \App\Models\StudentApplication::with([
+                'application_student',
+                'application_form.institution.organization',
+                'application_documents',
+                'application_address',
+                'application_parent'
+            ])
+            ->where('id', $id)
+            ->where('student_id', $student->id)
+            ->whereIn('status', ['submitted', 'approved'])
+            ->firstOrFail();
+
+        $org = $application->application_form?->organization ?? $application->application_form?->institution?->organization;
+
+        $stream = $application->applied_for_display;
+        $center = $application->examination_center_full;
+        $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$application->application_code}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+        $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
+
+        $emblemPath = public_path('image/logo/logo-em.png');
+        $photoPath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->photo);
+        $photoUrl = \App\Services\DocumentImageHelper::resolveImageUrl($application->application_documents?->photo);
+        $signaturePath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->signature);
+        $signatureUrl = \App\Services\DocumentImageHelper::resolveImageUrl($application->application_documents?->signature);
+
+        // Log admit card print/view
+        \App\Models\AdmitCardDownloadLog::logDownload($application, 'web_print');
+
+        return view('administration.admin-cards.print', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath', 'photoUrl', 'signatureUrl'));
     }
 
     public function applicationPreview(Request $request)

@@ -2130,4 +2130,481 @@ class AdministrationController extends Controller
                 ->header('Content-Type', 'image/svg+xml');
         }
     }
+
+    /**
+     * Display a dedicated page for only submitted applications for Admin Card generation.
+     */
+    public function adminCards(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) {
+            return view('administration.admin-cards.index', [
+                'applications' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
+                'forms' => collect([]),
+                'institutions' => collect([]),
+                'appliedForOptions' => collect([]),
+                'examDistricts' => collect([]),
+                'stats' => [
+                    'total_submitted' => 0,
+                    'stream_stats' => collect([]),
+                    'center_stats' => collect([]),
+                ],
+            ]);
+        }
+
+        // Query strictly ONLY submitted applications
+        $query = \App\Models\StudentApplication::with([
+                'application_student',
+                'application_form.institution',
+                'application_documents',
+                'application_address',
+                'application_parent'
+            ])
+            ->where('status', 'submitted')
+            ->whereHas('application_form', function ($q) use ($org) {
+                $q->where('organization_id', $org->id);
+            });
+
+        // Total submitted count before query filtering
+        $totalSubmittedCount = (clone $query)->count();
+
+        // 1. Filter by Form / Trade
+        if ($request->filled('form_id')) {
+            $query->where('application_form_id', $request->form_id);
+        }
+
+        // 2. Filter by Institution
+        if ($request->filled('institution_id')) {
+            $query->whereHas('application_form', function ($q) use ($request) {
+                $q->where('institution_id', $request->institution_id);
+            });
+        }
+
+        // 3. Filter by Applied For / Stream
+        if ($request->filled('applied_for') && strtolower($request->applied_for) !== 'all') {
+            $appliedForVal = trim($request->applied_for);
+            $query->where(function($q) use ($appliedForVal) {
+                $q->where('applied_for', 'like', "%{$appliedForVal}%")
+                  ->orWhereHas('application_student', function($qs) use ($appliedForVal) {
+                      $qs->where('applied_for', 'like', "%{$appliedForVal}%");
+                  });
+            });
+        }
+
+        // 4. Filter by Examination Center / District
+        if ($request->filled('examination_center') && strtolower($request->examination_center) !== 'all') {
+            $examCenterVal = trim($request->examination_center);
+            $query->where(function($q) use ($examCenterVal) {
+                $q->where('examination_center', 'like', "%{$examCenterVal}%")
+                  ->orWhereHas('application_student', function($sq) use ($examCenterVal) {
+                      $sq->where('examination_center', 'like', "%{$examCenterVal}%");
+                  });
+            });
+        }
+
+        // 5. Search (Application Code / Roll No, Full Name, Phone, Email, Center, Applied For)
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('application_code', 'like', "%{$search}%")
+                  ->orWhere('applied_for', 'like', "%{$search}%")
+                  ->orWhere('examination_center', 'like', "%{$search}%")
+                  ->orWhereHas('application_student', function($qs) use ($search) {
+                      $qs->where('full_name', 'like', "%{$search}%")
+                         ->orWhere('phone_number', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%")
+                         ->orWhere('applied_for', 'like', "%{$search}%")
+                         ->orWhere('examination_center', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Stream distribution of submitted candidates
+        $streamStats = \App\Models\StudentApplication::where('status', 'submitted')
+            ->whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->with(['application_student:id,student_application_id,applied_for'])
+            ->select('id', 'applied_for')
+            ->get()
+            ->map(fn($app) => trim($app->applied_for ?: ($app->application_student?->applied_for ?: 'Other')))
+            ->filter()
+            ->groupBy(fn($trade) => $trade)
+            ->map->count();
+
+        // Examination Center distribution of submitted candidates
+        $centerStats = \App\Models\StudentApplication::where('status', 'submitted')
+            ->whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->with(['application_student:id,student_application_id,examination_center'])
+            ->select('id', 'examination_center')
+            ->get()
+            ->map(fn($app) => ucwords(strtolower(trim($app->examination_center ?: ($app->application_student?->examination_center ?: 'Not Assigned')))))
+            ->filter()
+            ->groupBy(fn($c) => $c)
+            ->map->count();
+
+        $applications = $query->latest('submitted_at')->paginate(15)->withQueryString();
+
+        $forms = $org->applicationForms()->select('id', 'application_name')->get();
+        $institutions = $org->institutions()->select('id', 'institution_name')->get();
+
+        // Examination Centers for Dropdown
+        $standardExamDistricts = ['Kokrajhar', 'Chirang', 'Baksa', 'Tamulpur', 'Udalguri'];
+        $dbExamApps = \App\Models\StudentApplication::whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->where('status', 'submitted')
+            ->whereNotNull('examination_center')
+            ->where('examination_center', '!=', '')
+            ->pluck('examination_center')
+            ->map(fn($v) => ucwords(strtolower(trim($v))));
+        $dbExamStudents = \App\Models\ApplicationStudent::whereHas('student_application.application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereHas('student_application', fn($q) => $q->where('status', 'submitted'))
+            ->whereNotNull('examination_center')
+            ->where('examination_center', '!=', '')
+            ->pluck('examination_center')
+            ->map(fn($v) => ucwords(strtolower(trim($v))));
+        $examDistricts = collect($standardExamDistricts)->merge($dbExamApps)->merge($dbExamStudents)->filter()->unique()->sort()->values();
+
+        // Applied For Options
+        $appliedForList = \App\Models\StudentApplication::whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->where('status', 'submitted')
+            ->whereNotNull('applied_for')
+            ->where('applied_for', '!=', '')
+            ->distinct()
+            ->pluck('applied_for');
+
+        $studentAppliedFor = \App\Models\ApplicationStudent::whereHas('student_application.application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereHas('student_application', fn($q) => $q->where('status', 'submitted'))
+            ->whereNotNull('applied_for')
+            ->where('applied_for', '!=', '')
+            ->distinct()
+            ->pluck('applied_for');
+
+        $formAppliedFor = collect([]);
+        foreach ($forms as $f) {
+            $opts = $f->field_config['applied_for_options'] ?? (is_array($f->applied_for_options) ? $f->applied_for_options : json_decode($f->applied_for_options ?? '[]', true));
+            if (!empty($opts) && is_array($opts)) {
+                $formAppliedFor = $formAppliedFor->merge($opts);
+            }
+        }
+        $appliedForOptions = $appliedForList->merge($studentAppliedFor)->merge($formAppliedFor)
+            ->filter()
+            ->groupBy(fn($v) => strtolower(trim($v)))
+            ->map(fn($g) => $g->first())
+            ->values();
+
+        $stats = [
+            'total_submitted' => $totalSubmittedCount,
+            'stream_stats' => $streamStats,
+            'center_stats' => $centerStats,
+        ];
+
+        return view('administration.admin-cards.index', compact('applications', 'forms', 'institutions', 'examDistricts', 'appliedForOptions', 'stats'));
+    }
+
+    /**
+     * Download a single candidate Admin Card PDF
+     */
+    public function downloadAdminCard($id)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        $application = \App\Models\StudentApplication::with([
+                'application_student',
+                'application_form.institution',
+                'application_documents',
+                'application_address',
+                'application_parent'
+            ])
+            ->where('id', $id)
+            ->where('status', 'submitted')
+            ->whereHas('application_form', function ($q) use ($org) {
+                $q->where('organization_id', $org->id);
+            })
+            ->firstOrFail();
+
+        $stream = $application->applied_for_display;
+        $center = $application->examination_center_full;
+        $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$application->application_code}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+        $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
+
+        $emblemPath = public_path('image/logo/logo-em.png');
+        $photoPath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->photo);
+        $signaturePath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->signature);
+
+        $pdf = Pdf::loadView('administration.admin-cards.pdf', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath'))
+            ->setPaper('a4', 'portrait');
+
+        // Log admit card download
+        \App\Models\AdmitCardDownloadLog::logDownload($application, 'single_pdf');
+
+        $fileName = 'Admin_Card_' . str_replace(['/', '\\', ' '], '_', $application->application_code) . '.pdf';
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Direct print view for a candidate Admin Card
+     */
+    public function printAdminCard($id)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        $application = \App\Models\StudentApplication::with([
+                'application_student',
+                'application_form.institution',
+                'application_documents',
+                'application_address',
+                'application_parent'
+            ])
+            ->where('id', $id)
+            ->where('status', 'submitted')
+            ->whereHas('application_form', function ($q) use ($org) {
+                $q->where('organization_id', $org->id);
+            })
+            ->firstOrFail();
+
+        $stream = $application->applied_for_display;
+        $center = $application->examination_center_full;
+        $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$application->application_code}\nName: " . ($application->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+        $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
+
+        $emblemPath = public_path('image/logo/logo-em.png');
+        $photoPath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->photo);
+        $photoUrl = \App\Services\DocumentImageHelper::resolveImageUrl($application->application_documents?->photo);
+        $signaturePath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($application->application_documents?->signature);
+        $signatureUrl = \App\Services\DocumentImageHelper::resolveImageUrl($application->application_documents?->signature);
+
+        // Log admit card print/view
+        \App\Models\AdmitCardDownloadLog::logDownload($application, 'web_print');
+
+        return view('administration.admin-cards.print', compact('application', 'qrCodeSvg', 'org', 'emblemPath', 'photoPath', 'signaturePath', 'photoUrl', 'signatureUrl'));
+    }
+
+    /**
+     * Bulk Download Admin Cards for selected candidates as a merged PDF
+     */
+    public function bulkDownloadAdminCards(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        $selectedIds = $request->input('selected_ids', []);
+        if (is_string($selectedIds)) {
+            $selectedIds = explode(',', $selectedIds);
+        }
+        $selectedIds = array_filter(array_map('intval', (array)$selectedIds));
+
+        $query = \App\Models\StudentApplication::with([
+                'application_student',
+                'application_form.institution',
+                'application_documents',
+                'application_address',
+                'application_parent'
+            ])
+            ->where('status', 'submitted')
+            ->whereHas('application_form', function ($q) use ($org) {
+                $q->where('organization_id', $org->id);
+            });
+
+        if (!empty($selectedIds)) {
+            $query->whereIn('id', $selectedIds);
+        } else {
+            // Apply current filters if passed
+            if ($request->filled('form_id')) $query->where('application_form_id', $request->form_id);
+            if ($request->filled('institution_id')) {
+                $query->whereHas('application_form', fn($q) => $q->where('institution_id', $request->institution_id));
+            }
+            if ($request->filled('applied_for')) {
+                $appliedForVal = trim($request->applied_for);
+                $query->where(fn($q) => $q->where('applied_for', 'like', "%{$appliedForVal}%")->orWhereHas('application_student', fn($qs) => $qs->where('applied_for', 'like', "%{$appliedForVal}%")));
+            }
+            if ($request->filled('examination_center')) {
+                $examCenterVal = trim($request->examination_center);
+                $query->where(fn($q) => $q->where('examination_center', 'like', "%{$examCenterVal}%")->orWhereHas('application_student', fn($sq) => $sq->where('examination_center', 'like', "%{$examCenterVal}%")));
+            }
+            if ($request->filled('search')) {
+                $search = trim($request->search);
+                $query->where(function($q) use ($search) {
+                    $q->where('application_code', 'like', "%{$search}%")
+                      ->orWhereHas('application_student', fn($qs) => $qs->where('full_name', 'like', "%{$search}%")->orWhere('phone_number', 'like', "%{$search}%"));
+                });
+            }
+        }
+
+        $applications = $query->orderBy('application_code')->get();
+
+        if ($applications->isEmpty()) {
+            return back()->with('error', 'No submitted applications found for bulk admin card generation.');
+        }
+
+        $emblemPath = public_path('image/logo/logo-em.png');
+        $cardsData = [];
+
+        foreach ($applications as $app) {
+            $stream = $app->applied_for_display;
+            $center = $app->examination_center_full;
+            $qrData = "BTC ENTRANCE EXAM 2026\nRoll No: {$app->application_code}\nName: " . ($app->application_student->full_name ?? 'N/A') . "\nCourse: {$stream}\nCenter: {$center}\nStatus: VERIFIED CANDIDATE";
+            $qrCodeSvg = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(130)->margin(0)->generate($qrData));
+
+            $photoPath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($app->application_documents?->photo);
+            $signaturePath = \App\Services\DocumentImageHelper::resolveImageAbsolutePath($app->application_documents?->signature);
+
+            $cardsData[] = [
+                'application' => $app,
+                'qrCodeSvg' => $qrCodeSvg,
+                'photoPath' => $photoPath,
+                'signaturePath' => $signaturePath,
+            ];
+        }
+
+        // Bulk log admit card downloads for all included applications
+        \App\Models\AdmitCardDownloadLog::logBulkDownload($applications, 'bulk_pdf');
+
+        $pdf = Pdf::loadView('administration.admin-cards.bulk-pdf', compact('cardsData', 'org', 'emblemPath'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('Admin_Cards_Batch_' . date('Ymd_His') . '.pdf');
+    }
+
+    /**
+     * Export CSV Attendance / Roll sheet for Admin Card Generation
+     */
+    public function exportAdminCards(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        $query = \App\Models\StudentApplication::with([
+                'application_student',
+                'application_form.institution',
+                'application_address',
+                'application_parent'
+            ])
+            ->where('status', 'submitted')
+            ->whereHas('application_form', fn($q) => $q->where('organization_id', $org->id));
+
+        // Filters
+        if ($request->filled('form_id')) $query->where('application_form_id', $request->form_id);
+        if ($request->filled('institution_id')) {
+            $query->whereHas('application_form', fn($q) => $q->where('institution_id', $request->institution_id));
+        }
+        if ($request->filled('applied_for')) {
+            $appliedForVal = trim($request->applied_for);
+            $query->where(fn($q) => $q->where('applied_for', 'like', "%{$appliedForVal}%")->orWhereHas('application_student', fn($qs) => $qs->where('applied_for', 'like', "%{$appliedForVal}%")));
+        }
+        if ($request->filled('examination_center')) {
+            $examCenterVal = trim($request->examination_center);
+            $query->where(fn($q) => $q->where('examination_center', 'like', "%{$examCenterVal}%")->orWhereHas('application_student', fn($sq) => $sq->where('examination_center', 'like', "%{$examCenterVal}%")));
+        }
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('application_code', 'like', "%{$search}%")
+                  ->orWhereHas('application_student', fn($qs) => $qs->where('full_name', 'like', "%{$search}%")->orWhere('phone_number', 'like', "%{$search}%"));
+            });
+        }
+
+        $applications = $query->orderBy('application_code')->get();
+
+        $headers = [
+            "Content-type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=Admin_Card_Roll_Sheet_" . date('Y-m-d_His') . ".csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $columns = [
+            'Sl No', 'Roll No / Application Code', 'Candidate Name', 'Gender', 'Category', 
+            'Father Name', 'Phone Number', 'Email', 'Applied For / Stream', 
+            'Allotted Examination Center', 'Permanent District', 'Submitted Date'
+        ];
+
+        $callback = function() use ($applications, $columns) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, $columns);
+
+            $sl = 1;
+            foreach ($applications as $app) {
+                $student = $app->application_student;
+                $parent = $app->application_parent;
+                $address = $app->application_address;
+
+                fputcsv($file, [
+                    $sl++,
+                    $app->application_code,
+                    $student->full_name ?? 'N/A',
+                    $student->gender ?? 'N/A',
+                    $student->category ?? 'N/A',
+                    $student->father_name ?? $parent?->father_name ?? 'N/A',
+                    $student->phone_number ?? 'N/A',
+                    $student->email ?? 'N/A',
+                    $app->applied_for_display,
+                    $app->examination_center_display,
+                    $address->permanent_district ?? 'N/A',
+                    $app->submitted_at ? $app->submitted_at->format('d-m-Y H:i') : ($app->created_at ? $app->created_at->format('d-m-Y H:i') : 'N/A'),
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * View Admit Card Download and Print Logs
+     */
+    public function adminCardLogs(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        $query = \App\Models\AdmitCardDownloadLog::with(['application.application_student', 'application.application_form', 'user'])
+            ->where(function($q) use ($org) {
+                $q->where('organization_id', $org->id)
+                  ->orWhereHas('application.application_form', fn($formQ) => $formQ->where('organization_id', $org->id));
+            });
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('application_code', 'like', "%{$search}%")
+                  ->orWhere('user_name', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhere('download_type', 'like', "%{$search}%")
+                  ->orWhereHas('application.application_student', fn($sq) => $sq->where('full_name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($request->filled('user_type')) {
+            $query->where('user_type', $request->user_type);
+        }
+
+        if ($request->filled('download_type')) {
+            $query->where('download_type', $request->download_type);
+        }
+
+        $logs = $query->latest('downloaded_at')->paginate(25)->withQueryString();
+
+        $stats = [
+            'total_downloads' => \App\Models\AdmitCardDownloadLog::where(function($q) use ($org) {
+                $q->where('organization_id', $org->id)
+                  ->orWhereHas('application.application_form', fn($formQ) => $formQ->where('organization_id', $org->id));
+            })->count(),
+            'student_downloads' => \App\Models\AdmitCardDownloadLog::where(function($q) use ($org) {
+                $q->where('organization_id', $org->id)
+                  ->orWhereHas('application.application_form', fn($formQ) => $formQ->where('organization_id', $org->id));
+            })->where('user_type', 'student')->count(),
+            'admin_downloads' => \App\Models\AdmitCardDownloadLog::where(function($q) use ($org) {
+                $q->where('organization_id', $org->id)
+                  ->orWhereHas('application.application_form', fn($formQ) => $formQ->where('organization_id', $org->id));
+            })->where('user_type', 'admin')->count(),
+            'unique_ips' => \App\Models\AdmitCardDownloadLog::where(function($q) use ($org) {
+                $q->where('organization_id', $org->id)
+                  ->orWhereHas('application.application_form', fn($formQ) => $formQ->where('organization_id', $org->id));
+            })->distinct('ip_address')->count('ip_address'),
+        ];
+
+        return view('administration.admin-cards.logs', compact('logs', 'stats'));
+    }
 }

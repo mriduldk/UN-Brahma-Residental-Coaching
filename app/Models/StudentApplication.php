@@ -34,6 +34,60 @@ class StudentApplication extends Model
         return $this->examination_center ?? $this->application_student?->examination_center ?? 'N/A';
     }
 
+    public function getExaminationCenterVenueAttribute(): string
+    {
+        $center = strtoupper((string) ($this->examination_center ?? $this->application_student?->examination_center ?? ''));
+        if (str_contains($center, 'KOKRAJHAR')) {
+            return 'Kokrajhar Girls H.S.S.';
+        }
+        if (str_contains($center, 'CHIRANG') || str_contains($center, 'KASHIKOTRA')) {
+            return 'Kashikotra H.S.S.';
+        }
+        if (str_contains($center, 'BAKSA') || str_contains($center, 'BARAMA')) {
+            return 'Barama College';
+        }
+        if (str_contains($center, 'TAMULPUR')) {
+            return 'Tamulpur HSS';
+        }
+        if (str_contains($center, 'UDALGURI')) {
+            return 'Udalguri HSS';
+        }
+        return $this->examination_center_display;
+    }
+
+    public function getExaminationCenterFullAttribute(): string
+    {
+        $venue = $this->examination_center_venue;
+        $district = $this->examination_center_display;
+        if ($district && $district !== 'N/A') {
+            return "{$venue} - {$district}";
+        }
+        return $venue;
+    }
+
+    public function getExamDateAttribute(): string
+    {
+        return 'Tuesday, 27th October, 2026';
+    }
+
+    public function getExamTimeAttribute(): string
+    {
+        $stream = strtoupper((string) ($this->applied_for_display ?? ''));
+        if (str_contains($stream, 'UPSC') || str_contains($stream, 'APSC') || str_contains($stream, 'CIVIL')) {
+            return '02:00 PM – 04:00 PM (2 Hours)';
+        }
+        return '10:00 AM – 12:00 PM (2 Hours)';
+    }
+
+    public function getExamTimeShortAttribute(): string
+    {
+        $stream = strtoupper((string) ($this->applied_for_display ?? ''));
+        if (str_contains($stream, 'UPSC') || str_contains($stream, 'APSC') || str_contains($stream, 'CIVIL')) {
+            return '02:00 PM – 04:00 PM';
+        }
+        return '10:00 AM – 12:00 PM';
+    }
+
     protected $casts = [
         'submitted_at' => 'datetime',
     ];
@@ -111,6 +165,11 @@ class StudentApplication extends Model
     public function admission_student()
     {
         return $this->hasOne(AdmissionStudent::class);
+    }
+
+    public function admit_card_download_logs()
+    {
+        return $this->hasMany(AdmitCardDownloadLog::class);
     }
 
     public static function getStreamCode(?string $appliedFor): string
