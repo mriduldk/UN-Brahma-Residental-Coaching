@@ -26,6 +26,12 @@
                 <i data-lucide="file-spreadsheet" size="16"></i>
                 <span>Generate Excel</span>
             </a>
+
+            <!-- Roll Numbers Only PDF Button -->
+            <a href="{{ route('administration.attendance-sheets.roll-numbers-pdf', request()->query()) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md shadow-purple-200 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                <i data-lucide="tag" size="16"></i>
+                <span>Roll No PDF</span>
+            </a>
         </div>
     </div>
 

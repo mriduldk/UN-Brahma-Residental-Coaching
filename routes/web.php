@@ -270,6 +270,7 @@ Route::middleware(['auth', 'mobile.verified', \App\Http\Middleware\EnsureOrganiz
     Route::get('/attendance-sheets', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheets'])->name('attendance-sheets.index');
     Route::get('/attendance-sheet', fn() => redirect()->route('administration.attendance-sheets.index'));
     Route::get('/attendance-sheets/pdf', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetPdf'])->name('attendance-sheets.pdf');
+    Route::get('/attendance-sheets/roll-numbers-pdf', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetRollNumbersPdf'])->name('attendance-sheets.roll-numbers-pdf');
     Route::get('/attendance-sheets/excel', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetExcel'])->name('attendance-sheets.excel');
     Route::get('/attendance-sheets/csv', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetCsv'])->name('attendance-sheets.csv');
     Route::get('/attendance-sheets/print', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetPrint'])->name('attendance-sheets.print');

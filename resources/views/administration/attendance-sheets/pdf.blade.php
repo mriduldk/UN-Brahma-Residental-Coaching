@@ -281,7 +281,7 @@
     <!-- DomPDF Script for Page Numbering -->
     <script type="text/php">
         if (isset($pdf)) {
-            $text = "Page {PAGE_NUM} of {PAGE_COUNT}  |  BTC Super 50 Examination Attendance Sheet";
+            $text = "Page {PAGE_NUM} of {PAGE_COUNT}  |  UN Brahma Residential Free Coaching Examination Attendance Sheet";
             $size = 8;
             $font = $fontMetrics->getFont("DejaVu Sans", "normal");
             $width = $fontMetrics->getTextWidth($text, $font, $size);

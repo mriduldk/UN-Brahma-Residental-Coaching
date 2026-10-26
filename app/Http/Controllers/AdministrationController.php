@@ -2952,6 +2952,41 @@ class AdministrationController extends Controller
     }
 
     /**
+     * Download Roll Numbers Only PDF (3 per row, 10 rows per page = 30 per page)
+     */
+    public function attendanceSheetRollNumbersPdf(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        if (!$request->filled('examination_center') || strtolower($request->examination_center) === 'all') {
+            $request->merge(['examination_center' => 'Kokrajhar']);
+        }
+        if (!$request->filled('applied_for') || strtolower($request->applied_for) === 'all') {
+            $request->merge(['applied_for' => 'Engineering (JEE)']);
+        }
+
+        \App\Models\StudentApplication::assignMissingRollNumbers();
+
+        $query = $this->buildAttendanceSheetQuery($request, $org);
+        $applications = $query->get();
+
+        $selectedCenter = $request->input('examination_center');
+        $centerTitle = $this->resolveCenterDisplayName($selectedCenter);
+
+        $pdf = Pdf::loadView('administration.attendance-sheets.roll-numbers-pdf', compact(
+            'applications',
+            'selectedCenter',
+            'centerTitle',
+            'org'
+        ))->setPaper('a4', 'portrait')
+          ->setOption(['isPhpEnabled' => true, 'isRemoteEnabled' => true]);
+
+        $fileNameCenter = str_replace([' ', '/', '\\', '(', ')'], '_', $selectedCenter ?: 'Kokrajhar');
+        return $pdf->download("Roll_Numbers_{$fileNameCenter}_" . date('Ymd_His') . ".pdf");
+    }
+
+    /**
      * Generate Excel Attendance Sheet (.xls)
      */
     public function attendanceSheetExcel(Request $request)
