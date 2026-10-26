@@ -265,6 +265,14 @@ Route::middleware(['auth', 'mobile.verified', \App\Http\Middleware\EnsureOrganiz
     Route::post('/admin-cards/bulk-download', [\App\Http\Controllers\AdministrationController::class, 'bulkDownloadAdminCards'])->name('admin-cards.bulk-download');
     Route::get('/admin-cards/export', [\App\Http\Controllers\AdministrationController::class, 'exportAdminCards'])->name('admin-cards.export');
     Route::post('/admin-cards/generate-roll-numbers', [\App\Http\Controllers\AdministrationController::class, 'generateRollNumbers'])->name('admin-cards.generate-roll-numbers');
+
+    // Attendance Sheet Generation (Examination Center Wise)
+    Route::get('/attendance-sheets', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheets'])->name('attendance-sheets.index');
+    Route::get('/attendance-sheet', fn() => redirect()->route('administration.attendance-sheets.index'));
+    Route::get('/attendance-sheets/pdf', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetPdf'])->name('attendance-sheets.pdf');
+    Route::get('/attendance-sheets/excel', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetExcel'])->name('attendance-sheets.excel');
+    Route::get('/attendance-sheets/csv', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetCsv'])->name('attendance-sheets.csv');
+    Route::get('/attendance-sheets/print', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetPrint'])->name('attendance-sheets.print');
     Route::get('/finance', [\App\Http\Controllers\AdministrationController::class, 'finance'])->name('finance');
     Route::get('/finance/{type}/{id}', [\App\Http\Controllers\AdministrationController::class, 'financeDetail'])->name('finance.show');
     Route::post('/finance/refresh', [\App\Http\Controllers\AdministrationController::class, 'refreshFinanceStatus'])->name('finance.refresh');

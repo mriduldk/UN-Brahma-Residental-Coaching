@@ -2663,4 +2663,449 @@ class AdministrationController extends Controller
         $assigned = \App\Models\StudentApplication::assignMissingRollNumbers();
         return redirect()->back()->with('success', "Roll Numbers synced successfully ({$assigned} new assigned).");
     }
+
+    /**
+     * Resolve examination center full name or venue for display
+     */
+    protected function resolveCenterDisplayName(?string $center): string
+    {
+        if (!$center || strtolower($center) === 'all') {
+            return 'ALL EXAMINATION CENTERS';
+        }
+        $c = strtoupper(trim($center));
+        if (str_contains($c, 'KOKRAJHAR')) {
+            return 'KOKRAJHAR (Kokrajhar Girls H.S.S.)';
+        }
+        if (str_contains($c, 'CHIRANG') || str_contains($c, 'KASHIKOTRA')) {
+            return 'CHIRANG (Kashikotra H.S.S.)';
+        }
+        if (str_contains($c, 'BAKSA') || str_contains($c, 'BARAMA')) {
+            return 'BAKSA (Barama College)';
+        }
+        if (str_contains($c, 'TAMULPUR')) {
+            return 'TAMULPUR (Tamulpur HSS)';
+        }
+        if (str_contains($c, 'UDALGURI')) {
+            return 'UDALGURI (Udalguri HSS)';
+        }
+        return strtoupper($center);
+    }
+
+    /**
+     * Helper to build base attendance sheet query
+     */
+    protected function buildAttendanceSheetQuery(Request $request, $org)
+    {
+        $query = \App\Models\StudentApplication::with([
+                'application_student',
+                'application_form.institution',
+                'application_address',
+                'application_parent'
+            ])
+            ->where('status', 'submitted')
+            ->whereHas('application_form', function ($q) use ($org) {
+                $q->where('organization_id', $org->id);
+            });
+
+        // 1. Filter by Examination Center
+        if ($request->filled('examination_center') && strtolower($request->examination_center) !== 'all') {
+            $examCenterVal = trim($request->examination_center);
+            $query->where(function($q) use ($examCenterVal) {
+                $q->where('examination_center', 'like', "%{$examCenterVal}%")
+                  ->orWhereHas('application_student', function($sq) use ($examCenterVal) {
+                      $sq->where('examination_center', 'like', "%{$examCenterVal}%");
+                  });
+            });
+        }
+
+        // 2. Filter by Course / Stream (Applied For)
+        if ($request->filled('applied_for') && strtolower($request->applied_for) !== 'all') {
+            $appliedForVal = trim($request->applied_for);
+            $query->where(function($q) use ($appliedForVal) {
+                $q->where('applied_for', 'like', "%{$appliedForVal}%")
+                  ->orWhereHas('application_student', function($qs) use ($appliedForVal) {
+                      $qs->where('applied_for', 'like', "%{$appliedForVal}%");
+                  });
+            });
+        }
+
+        // 3. Filter by Application Form
+        if ($request->filled('form_id')) {
+            $query->where('application_form_id', $request->form_id);
+        }
+
+        // 4. Search Filter
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('roll_no', 'like', "%{$search}%")
+                  ->orWhere('application_code', 'like', "%{$search}%")
+                  ->orWhere('applied_for', 'like', "%{$search}%")
+                  ->orWhere('examination_center', 'like', "%{$search}%")
+                  ->orWhereHas('application_student', function($qs) use ($search) {
+                      $qs->where('full_name', 'like', "%{$search}%")
+                         ->orWhere('father_name', 'like', "%{$search}%")
+                         ->orWhere('phone_number', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('application_parent', function($qp) use ($search) {
+                      $qp->where('father_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Order by roll number sequentially
+        return $query->orderByRaw('CASE WHEN roll_no IS NOT NULL AND roll_no != "" THEN 0 ELSE 1 END')
+                     ->orderBy('roll_no', 'asc')
+                     ->orderBy('application_code', 'asc');
+    }
+
+    /**
+     * Display the Attendance Sheet page
+     */
+    public function attendanceSheets(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) {
+            return view('administration.attendance-sheets.index', [
+                'applications' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50),
+                'examCenters' => collect([]),
+                'appliedForOptions' => collect([]),
+                'centerStats' => collect([]),
+                'totalSubmitted' => 0,
+                'headerTitle' => 'UN BRAHMA RESIDENTAL COACHING (ENGINEERING)',
+                'centerTitle' => 'ALL EXAMINATION CENTERS',
+            ]);
+        }
+
+        // Ensure roll numbers exist
+        \App\Models\StudentApplication::assignMissingRollNumbers();
+
+        // Standard Examination Centers
+        $standardCenters = ['Kokrajhar', 'Chirang', 'Baksa', 'Tamulpur', 'Udalguri'];
+        
+        $dbExamApps = \App\Models\StudentApplication::whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->where('status', 'submitted')
+            ->whereNotNull('examination_center')
+            ->where('examination_center', '!=', '')
+            ->pluck('examination_center')
+            ->map(fn($v) => ucwords(strtolower(trim($v))));
+
+        $dbExamStudents = \App\Models\ApplicationStudent::whereHas('student_application.application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->whereHas('student_application', fn($q) => $q->where('status', 'submitted'))
+            ->whereNotNull('examination_center')
+            ->where('examination_center', '!=', '')
+            ->pluck('examination_center')
+            ->map(fn($v) => ucwords(strtolower(trim($v))));
+
+        $examCenters = collect($standardCenters)->merge($dbExamApps)->merge($dbExamStudents)->filter()->unique()->sort()->values();
+
+        // Default to first center if not provided or if 'all'
+        if (!$request->filled('examination_center') || strtolower($request->examination_center) === 'all') {
+            $selectedCenter = $examCenters->first() ?: 'Kokrajhar';
+            $request->merge(['examination_center' => $selectedCenter]);
+        } else {
+            $selectedCenter = $request->input('examination_center');
+        }
+
+        // Applied For (Streams)
+        $defaultStreams = ['Engineering (JEE)', 'Medical (NEET)', 'UPSC', 'APSC'];
+        $dbStreams = \App\Models\StudentApplication::whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->where('status', 'submitted')
+            ->whereNotNull('applied_for')
+            ->pluck('applied_for');
+        $appliedForOptions = collect($defaultStreams)->merge($dbStreams)->filter()->unique()->values();
+
+        // Default to first stream if not provided or if 'all'
+        if (!$request->filled('applied_for') || strtolower($request->applied_for) === 'all') {
+            $defaultStream = $appliedForOptions->first() ?: 'Engineering (JEE)';
+            $request->merge(['applied_for' => $defaultStream]);
+        }
+
+        // Center counts
+        $allSubmitted = \App\Models\StudentApplication::where('status', 'submitted')
+            ->whereHas('application_form', fn($q) => $q->where('organization_id', $org->id))
+            ->with(['application_student:id,student_application_id,examination_center'])
+            ->get();
+
+        $totalSubmitted = $allSubmitted->count();
+
+        $centerStats = collect();
+        foreach ($examCenters as $c) {
+            $cNameLower = strtolower(trim($c));
+            $count = $allSubmitted->filter(function($app) use ($cNameLower) {
+                $centerVal = strtolower(trim($app->examination_center ?: ($app->application_student?->examination_center ?: '')));
+                return str_contains($centerVal, $cNameLower);
+            })->count();
+            $centerStats[$c] = $count;
+        }
+
+        // Header Title (Dynamically append applied_for at the end instead of fixed ENGINEERING)
+        $headerTitle = $this->resolveHeaderTitle($request);
+
+        // Center Title
+        $centerTitle = $this->resolveCenterDisplayName($selectedCenter);
+
+        $query = $this->buildAttendanceSheetQuery($request, $org);
+        $applications = $query->paginate(50)->withQueryString();
+
+        // Exam Time from StudentApplication getExamTimeAttribute
+        $examTime = $this->resolveExamTime($request, $applications);
+
+        return view('administration.attendance-sheets.index', compact(
+            'applications',
+            'examCenters',
+            'appliedForOptions',
+            'centerStats',
+            'totalSubmitted',
+            'headerTitle',
+            'centerTitle',
+            'selectedCenter',
+            'examTime'
+        ));
+    }
+
+    /**
+     * Resolve header title with selected stream (applied_for) at the end instead of fixed (ENGINEERING)
+     */
+    protected function resolveHeaderTitle(Request $request): string
+    {
+        $defaultBase = 'UN BRAHMA RESIDENTAL COACHING';
+        $appliedFor = $request->input('applied_for');
+        $hasStream = $request->filled('applied_for') && strtolower($appliedFor) !== 'all';
+        $streamSuffix = $hasStream ? ' (' . strtoupper(trim($appliedFor)) . ')' : '';
+
+        if ($request->filled('header_title')) {
+            $headerTitle = trim($request->input('header_title'));
+            // If the header_title is the standard base prefix with an old or fixed suffix (e.g. ENGINEERING), update it to current applied_for
+            if (preg_match('/^UN BRAHMA RESIDENTAL COACHING(\s*\(.*\))?$/i', $headerTitle)) {
+                return $defaultBase . $streamSuffix;
+            }
+            return $headerTitle;
+        }
+
+        return $defaultBase . $streamSuffix;
+    }
+
+    /**
+     * Resolve exam time based on applied_for using StudentApplication's getExamTimeAttribute
+     */
+    protected function resolveExamTime(Request $request, $applications = null): string
+    {
+        $appliedFor = $request->input('applied_for');
+        if ($appliedFor && strtolower($appliedFor) !== 'all') {
+            $dummy = new \App\Models\StudentApplication(['applied_for' => $appliedFor]);
+            return $dummy->exam_time;
+        }
+
+        if ($applications && $applications->isNotEmpty()) {
+            $first = $applications->first();
+            if ($first instanceof \App\Models\StudentApplication) {
+                return $first->exam_time;
+            }
+        }
+
+        $dummy = new \App\Models\StudentApplication(['applied_for' => 'Engineering']);
+        return $dummy->exam_time;
+    }
+
+    /**
+     * Download Attendance Sheet PDF
+     */
+    public function attendanceSheetPdf(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        if (!$request->filled('examination_center') || strtolower($request->examination_center) === 'all') {
+            $request->merge(['examination_center' => 'Kokrajhar']);
+        }
+        if (!$request->filled('applied_for') || strtolower($request->applied_for) === 'all') {
+            $request->merge(['applied_for' => 'Engineering (JEE)']);
+        }
+
+        \App\Models\StudentApplication::assignMissingRollNumbers();
+
+        $query = $this->buildAttendanceSheetQuery($request, $org);
+        $applications = $query->get();
+
+        // Header Title
+        $headerTitle = $this->resolveHeaderTitle($request);
+
+        $selectedCenter = $request->input('examination_center');
+        $centerTitle = $this->resolveCenterDisplayName($selectedCenter);
+        $emblemPath = public_path('image/logo/logo-em.png');
+        $examTime = $this->resolveExamTime($request, $applications);
+
+        $pdf = Pdf::loadView('administration.attendance-sheets.pdf', compact(
+            'applications',
+            'headerTitle',
+            'centerTitle',
+            'selectedCenter',
+            'org',
+            'emblemPath',
+            'examTime'
+        ))->setPaper('a4', 'portrait')
+          ->setOption(['isPhpEnabled' => true, 'isRemoteEnabled' => true]);
+
+        $fileNameCenter = str_replace([' ', '/', '\\', '(', ')'], '_', $selectedCenter ?: 'Kokrajhar');
+        return $pdf->download("Attendance_Sheet_{$fileNameCenter}_" . date('Ymd_His') . ".pdf");
+    }
+
+    /**
+     * Generate Excel Attendance Sheet (.xls)
+     */
+    public function attendanceSheetExcel(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        if (!$request->filled('examination_center') || strtolower($request->examination_center) === 'all') {
+            $request->merge(['examination_center' => 'Kokrajhar']);
+        }
+        if (!$request->filled('applied_for') || strtolower($request->applied_for) === 'all') {
+            $request->merge(['applied_for' => 'Engineering (JEE)']);
+        }
+
+        \App\Models\StudentApplication::assignMissingRollNumbers();
+
+        $query = $this->buildAttendanceSheetQuery($request, $org);
+        $applications = $query->get();
+
+        // Header Title
+        $headerTitle = $this->resolveHeaderTitle($request);
+
+        $selectedCenter = $request->input('examination_center');
+        $centerTitle = $this->resolveCenterDisplayName($selectedCenter);
+        $examTime = $this->resolveExamTime($request, $applications);
+
+        $fileNameCenter = str_replace([' ', '/', '\\', '(', ')'], '_', $selectedCenter ?: 'Kokrajhar');
+        $fileName = "Attendance_Sheet_{$fileNameCenter}_" . date('Ymd_His') . ".xls";
+
+        return response()->view('administration.attendance-sheets.excel', compact(
+            'applications',
+            'headerTitle',
+            'centerTitle',
+            'selectedCenter',
+            'org',
+            'examTime'
+        ))->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+          ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+          ->header('Pragma', 'no-cache')
+          ->header('Expires', '0');
+    }
+
+    /**
+     * Export CSV Attendance Sheet (.csv)
+     */
+    public function attendanceSheetCsv(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        if (!$request->filled('examination_center') || strtolower($request->examination_center) === 'all') {
+            $request->merge(['examination_center' => 'Kokrajhar']);
+        }
+        if (!$request->filled('applied_for') || strtolower($request->applied_for) === 'all') {
+            $request->merge(['applied_for' => 'Engineering (JEE)']);
+        }
+
+        \App\Models\StudentApplication::assignMissingRollNumbers();
+
+        $query = $this->buildAttendanceSheetQuery($request, $org);
+        $applications = $query->get();
+
+        // Header Title
+        $headerTitle = $this->resolveHeaderTitle($request);
+
+        $selectedCenter = $request->input('examination_center');
+        $centerTitle = $this->resolveCenterDisplayName($selectedCenter);
+        $examTime = $this->resolveExamTime($request, $applications);
+
+        $fileNameCenter = str_replace([' ', '/', '\\', '(', ')'], '_', $selectedCenter ?: 'Kokrajhar');
+        $fileName = "Attendance_Sheet_{$fileNameCenter}_" . date('Ymd_His') . ".csv";
+
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=\"$fileName\"",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use ($applications, $headerTitle, $centerTitle, $examTime) {
+            $file = fopen('php://output', 'w');
+            // Write UTF-8 BOM so Excel opens Hindi/Assamese/Unicode names correctly
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            fputcsv($file, [$headerTitle]);
+            fputcsv($file, ['EXAMINATION CENTER : ' . $centerTitle]);
+            fputcsv($file, ['Date of Exam: Tuesday, 27th October, 2026', 'Time: ' . $examTime, 'Total Candidates: ' . $applications->count()]);
+            fputcsv($file, []);
+
+            // Columns requested: SL NO, ROLL NO, CANDIDATE NAME, FATHER NAME, SIGNATURE (Blank)
+            fputcsv($file, ['SL NO', 'ROLL NO', 'CANDIDATE NAME', 'FATHER NAME', 'SIGNATURE']);
+
+            $sl = 1;
+            foreach ($applications as $app) {
+                $student = $app->application_student;
+                $parent = $app->application_parent;
+                $candidateName = $student?->full_name ?? $app->student?->name ?? 'N/A';
+                $fatherName = $student?->father_name ?? $parent?->father_name ?? 'N/A';
+                $rollNo = $app->roll_number ?: $app->roll_no ?: $app->application_code;
+
+                fputcsv($file, [
+                    $sl++,
+                    $rollNo,
+                    strtoupper($candidateName),
+                    strtoupper($fatherName),
+                    '' // Blank for signature
+                ]);
+            }
+
+            fputcsv($file, []);
+            fputcsv($file, ['Invigilator Signature: ______________________', '', '', 'Center Superintendent: ______________________']);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Printable Web View of Attendance Sheet
+     */
+    public function attendanceSheetPrint(Request $request)
+    {
+        $org = auth()->user()->currentOrganization();
+        if (!$org) abort(403);
+
+        if (!$request->filled('examination_center') || strtolower($request->examination_center) === 'all') {
+            $request->merge(['examination_center' => 'Kokrajhar']);
+        }
+        if (!$request->filled('applied_for') || strtolower($request->applied_for) === 'all') {
+            $request->merge(['applied_for' => 'Engineering (JEE)']);
+        }
+
+        \App\Models\StudentApplication::assignMissingRollNumbers();
+
+        $query = $this->buildAttendanceSheetQuery($request, $org);
+        $applications = $query->get();
+
+        // Header Title
+        $headerTitle = $this->resolveHeaderTitle($request);
+
+        $selectedCenter = $request->input('examination_center');
+        $centerTitle = $this->resolveCenterDisplayName($selectedCenter);
+        $emblemPath = public_path('image/logo/logo-em.png');
+        $examTime = $this->resolveExamTime($request, $applications);
+
+        return view('administration.attendance-sheets.print', compact(
+            'applications',
+            'headerTitle',
+            'centerTitle',
+            'selectedCenter',
+            'org',
+            'emblemPath',
+            'examTime'
+        ));
+    }
 }
