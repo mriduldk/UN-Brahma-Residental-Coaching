@@ -33,7 +33,7 @@
 
         table.grid-table td {
             width: 33.333%;
-            height: 24.8mm;
+            height: 24mm;
             padding: 1.5mm;
             vertical-align: middle;
             text-align: center;
@@ -42,19 +42,18 @@
         .roll-box {
             border: 1.5px dashed #334155;
             border-radius: 4px;
-            height: 21.8mm;
+            height: 21mm;
             text-align: center;
             background-color: #ffffff;
-            padding: 2mm 3mm;
             display: block;
         }
 
         .roll-text {
             font-family: 'Courier New', Courier, monospace, 'DejaVu Sans';
-            font-size: 17pt;
+            font-size: 16.5pt;
             font-weight: bold;
             color: #0f172a;
-            line-height: 21.8mm;
+            line-height: 21mm;
             letter-spacing: 1.5px;
             text-align: center;
         }
@@ -71,24 +70,24 @@
 <body>
 
 @php
-    $chunks = $applications->chunk(30);
+    $chunks = $applications->values()->chunk(30);
 @endphp
 
 @forelse($chunks as $pIdx => $pageApplications)
     @php
-        $rows = $pageApplications->chunk(3);
+        $rows = $pageApplications->values()->chunk(3);
         $isLastPage = $loop->last;
     @endphp
     <table class="grid-table {{ !$isLastPage ? 'page-break' : '' }}">
         <tbody>
-            @for($r = 0; $r < 10; $r++)
+            @foreach($rows as $row)
                 @php
-                    $rowItems = $rows->get($r, collect());
+                    $rowCols = $row->values();
                 @endphp
                 <tr>
                     @for($c = 0; $c < 3; $c++)
                         @php
-                            $app = $rowItems->get($c);
+                            $app = $rowCols->get($c);
                         @endphp
                         @if($app)
                             @php
@@ -103,6 +102,15 @@
                             <td></td>
                         @endif
                     @endfor
+                </tr>
+            @endforeach
+
+            {{-- Ensure exactly 10 rows on the page --}}
+            @for($r = $rows->count(); $r < 10; $r++)
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                 </tr>
             @endfor
         </tbody>
