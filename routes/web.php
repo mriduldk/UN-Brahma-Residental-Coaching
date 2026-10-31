@@ -20,6 +20,7 @@ Route::post('/contact-inquiry', [App\Http\Controllers\ContactController::class, 
 Route::view('/pricing', 'pages.pricing')->name('pricing');
 Route::view('/about', 'pages.about')->name('about');
 
+
 // Institutional Demo Suite Routes
 Route::prefix('demo')->name('demo.')->group(function () {
     Route::get('/admin/dashboard', function () { return view('demo.admin.dashboard'); })->name('admin.dashboard');
@@ -274,6 +275,15 @@ Route::middleware(['auth', 'mobile.verified', \App\Http\Middleware\EnsureOrganiz
     Route::get('/attendance-sheets/excel', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetExcel'])->name('attendance-sheets.excel');
     Route::get('/attendance-sheets/csv', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetCsv'])->name('attendance-sheets.csv');
     Route::get('/attendance-sheets/print', [\App\Http\Controllers\AdministrationController::class, 'attendanceSheetPrint'])->name('attendance-sheets.print');
+
+    // Entrance Exam Results Management
+    Route::get('/entrance-results', [\App\Http\Controllers\Administration\EntranceResultController::class, 'index'])->name('entrance-results.index');
+    Route::get('/entrance-results/reconciliation', [\App\Http\Controllers\Administration\EntranceResultController::class, 'reconciliation'])->name('entrance-results.reconciliation');
+    Route::post('/entrance-results/upload', [\App\Http\Controllers\Administration\EntranceResultController::class, 'upload'])->name('entrance-results.upload');
+    Route::get('/entrance-results/template', [\App\Http\Controllers\Administration\EntranceResultController::class, 'template'])->name('entrance-results.template');
+    Route::put('/entrance-results/{id}', [\App\Http\Controllers\Administration\EntranceResultController::class, 'update'])->name('entrance-results.update');
+    Route::delete('/entrance-results/{id}', [\App\Http\Controllers\Administration\EntranceResultController::class, 'destroy'])->name('entrance-results.destroy');
+    Route::get('/entrance-results/{roll_no}/print', [\App\Http\Controllers\Administration\EntranceResultController::class, 'printScorecard'])->name('entrance-results.print');
     Route::get('/finance', [\App\Http\Controllers\AdministrationController::class, 'finance'])->name('finance');
     Route::get('/finance/{type}/{id}', [\App\Http\Controllers\AdministrationController::class, 'financeDetail'])->name('finance.show');
     Route::post('/finance/refresh', [\App\Http\Controllers\AdministrationController::class, 'refreshFinanceStatus'])->name('finance.refresh');

@@ -173,6 +173,11 @@ class StudentApplication extends Model
         return $this->hasMany(AdmitCardDownloadLog::class);
     }
 
+    public function entrance_result()
+    {
+        return $this->hasOne(EntranceExamResult::class, 'roll_no', 'roll_no');
+    }
+
     public static function getStreamCode(?string $appliedFor): string
     {
         if (!$appliedFor) {
